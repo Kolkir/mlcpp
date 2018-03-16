@@ -3,7 +3,7 @@ project(ml-cpp-examples)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -Wall -Wextra")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++1z -Wall -Wextra")
 
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
