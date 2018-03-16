@@ -1,3 +1,6 @@
 [submodule "third_party/plotcpp"]
 	path = third_party/plotcpp
 	url = https://github.com/Kolkir/plotcpp.git
+[submodule "third_party/mshadow"]
+	path = third_party/mshadow
+	url = https://github.com/dmlc/mshadow.git
