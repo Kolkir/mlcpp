@@ -4,6 +4,8 @@
 
 #include <csv.h>
 #include <plot.h>
+#include <xtensor/xadapt.hpp>
+#include <xtensor/xio.hpp>
 
 // regular includes
 #include <experimental/filesystem>
@@ -71,6 +73,15 @@ int main() {
 
   plt.Draw2D(plotcpp::Points(x.begin(), x.end(), y.begin(), "points"));
   plt.Flush();
+
+  // fit polynom to our data
+  std::vector<int> shape = {static_cast<int>(x.size()), 1};
+  auto data_x = xt::adapt(x, shape);
+  auto data_y = xt::adapt(y, shape);
+  auto data = xt::stack(xt::xtuple(data_x, data_y), 1);
+  std::cout << data.shape()[0] << " " << data.shape()[1];
+
+  // xt::zeros<float> data{{3, 4}};
 
   return 0;
 }
