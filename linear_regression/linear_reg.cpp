@@ -2,31 +2,19 @@
  * "Building Machine Learning Systems with Python" by Willi Richert
  */
 
-#include <mshadow/tensor.h>
+#include <csv.h>
+#include <plot.h>
 
 // regular includes
 #include <experimental/filesystem>
-#include <fstream>
 #include <iostream>
-#include <iterator>
 #include <string>
-#include "../iotensor.h"
 #include "../utils.h"
 
 // Namespace and type aliases
 namespace fs = std::experimental::filesystem;
-namespace ms = mshadow;
-using device = ms::cpu;
-
-// tensor engine needed for CuBLAS
-struct ScopedTensorEngine {
-  ScopedTensorEngine() { ms::InitTensorEngine<device>(); }
-  ~ScopedTensorEngine() { ms::ShutdownTensorEngine<device>(); }
-};
 
 int main() {
-  ScopedTensorEngine tensorEngine;
-
   // Download the data
   const std::string data_path{"web_traffic.tsv"};
   if (!fs::exists(data_path)) {
@@ -37,50 +25,52 @@ int main() {
       return 1;
     }
   }
+
   // Read the data
-  std::ifstream data_file(data_path);
-  if (data_file) {
-    // count samples
-    auto n = static_cast<size_t>(
-        std::count(std::istreambuf_iterator<char>(data_file),
-                   std::istreambuf_iterator<char>(), '\n'));
-    data_file.seekg(0, std::ios_base::beg);
+  const size_t cols = 2;
+  io::CSVReader<cols, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
+      data_path);
 
-    // allocate tensor
-    ms::TensorContainer<device, 2> data(ms::Shape2(n, 2));
-
-    // read samples
-    std::string line_str;
-    std::stringstream line_fmt_stream;
-    for (size_t i = 0; i < n; ++i) {
-      if (std::getline(data_file, line_str)) {
-        line_fmt_stream << line_str;
-        if (!(line_fmt_stream >> data[i][0]))
-          data[i][0] = std::numeric_limits<ms::default_real_t>::quiet_NaN();
-        if (!(line_fmt_stream >> data[i][1]))
-          data[i][1] = std::numeric_limits<ms::default_real_t>::quiet_NaN();
-        std::stringstream().swap(line_fmt_stream);
-      } else {
-        std::cerr << "Error parsing the file " << data_path << " line: " << i
-                  << std::endl;
-        return 1;
-      }
+  std::vector<float> x;
+  std::vector<float> y;
+  bool done = false;
+  do {
+    try {
+      float x_v = 0, y_v = 0;
+      done = !data_tsv.read_row(x_v, y_v);
+      x.push_back(x_v);
+      y.push_back(y_v);
+    } catch (const io::error::no_digit& err) {
+      std::cout << err.what() << std::endl;
     }
+  } while (!done);
 
-    // check data we read
-    auto slice = data.Slice(0, 10);
-    for (size_t y = 0; y < slice.shape_[0]; ++y) {
-      std::cout << "[";
-      for (size_t x = 0; x < slice.shape_[1]; ++x) {
-        std::cout << slice[y][x] << ", ";
-      }
-      std::cout << "]\n";
-    }
+  // plot data we read
+  plotcpp::Plot plt(true);
+  plt.SetTerminal("qt");
+  plt.SetTitle("Web traffic over the last month");
+  plt.SetXLabel("Time");
+  plt.SetYLabel("Hits/hour");
+  plt.SetAutoscale();
+  plt.GnuplotCommand("set grid");
 
-  } else {
-    std::cerr << "Unable to read the file " << data_path << std::endl;
-    return 1;
+  auto minmax = std::minmax_element(x.begin(), x.end());
+  auto diff = *minmax.second - *minmax.first;
+  auto tic_size = 7 * 24;
+  auto time_tics = diff / tic_size;
+
+  plt.GnuplotCommand("set xrange [" + std::to_string(-tic_size / 2) + ":" +
+                     std::to_string(*minmax.second + tic_size / 2) + "]");
+  std::stringstream xtics_labels;
+  xtics_labels << "set xtics (";
+  for (size_t t = 0; t < time_tics; ++t) {
+    xtics_labels << R"("week )" << t << R"(" )" << t * tic_size << ",";
   }
+  xtics_labels << ")";
+  plt.GnuplotCommand(xtics_labels.str());
+
+  plt.Draw2D(plotcpp::Points(x.begin(), x.end(), y.begin(), "points"));
+  plt.Flush();
 
   return 0;
 }

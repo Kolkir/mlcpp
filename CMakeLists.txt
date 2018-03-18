@@ -15,5 +15,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 include_directories(${CMAKE_SOURCE_DIR}/third_party/mshadow)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/fast-cpp-csv-parser)
+include_directories(${CMAKE_SOURCE_DIR}/third_party/plotcpp)
 
 add_subdirectory(linear_regression)
