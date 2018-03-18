@@ -16,7 +16,6 @@ ENDIF(CURL_FOUND)
 set(SOURCES "linear_reg.cpp"
             "../utils.h"
             "../utils.cpp"
-            "../iotensor.h"
 )
 
 add_executable(linear-regression ${SOURCES})
