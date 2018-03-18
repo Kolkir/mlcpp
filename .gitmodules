@@ -4,3 +4,6 @@
 [submodule "third_party/mshadow"]
 	path = third_party/mshadow
 	url = https://github.com/dmlc/mshadow.git
+[submodule "third_party/fast-cpp-csv-parser"]
+	path = third_party/fast-cpp-csv-parser
+	url = https://github.com/ben-strasser/fast-cpp-csv-parser.git
