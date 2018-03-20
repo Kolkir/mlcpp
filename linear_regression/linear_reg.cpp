@@ -19,6 +19,7 @@
 // Namespace and type aliases
 using namespace std::literals::string_literals;
 namespace fs = std::experimental::filesystem;
+typedef float DType;
 
 template <typename S, typename T>
 void PrintShape(const S& name, const T& shape) {
@@ -32,9 +33,29 @@ void PrintShape(const S& name, const T& shape) {
   std::cout.flush();
 }
 
-template <typename Vb, typename Vx>
-auto predict(const Vb& b, const Vx& x) {
-  return xt::sum(x * b, {1});
+template <typename V>
+auto generate_polynom(const V& v, size_t degree) {
+  assert(v.shape().size() == 1);
+  auto rows = v.shape()[0];
+  auto poly_shape = std::vector<size_t>{rows, degree};
+  xt::xarray<DType> poly_x = xt::zeros<DType>(poly_shape);
+  // fill additional column for simpler vectorization
+  {
+    auto xv = xt::view(poly_x, xt::all(), 0);
+    xv = xt::ones<DType>({rows});
+  }
+  // copy initial data
+  {
+    auto xv = xt::view(poly_x, xt::all(), 1);
+    xv = v;
+  }
+  // generate additional terms
+  auto x_col = xt::view(poly_x, xt::all(), 1);
+  for (size_t i = 2; i < degree; ++i) {
+    auto xv = xt::view(poly_x, xt::all(), i);
+    xv = xt::pow(x_col, i);
+  }
+  return poly_x;
 }
 
 template <typename V>
@@ -60,10 +81,15 @@ auto minmax_scale(const V& v) {
   }
 }
 
+template <typename Vb, typename Vx>
+auto predict(const Vb& b, const Vx& x) {
+  return xt::sum(b * x, {1});
+}
+
 template <typename Vx, typename Vy>
 auto gd(const Vx& x, const Vy& y) {
-  size_t n_epochs = 1000;
-  float lr = 0.001;
+  size_t n_epochs = 15000;
+  DType lr = 0.001;
   auto n = x.shape()[0];
   auto w = x.shape()[1];
 
@@ -72,6 +98,7 @@ auto gd(const Vx& x, const Vy& y) {
   xt::xarray<typename Vx::value_type> grad =
       xt::zeros<typename Vx::value_type>({w});
 
+  DType cost = std::numeric_limits<DType>::max();
   for (size_t i = 0; i < n_epochs; ++i) {
     auto yhat = predict(b, x);
     auto error = yhat - y;
@@ -80,33 +107,48 @@ auto gd(const Vx& x, const Vy& y) {
       grad[j] = (xt::sum(xc * error) / n)();
     }
     b = b - lr * grad;
-    auto cost = (xt::sum(xt::pow(error, 2)) / n)();
-    std::cout << "Iteration : " << i << " Cost = " << cost << " b0 = " << b[0]
-              << " b1 = " << b[1] << std::endl;
+    cost = (xt::sum(xt::pow(error, 2)) / n)();
+    // std::cout << "Iteration : " << i << " Cost = " << cost  << std::endl;
   }
+  std::cout << "Final cost = " << cost << std::endl;
   return b;
 }
 
-template <typename Vx, typename Vy>
-auto straight_line_model(const Vx& data_x, const Vy& data_y) {
-  // minmax scaling
-  auto y = minmax_scale(data_y);
-
-  xt::xarray<float> x = xt::zeros<float>(data_x.shape());
-  x = data_x;
+template <typename V>
+auto adapt_x(const V& data_x, size_t p_degree) {
+  xt::xarray<DType> poly_x = generate_polynom(data_x, p_degree);
+  xt::xarray<DType> x = xt::zeros<DType>(poly_x.shape());
+  x = poly_x;
   auto xv = xt::view(x, xt::all(), xt::range(1, xt::placeholders::_));
   xv = minmax_scale(xv);
+  return x;
+}
 
-  // learn line parameters with Gradient Descent
+template <typename Vx, typename Vy>
+auto make_regression_model(const Vx& data_x,
+                           const Vy& data_y,
+                           size_t p_degree) {
+  // minmax scaling
+  auto y = xt::eval(minmax_scale(data_y));
+
+  // minmax scaling & polynomization
+  auto x = xt::eval(adapt_x(data_x, p_degree));
+
+  // learn parameters with Gradient Descent
   auto b = gd(x, y);
 
-  // model with line
-  xt::xarray<float> line_values = predict(b, x);
-
-  // restore scaling for predicted line values
+  // create model
   auto y_minmax = xt::minmax(data_y)();
-  line_values = line_values * (y_minmax[1] - y_minmax[0]) + y_minmax[0];
-  return line_values;
+  auto model = [b, y_minmax, p_degree](const auto& data_x) {
+    auto x = xt::eval(adapt_x(data_x, p_degree));
+    xt::xarray<DType> yhat = xt::eval(predict(b, x));
+
+    // restore scaling for predicted line values
+
+    yhat = yhat * (y_minmax[1] - y_minmax[0]) + y_minmax[0];
+    return yhat;
+  };
+  return model;
 }
 
 int main() {
@@ -122,21 +164,21 @@ int main() {
   }
 
   // Read the data
-  const size_t cols = 2;
-  io::CSVReader<cols, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
+  io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
       data_path);
 
-  std::vector<float> raw_data_x;
-  std::vector<float> raw_data_y;
+  std::vector<DType> raw_data_x;
+  std::vector<DType> raw_data_y;
 
   bool done = false;
   do {
     try {
-      float x = 0, y = 0;
+      DType x = 0, y = 0;
       done = !data_tsv.read_row(x, y);
-      raw_data_x.push_back(1);  // additional x for simpler vectorization
-      raw_data_x.push_back(x);
-      raw_data_y.push_back(y);
+      if (!done) {
+        raw_data_x.push_back(x);
+        raw_data_y.push_back(y);
+      }
     } catch (const io::error::no_digit& err) {
       // ignore bad formated samples
       std::cout << err.what() << std::endl;
@@ -144,8 +186,8 @@ int main() {
   } while (!done);
 
   // map data to the tensor
-  size_t rows = raw_data_x.size() / 2;
-  auto shape_x = std::vector<size_t>{rows, size_t{2}};
+  size_t rows = raw_data_x.size();
+  auto shape_x = std::vector<size_t>{rows};
   auto data_x = xt::adapt(raw_data_x, shape_x);
   PrintShape("X"s, data_x.shape());
 
@@ -153,9 +195,25 @@ int main() {
   auto data_y = xt::adapt(raw_data_y, shape_y);
   PrintShape("Y"s, data_y.shape());
 
-  xt::xarray<float> line_values = straight_line_model(data_x, data_y);
+  // generate new data
+  xt::xarray<DType> new_x = xt::linspace<DType>(0.f, raw_data_x.back(), 2000);
 
-  // plot the data we read
+  // straight line
+  auto line_model = make_regression_model(data_x, data_y, 2);
+  xt::xarray<DType> line_values = line_model(new_x);
+  PrintShape("Line"s, line_values.shape());
+
+  // poly line
+  auto poly_model = make_regression_model(data_x, data_y, 12);
+  xt::xarray<DType> poly_line_values = poly_model(new_x);
+  PrintShape("Poly line"s, poly_line_values.shape());
+
+  // create adaptors with STL like interfaces
+  auto x_coord = xt::view(new_x, xt::all());
+  auto line = xt::view(line_values, xt::all());
+  auto polyline = xt::view(poly_line_values, xt::all());
+
+  // plot the data we read and approximate
   plotcpp::Plot plt(true);
   plt.SetTerminal("qt");
   plt.SetTitle("Web traffic over the last month");
@@ -179,11 +237,12 @@ int main() {
   xtics_labels << ")";
   plt.GnuplotCommand(xtics_labels.str());
 
-  auto x_coord = xt::view(data_x, xt::all(), 1);
   plt.Draw2D(
-      plotcpp::Points(x_coord.begin(), x_coord.end(), data_y.begin(), "points"),
-      plotcpp::Lines(x_coord.begin(), x_coord.end(), line_values.begin(),
-                     "line approx"));
+      plotcpp::Points(data_x.begin(), data_x.end(), data_y.begin(), "points"),
+      plotcpp::Lines(x_coord.begin(), x_coord.end(), line.begin(),
+                     "line approx"),
+      plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline.begin(),
+                     "poly line approx"));
   plt.Flush();
 
   return 0;
