@@ -2,6 +2,7 @@
  * "Building Machine Learning Systems with Python" by Willi Richert
  */
 
+// third party includes
 #include <csv.h>
 #include <plot.h>
 #include <xtensor/xadapt.hpp>
@@ -10,28 +11,19 @@
 #include <xtensor/xeval.hpp>
 #include <xtensor/xio.hpp>
 
-// regular includes
+// stl includes
 #include <experimental/filesystem>
 #include <iostream>
 #include <string>
+
+// application includes
+#include "../ioutils.h"
 #include "../utils.h"
 
 // Namespace and type aliases
 using namespace std::literals::string_literals;
 namespace fs = std::experimental::filesystem;
 typedef float DType;
-
-template <typename S, typename T>
-void PrintShape(const S& name, const T& shape) {
-  std::cout << name << " {";
-  for (size_t i = 0; i < shape.size(); ++i) {
-    std::cout << shape[i];
-    if (i < shape.size() - 1)
-      std::cout << ", ";
-  }
-  std::cout << "}\n";
-  std::cout.flush();
-}
 
 template <typename V>
 auto generate_polynom(const V& v, size_t degree) {
@@ -189,11 +181,11 @@ int main() {
   size_t rows = raw_data_x.size();
   auto shape_x = std::vector<size_t>{rows};
   auto data_x = xt::adapt(raw_data_x, shape_x);
-  PrintShape("X"s, data_x.shape());
+  std::cout << "X shape " << data_x.shape() << std::endl;
 
   auto shape_y = std::vector<size_t>{rows};
   auto data_y = xt::adapt(raw_data_y, shape_y);
-  PrintShape("Y"s, data_y.shape());
+  std::cout << "Y shape " << data_y.shape() << std::endl;
 
   // generate new data
   xt::xarray<DType> new_x = xt::linspace<DType>(0.f, raw_data_x.back(), 2000);
@@ -201,12 +193,12 @@ int main() {
   // straight line
   auto line_model = make_regression_model(data_x, data_y, 2);
   xt::xarray<DType> line_values = line_model(new_x);
-  PrintShape("Line"s, line_values.shape());
+  std::cout << "Line shape " << line_values.shape() << std::endl;
 
   // poly line
   auto poly_model = make_regression_model(data_x, data_y, 12);
   xt::xarray<DType> poly_line_values = poly_model(new_x);
-  PrintShape("Poly line"s, poly_line_values.shape());
+  std::cout << "Poly line shape " << poly_line_values.shape() << std::endl;
 
   // create adaptors with STL like interfaces
   auto x_coord = xt::view(new_x, xt::all());
