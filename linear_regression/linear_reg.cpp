@@ -21,7 +21,6 @@
 #include "../utils.h"
 
 // Namespace and type aliases
-using namespace std::literals::string_literals;
 namespace fs = std::experimental::filesystem;
 typedef float DType;
 
@@ -214,27 +213,24 @@ int main() {
   plt.SetAutoscale();
   plt.GnuplotCommand("set grid");
 
-  auto minmax = std::minmax_element(data_x.begin(), data_x.end());
-  auto diff = *minmax.second - *minmax.first;
+  auto minmax = xt::eval(xt::minmax(data_x));
+  auto time_range = minmax[0][1] - minmax[0][0];
   auto tic_size = 7 * 24;
-  auto time_tics = diff / tic_size;
+  auto time_tics = time_range / tic_size;
+  plt.SetXRange(-tic_size / 2, minmax[0][1] + tic_size / 2);
 
-  plt.GnuplotCommand("set xrange [" + std::to_string(-tic_size / 2) + ":" +
-                     std::to_string(*minmax.second + tic_size / 2) + "]");
-  std::stringstream xtics_labels;
-  xtics_labels << "set xtics (";
+  plotcpp::Plot::Tics xtics;
   for (size_t t = 0; t < time_tics; ++t) {
-    xtics_labels << R"("week )" << t << R"(" )" << t * tic_size << ",";
+    xtics.push_back({"week " + std::to_string(t), t * tic_size});
   }
-  xtics_labels << ")";
-  plt.GnuplotCommand(xtics_labels.str());
+  plt.SetXTics(xtics);
 
-  plt.Draw2D(
-      plotcpp::Points(data_x.begin(), data_x.end(), data_y.begin(), "points"),
-      plotcpp::Lines(x_coord.begin(), x_coord.end(), line.begin(),
-                     "line approx"),
-      plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline.begin(),
-                     "poly line approx"));
+  plt.Draw2D(plotcpp::Points(data_x.begin(), data_x.end(), data_y.begin(),
+                             "points", "lc rgb 'black' pt 1"),
+             plotcpp::Lines(x_coord.begin(), x_coord.end(), line.begin(),
+                            "line approx", "lc rgb 'red' lw 2"),
+             plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline.begin(),
+                            "poly line approx", "lc rgb 'green' lw 2"));
   plt.Flush();
 
   return 0;
