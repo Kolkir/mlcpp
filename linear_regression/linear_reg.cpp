@@ -12,8 +12,10 @@
 #include <xtensor/xio.hpp>
 
 // stl includes
+#include <algorithm>
 #include <experimental/filesystem>
 #include <iostream>
+#include <random>
 #include <string>
 
 // application includes
@@ -23,31 +25,6 @@
 // Namespace and type aliases
 namespace fs = std::experimental::filesystem;
 typedef float DType;
-
-template <typename V>
-auto generate_polynom(const V& v, size_t degree) {
-  assert(v.shape().size() == 1);
-  auto rows = v.shape()[0];
-  auto poly_shape = std::vector<size_t>{rows, degree};
-  xt::xarray<DType> poly_x = xt::zeros<DType>(poly_shape);
-  // fill additional column for simpler vectorization
-  {
-    auto xv = xt::view(poly_x, xt::all(), 0);
-    xv = xt::ones<DType>({rows});
-  }
-  // copy initial data
-  {
-    auto xv = xt::view(poly_x, xt::all(), 1);
-    xv = v;
-  }
-  // generate additional terms
-  auto x_col = xt::view(poly_x, xt::all(), 1);
-  for (size_t i = 2; i < degree; ++i) {
-    auto xv = xt::view(poly_x, xt::all(), i);
-    xv = xt::pow(x_col, i);
-  }
-  return poly_x;
-}
 
 template <typename V>
 auto minmax_scale(const V& v) {
@@ -72,36 +49,79 @@ auto minmax_scale(const V& v) {
   }
 }
 
+template <typename V>
+auto generate_polynom(const V& v, size_t degree) {
+  assert(v.shape().size() == 1);
+  auto rows = v.shape()[0];
+  auto poly_shape = std::vector<size_t>{rows, degree};
+  xt::xarray<DType> poly_x = xt::zeros<DType>(poly_shape);
+  // fill additional column for simpler vectorization
+  {
+    auto xv = xt::view(poly_x, xt::all(), 0);
+    xv = xt::ones<DType>({rows});
+  }
+  // copy initial data
+  {
+    auto xv = xt::view(poly_x, xt::all(), 1);
+    xv = minmax_scale(v);
+  }
+  // generate additional terms
+  auto x_col = xt::view(poly_x, xt::all(), 1);
+  for (size_t i = 2; i < degree; ++i) {
+    auto xv = xt::view(poly_x, xt::all(), i);
+    xv = xt::pow(x_col, static_cast<float>(i));
+  }
+  return poly_x;
+}
+
 template <typename Vb, typename Vx>
 auto predict(const Vb& b, const Vx& x) {
   return xt::sum(b * x, {1});
 }
 
 template <typename Vx, typename Vy>
-auto gd(const Vx& x, const Vy& y) {
-  size_t n_epochs = 15000;
-  DType lr = 0.001;
-  auto n = x.shape()[0];
-  auto w = x.shape()[1];
+auto bgd(const Vx& x, const Vy& y, size_t batch_size) {
+  size_t n_epochs = 100;
+  DType lr = 0.03;
+
+  auto rows = x.shape()[0];
+  auto cols = x.shape()[1];
+
+  size_t batches = rows / batch_size;  // some samples will be skipped
 
   xt::xarray<typename Vx::value_type> b =
-      xt::zeros<typename Vx::value_type>({w});
+      xt::zeros<typename Vx::value_type>({cols});
   xt::xarray<typename Vx::value_type> grad =
-      xt::zeros<typename Vx::value_type>({w});
+      xt::zeros<typename Vx::value_type>({cols});
 
-  DType cost = std::numeric_limits<DType>::max();
   for (size_t i = 0; i < n_epochs; ++i) {
-    auto yhat = predict(b, x);
-    auto error = yhat - y;
-    for (size_t j = 0; j < w; ++j) {
-      auto xc = xt::view(x, xt::all(), j);
-      grad[j] = (xt::sum(xc * error) / n)();
+    for (size_t bi = 0; bi < batches; ++bi) {
+      auto s = bi * batch_size;
+      auto e = s + batch_size;
+      auto batch_x = xt::view(x, xt::range(s, e), xt::all());
+      auto batch_y = xt::view(y, xt::range(s, e), xt::all());
+
+      auto yhat = xt::sum(b * batch_x, {1});
+      xt::xarray<typename Vx::value_type> error = yhat - batch_y;
+      error.reshape({batch_size, 1});
+
+      auto grad =
+          xt::sum(xt::broadcast(error, batch_x.shape()) * batch_x, {0}) /
+          static_cast<DType>(batch_size);
+
+      // loop version
+      //      for (size_t col = 0; col < cols; ++col) {
+      //        auto xc = xt::view(batch_x, xt::all(), col);
+      //        grad[col] = xt::sum(xc * error)() /
+      //        static_cast<DType>(batch_size);
+      //      }
+
+      b = b - lr * grad;
     }
-    b = b - lr * grad;
-    cost = (xt::sum(xt::pow(error, 2)) / n)();
-    // std::cout << "Iteration : " << i << " Cost = " << cost  << std::endl;
+
+    auto cost = xt::pow(xt::sum(b * x, {1}) - y, 2) / static_cast<DType>(rows);
+    std::cout << "Iteration : " << i << " Cost = " << cost[0] << std::endl;
   }
-  std::cout << "Final cost = " << cost << std::endl;
   return b;
 }
 
@@ -110,8 +130,8 @@ auto adapt_x(const V& data_x, size_t p_degree) {
   xt::xarray<DType> poly_x = generate_polynom(data_x, p_degree);
   xt::xarray<DType> x = xt::zeros<DType>(poly_x.shape());
   x = poly_x;
-  auto xv = xt::view(x, xt::all(), xt::range(1, xt::placeholders::_));
-  xv = minmax_scale(xv);
+  // auto xv = xt::view(x, xt::all(), xt::range(1, xt::placeholders::_));
+  // xv = minmax_scale(xv);
   return x;
 }
 
@@ -126,7 +146,7 @@ auto make_regression_model(const Vx& data_x,
   auto x = xt::eval(adapt_x(data_x, p_degree));
 
   // learn parameters with Gradient Descent
-  auto b = gd(x, y);
+  auto b = bgd(x, y, 15);
 
   // create model
   auto y_minmax = xt::minmax(data_y)();
@@ -176,6 +196,13 @@ int main() {
     }
   } while (!done);
 
+  // shuffle data
+  size_t seed = 3465467546;
+  std::shuffle(raw_data_x.begin(), raw_data_x.end(),
+               std::default_random_engine(seed));
+  std::shuffle(raw_data_y.begin(), raw_data_y.end(),
+               std::default_random_engine(seed));
+
   // map data to the tensor
   size_t rows = raw_data_x.size();
   auto shape_x = std::vector<size_t>{rows};
@@ -187,7 +214,9 @@ int main() {
   std::cout << "Y shape " << data_y.shape() << std::endl;
 
   // generate new data
-  xt::xarray<DType> new_x = xt::linspace<DType>(0.f, raw_data_x.back(), 2000);
+  auto minmax = xt::eval(xt::minmax(data_x));
+  xt::xarray<DType> new_x =
+      xt::linspace<DType>(minmax[0][0], minmax[0][1], 2000);
 
   // straight line
   auto line_model = make_regression_model(data_x, data_y, 2);
@@ -195,7 +224,7 @@ int main() {
   std::cout << "Line shape " << line_values.shape() << std::endl;
 
   // poly line
-  auto poly_model = make_regression_model(data_x, data_y, 12);
+  auto poly_model = make_regression_model(data_x, data_y, 16);
   xt::xarray<DType> poly_line_values = poly_model(new_x);
   std::cout << "Poly line shape " << poly_line_values.shape() << std::endl;
 
@@ -213,7 +242,6 @@ int main() {
   plt.SetAutoscale();
   plt.GnuplotCommand("set grid");
 
-  auto minmax = xt::eval(xt::minmax(data_x));
   auto time_range = minmax[0][1] - minmax[0][0];
   auto tic_size = 7 * 24;
   auto time_tics = time_range / tic_size;

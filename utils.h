@@ -26,7 +26,7 @@ template <typename C>
 struct enumerate {
   enumerate(C& container) : container(container) {}
   auto begin() { return iter<typename C::iterator>(std::begin(container)); }
-  auto end() { return iter(std::end(container)); }
+  auto end() { return iter<typename C::iterator>(std::end(container)); }
   C& container;
 };
 
