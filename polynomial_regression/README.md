@@ -1,6 +1,7 @@
 # Polynomial regression tutorial with XTensor library
 
-1. Downloading data
+1. **Downloading data**
+
    We use STL ``filesystem`` library to check file existance to prevent multiple downloads, 
    and use libcurl library for downloading see ``utils::DownloadFile`` implementation for details.
     ``` cpp
@@ -14,8 +15,9 @@
       }
     }
     ```
-2. Parsing data
-    See how we process parse exceptions to ignore bad formated items.
+2. **Parsing data**
+
+    Pay attention on how we process parse exceptions to ignore bad formated items.
     ``` cpp
     io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
       data_path);
@@ -38,7 +40,7 @@
       }
     } while (!done);
     ```
-3. Shuffling data
+3. **Shuffling data**
     ``` cpp
     size_t seed = 3465467546;
     std::shuffle(raw_data_x.begin(), raw_data_x.end(),
@@ -46,8 +48,17 @@
     std::shuffle(raw_data_y.begin(), raw_data_y.end(),
                  std::default_random_engine(seed));
     ```
-4. Loading data to XTensor datastructures
-    * Creating views to prevent data duplicates
+4. **Loading data to XTensor datastructures**
+
+    We use ``xt::adapt`` function to create views over existent data in ``std::vector`` to prevent data duplicates
+    ``` cpp
+     size_t rows = raw_data_x.size();
+     auto shape_x = std::vector<size_t>{rows};
+     auto data_x = xt::adapt(raw_data_x, shape_x);
+
+     auto shape_y = std::vector<size_t>{rows};
+     auto data_y = xt::adapt(raw_data_y, shape_y);
+    ```
 5. MinMax scaling
 6. Generate new data for testing model predictions
 8. Batch gradient descent implementation
