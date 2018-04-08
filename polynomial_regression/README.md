@@ -2,11 +2,15 @@
 
 1. Downloading data
 2. Parsing data
-    1. Skiping parse failures
+  * Skiping parse failures
 3. Shuffling data
 4. Loading data to XTensor datastructures
-5. Generate new data for testing model predictions
-6. Creating linear model
-7. Creating higher order polynomial model
-8. Making predictions
-9. Plot results
+  * Creating views to prevent data duplicates
+5. MinMax scaling
+6. Generate new data for testing model predictions
+8. Batch gradient descent implementation
+9. Generating additional polynomial components
+10. Creating linear model
+11. Creating higher order polynomial model
+12. Making predictions
+13. Plot results
