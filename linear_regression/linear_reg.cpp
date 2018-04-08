@@ -26,17 +26,14 @@
 namespace fs = std::experimental::filesystem;
 typedef float DType;
 
-template <typename V>
-auto minmax_scale(const V& v) {
+auto minmax_scale(const xt::xarray<DType>& v) {
   if (v.shape().size() == 1) {
     auto minmax = xt::minmax(v)();
-    xt::xarray<typename V::value_type> vs =
-        (v - minmax[0]) / (minmax[1] - minmax[0]);
+    xt::xarray<DType> vs = (v - minmax[0]) / (minmax[1] - minmax[0]);
     return vs;
   } else if (v.shape().size() == 2) {
     auto w = v.shape()[1];
-    xt::xarray<typename V::value_type> vs =
-        xt::zeros<typename V::value_type>(v.shape());
+    xt::xarray<DType> vs = xt::zeros<DType>(v.shape());
     for (decltype(w) j = 0; j < w; ++j) {
       auto vc = xt::view(v, xt::all(), j);
       auto vsc = xt::view(vs, xt::all(), j);
@@ -49,10 +46,9 @@ auto minmax_scale(const V& v) {
   }
 }
 
-template <typename V>
-auto generate_polynom(const V& v, size_t degree) {
-  assert(v.shape().size() == 1);
-  auto rows = v.shape()[0];
+auto generate_polynomial(const xt::xarray<DType>& x, size_t degree) {
+  assert(x.shape().size() == 1);
+  auto rows = x.shape()[0];
   auto poly_shape = std::vector<size_t>{rows, degree};
   xt::xarray<DType> poly_x = xt::zeros<DType>(poly_shape);
   // fill additional column for simpler vectorization
@@ -63,7 +59,7 @@ auto generate_polynom(const V& v, size_t degree) {
   // copy initial data
   {
     auto xv = xt::view(poly_x, xt::all(), 1);
-    xv = minmax_scale(v);
+    xv = minmax_scale(x);
   }
   // generate additional terms
   auto x_col = xt::view(poly_x, xt::all(), 1);
@@ -74,13 +70,9 @@ auto generate_polynom(const V& v, size_t degree) {
   return poly_x;
 }
 
-template <typename Vb, typename Vx>
-auto predict(const Vb& b, const Vx& x) {
-  return xt::sum(b * x, {1});
-}
-
-template <typename Vx, typename Vy>
-auto bgd(const Vx& x, const Vy& y, size_t batch_size) {
+auto bgd(const xt::xarray<DType>& x,
+         const xt::xarray<DType>& y,
+         size_t batch_size) {
   size_t n_epochs = 100;
   DType lr = 0.03;
 
@@ -89,10 +81,7 @@ auto bgd(const Vx& x, const Vy& y, size_t batch_size) {
 
   size_t batches = rows / batch_size;  // some samples will be skipped
 
-  xt::xarray<typename Vx::value_type> b =
-      xt::zeros<typename Vx::value_type>({cols});
-  xt::xarray<typename Vx::value_type> grad =
-      xt::zeros<typename Vx::value_type>({cols});
+  xt::xarray<DType> b = xt::zeros<DType>({cols});
 
   for (size_t i = 0; i < n_epochs; ++i) {
     for (size_t bi = 0; bi < batches; ++bi) {
@@ -102,19 +91,12 @@ auto bgd(const Vx& x, const Vy& y, size_t batch_size) {
       auto batch_y = xt::view(y, xt::range(s, e), xt::all());
 
       auto yhat = xt::sum(b * batch_x, {1});
-      xt::xarray<typename Vx::value_type> error = yhat - batch_y;
+      xt::xarray<DType> error = yhat - batch_y;
       error.reshape({batch_size, 1});
 
       auto grad =
           xt::sum(xt::broadcast(error, batch_x.shape()) * batch_x, {0}) /
           static_cast<DType>(batch_size);
-
-      // loop version
-      //      for (size_t col = 0; col < cols; ++col) {
-      //        auto xc = xt::view(batch_x, xt::all(), col);
-      //        grad[col] = xt::sum(xc * error)() /
-      //        static_cast<DType>(batch_size);
-      //      }
 
       b = b - lr * grad;
     }
@@ -125,25 +107,14 @@ auto bgd(const Vx& x, const Vy& y, size_t batch_size) {
   return b;
 }
 
-template <typename V>
-auto adapt_x(const V& data_x, size_t p_degree) {
-  xt::xarray<DType> poly_x = generate_polynom(data_x, p_degree);
-  xt::xarray<DType> x = xt::zeros<DType>(poly_x.shape());
-  x = poly_x;
-  // auto xv = xt::view(x, xt::all(), xt::range(1, xt::placeholders::_));
-  // xv = minmax_scale(xv);
-  return x;
-}
-
-template <typename Vx, typename Vy>
-auto make_regression_model(const Vx& data_x,
-                           const Vy& data_y,
+auto make_regression_model(const xt::xarray<DType>& data_x,
+                           const xt::xarray<DType>& data_y,
                            size_t p_degree) {
   // minmax scaling
   auto y = xt::eval(minmax_scale(data_y));
 
   // minmax scaling & polynomization
-  auto x = xt::eval(adapt_x(data_x, p_degree));
+  auto x = xt::eval(generate_polynomial(data_x, p_degree));
 
   // learn parameters with Gradient Descent
   auto b = bgd(x, y, 15);
@@ -151,8 +122,8 @@ auto make_regression_model(const Vx& data_x,
   // create model
   auto y_minmax = xt::minmax(data_y)();
   auto model = [b, y_minmax, p_degree](const auto& data_x) {
-    auto x = xt::eval(adapt_x(data_x, p_degree));
-    xt::xarray<DType> yhat = xt::eval(predict(b, x));
+    auto x = xt::eval(generate_polynomial(data_x, p_degree));
+    xt::xarray<DType> yhat = xt::sum(b * x, {1});
 
     // restore scaling for predicted line values
 
