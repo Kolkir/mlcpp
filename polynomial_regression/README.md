@@ -2,10 +2,10 @@
 
 1. Downloading data
 2. Parsing data
-  * Skiping parse failures
+    * Skiping parse failures
 3. Shuffling data
 4. Loading data to XTensor datastructures
-  * Creating views to prevent data duplicates
+    * Creating views to prevent data duplicates
 5. MinMax scaling
 6. Generate new data for testing model predictions
 8. Batch gradient descent implementation
