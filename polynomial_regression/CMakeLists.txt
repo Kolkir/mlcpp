@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(linear-regression)
+project(polynomial-regression)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -26,6 +26,6 @@ set(COMMON_SOURCES "../utils.h"
                    "../ioutils.h"
 )
 
-add_executable(linear-regression ${COMMON_SOURCES} "linear_reg.cpp")
-target_link_libraries(linear-regression ${requiredlibs})
+add_executable(polynomial-regression ${COMMON_SOURCES} "poly_reg.cpp")
+target_link_libraries(polynomial-regression ${requiredlibs})
 

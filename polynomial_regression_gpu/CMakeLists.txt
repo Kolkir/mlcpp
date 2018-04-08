@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(linear-regression-gpu)
+project(polynomial-regression-gpu)
 
 set(CMAKE_C_COMPILER gcc-6)
 set(CMAKE_CXX_COMPILER g++-6)
@@ -44,9 +44,9 @@ set(COMMON_SOURCES "../utils.h"
                    "../ioutils.h"
 )
 
-CUDA_ADD_EXECUTABLE(linear-regression-gpu ${COMMON_SOURCES} linear_reg_gpu.cu)
-target_link_libraries(linear-regression-gpu ${requiredlibs} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
-target_compile_definitions(linear-regression-gpu PRIVATE
+CUDA_ADD_EXECUTABLE(polynomial-regression-gpu ${COMMON_SOURCES} linear_reg_gpu.cu)
+target_link_libraries(polynomial-regression-gpu ${requiredlibs} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
+target_compile_definitions(polynomial-regression-gpu PRIVATE
                                                  MSHADOW_USE_CBLAS=1
                                                  MSHADOW_USE_CUDA=1
                                                  MSHADOW_USE_CUDNN=0
@@ -54,5 +54,5 @@ target_compile_definitions(linear-regression-gpu PRIVATE
                                                  MSHADOW_USE_MKL=0
                                                  MSHADOW_DIST_PS=0
                                                  MSHADOW_USE_PASCAL=0)
-target_include_directories(linear-regression-gpu PRIVATE
+target_include_directories(polynomial-regression-gpu PRIVATE
                                                      ${CUDA_INCLUDE_DIRS})
