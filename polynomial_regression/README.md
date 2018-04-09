@@ -1,8 +1,16 @@
 # Polynomial regression tutorial with XTensor library
 
+There are a lot of articles about how to use Python for solving Machine Learning problems, with this article I start series of materials on how to use modern C++ for solving same problems and which libraries can be used. I assume that readers are already familiar with Machine Learning concepts and will concentrate on technical issues.
+
+We begin with simple polynomial regression to make a model to predict a amount of traffic at some time point. Our prediction will be based on some data gathered over some time period. The ``X`` data values correspond to time points and ``Y`` values correspond to time points.  
+
+For this tutorial we will use [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with minimum effort.
+
+0. Polynomial regression definition
+
 1. **Downloading data**
 
-   We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details.
+   We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
     ``` cpp
     ...
     namespace fs = std::experimental::filesystem;
@@ -19,7 +27,7 @@
     ```
 2. **Parsing data**
 
-    We configure ``io::CSVReader`` to use spaces as trim characters and tabs as delimiters. To parse whole data file we read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how we process parse exceptions to ignore bad formated items.
+    For reading TSV formated data we use [fast-cpp-csv-parser](https://github.com/ben-strasser/fast-cpp-csv-parser) library. But we configure ``io::CSVReader`` to use tabs as delimiters instead of commas. To parse whole data file we read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how we handle parse exceptions to ignore bad formated items.
     ``` cpp
     io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
       data_path);
@@ -211,9 +219,42 @@
     ```
 11. **Plot results**
 
-    To plot data we will use [plotcpp](https://github.com/Kolkir/plotcpp) library which is thin wrapper for ``gnuplot`` application. This library use iterators for plotting data so we need to adapt ``XTensor`` matrices for objects which can provide STL compatible iterators ``xt::view`` function returns such objects.
+    To plot data we will use [plotcpp](https://github.com/Kolkir/plotcpp) library which is thin wrapper for ``gnuplot`` application. This library use iterators for access to plotting data so we need to adapt ``XTensor`` matrices to objects which can provide STL compatible iterators ``xt::view`` function returns such objects.
     ``` cpp
     auto x_coord = xt::view(new_x, xt::all());
     auto line = xt::view(line_values, xt::all());
     auto polyline = xt::view(poly_line_values, xt::all());
     ```
+    Next we create plot object, configure it and plot data and approximation results.
+    ``` cpp
+    plotcpp::Plot plt(true);
+    plt.SetTerminal("qt"); // show ui window with plots
+    plt.SetTitle("Web traffic over the last month");
+    plt.SetXLabel("Time");
+    plt.SetYLabel("Hits/hour");
+    plt.SetAutoscale();
+    plt.GnuplotCommand("set grid"); // show coordinate grid under plots
+
+    // change X axis values interval
+    auto time_range = minmax[0][1] - minmax[0][0];
+    auto tic_size = 7 * 24;
+    auto time_tics = time_range / tic_size;
+    plt.SetXRange(-tic_size / 2, minmax[0][1] + tic_size / 2);
+
+    // change X axis points labels to correspond to week duration
+    plotcpp::Plot::Tics xtics;
+    for (size_t t = 0; t < time_tics; ++t) {
+      xtics.push_back({"week " + std::to_string(t), t * tic_size});
+    }
+    plt.SetXTics(xtics);
+
+    plt.Draw2D(plotcpp::Points(data_x.begin(), data_x.end(), data_y.begin(),
+                               "points", "lc rgb 'black' pt 1"),
+               plotcpp::Lines(x_coord.begin(), x_coord.end(), line.begin(),
+                              "line approx", "lc rgb 'red' lw 2"),
+               plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline.begin(),
+                              "poly line approx", "lc rgb 'green' lw 2"));
+    plt.Flush();
+    ```
+    With this code we get such plots:
+    ![plots](plot.png)

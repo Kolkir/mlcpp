@@ -206,7 +206,8 @@ int main() {
 
   // plot the data we read and approximate
   plotcpp::Plot plt(true);
-  plt.SetTerminal("qt");
+  plt.SetTerminal("png");
+  plt.SetOutput("plot.png");
   plt.SetTitle("Web traffic over the last month");
   plt.SetXLabel("Time");
   plt.SetYLabel("Hits/hour");
