@@ -8,3 +8,6 @@ git submodule init
 git submodule update
 ```
 Each folder contains single example with own ``CMakeLists.txt`` file.
+
+Content:
+1. [Polynomial regression with XTensor](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression)
