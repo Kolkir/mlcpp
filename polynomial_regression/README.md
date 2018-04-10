@@ -230,7 +230,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
         auto x = xt::eval(generate_polynomial(data_x, p_degree));
         xt::xarray<DType> yhat = xt::sum(b * x, {1});
 
-        // restore scaling for predicted line values
+        // restore scaling for predicted values
 
         yhat = yhat * (y_minmax[1] - y_minmax[0]) + y_minmax[0];
         return yhat;
@@ -240,7 +240,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 11. **Making predictions**
 
-    Here are examples how we can use our function for creating different regression models, and make predictions.
+    Here are examples how function for creating different regression models can be used and how  to make predictions.
     ``` cpp
     // straight line
     auto line_model = make_regression_model(data_x, data_y, 2);
@@ -292,7 +292,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTY3OTg0OTE1OSwtMjA2NTQ3MDYxNywxOD
+eyJoaXN0b3J5IjpbMTQyNDg2NTY5MSwtMjA2NTQ3MDYxNywxOD
 YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
 ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
 0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
