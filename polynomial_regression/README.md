@@ -95,7 +95,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 5. **Loading data to XTensor datastructures**
 
-    We use ``xt::adapt`` function to create views over existent data in ``std::vector`` to prevent data duplicates
+    I used ``xt::adapt`` function to create wrappers around existent data located in ``std::vector`` to prevent data duplicates.
     ``` cpp
      size_t rows = raw_data_x.size();
      auto shape_x = std::vector<size_t>{rows};
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTAyNzQ2Mjk1MywtMjA2NTQ3MDYxNywxOD
-YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
-ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
-0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbLTgxMzc0NTM1LC0yMDY1NDcwNjE3LDE4Nj
+MxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODExOTM4OCwzODE1NzU4
+OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC04OTc0MDEzNzUsLT
+EyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
 -->
