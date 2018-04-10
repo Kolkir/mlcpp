@@ -34,7 +34,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    Where $Y$ is vector of values from our training data. Next we should take a partial derivatives with respect to each $b_j$ term of polynomial:
 
-   $\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}$
+   $\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j$
 
    And use these derivatives to update vector $\vec{b}$ on each learning step:
 
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbOTE0NTI4ODExLC0yMDY1NDcwNjE3LDE4Nj
-MxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODExOTM4OCwzODE1NzU4
-OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC04OTc0MDEzNzUsLT
-EyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
+eyJoaXN0b3J5IjpbLTE0MjYwOTc5ODUsLTIwNjU0NzA2MTcsMT
+g2MzE2Mzg3OSwtMTM2MjUyOTkzNCwtMTU4MTE5Mzg4LDM4MTU3
+NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3NS
+wtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
