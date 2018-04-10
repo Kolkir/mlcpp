@@ -292,9 +292,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 
-   
+   Next time will solve this task with `MShadow` library to expose a power of 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTY5MzcwOTg0MiwtMjA2NTQ3MDYxNywxOD
+eyJoaXN0b3J5IjpbMTIxMzAwMjE2NCwtMjA2NTQ3MDYxNywxOD
 YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
 ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
 0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
