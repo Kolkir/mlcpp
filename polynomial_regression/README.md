@@ -7,7 +7,7 @@ I start with simple polynomial regression to make a model to predict an amount o
 For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with a minimum effort.
 
 0. **Polynomial regression definition**
-polynomial regression** is a form of [regression analysis](https://en.wikipedia.org/wiki/Regression_analysis "Regression analysis") in which the relationship between the [independent variable](https://en.wikipedia.org/wiki/Independent_variable "Independent variable") _x_ and the [dependent variable](https://en.wikipedia.org/wiki/Dependent_variable "Dependent variable") _y_ is modelled as an _n_th degree [polynomial](https://en.wikipedia.org/wiki/Polynomial "Polynomial") in _x_.
+   [Polynomial regression]() is a form of linear regression (https://en.wikipedia.org/wiki/Regression_analysis "Regression analysis") in which the relationship between the [independent variable](https://en.wikipedia.org/wiki/Independent_variable "Independent variable") _x_ and the [dependent variable](https://en.wikipedia.org/wiki/Dependent_variable "Dependent variable") _y_ is modelled as an _n_th degree [polynomial](https://en.wikipedia.org/wiki/Polynomial "Polynomial") in _x_.
     $y=f(x)=b_0*x^0 + b_1*x^1+b_2*x^2 +... +b_n*x^n$
     
     Where $n \in \left [0, d  \right ]$ and `d` is a degree of a polynomial we want use for approximation.
@@ -262,6 +262,6 @@ polynomial regression** is a form of [regression analysis](https://en.wikipedia.
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM0NTI0ODkzMSwtMTI2MjU0NzE2NSwtMT
+eyJoaXN0b3J5IjpbLTg5NzQwMTM3NSwtMTI2MjU0NzE2NSwtMT
 k1OTU1MzIzMl19
 -->
