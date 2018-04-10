@@ -141,7 +141,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 8. **Batch gradient descent implementation**
 
-    This is straightforward batch gradient implementation. The interesting things here is how I used ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges over required dimensions. Also because there are no automatic broadcasting in XTensor, as in ``numpy``, we have implicitly define broadcast direction for math operations with ``xt::broadcast`` function.
+    This is straightforward batch gradient implementation. The interesting things here is how I used ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges for required dimensions. Also because there are no automatic broadcasting in XTensor, as in ``numpy``, I have had implicitly define broadcast direction for math operations with ``xt::broadcast`` function.
     ``` cpp
     auto bgd(const xt::xarray<DType>& x,
          const xt::xarray<DType>& y,
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTUwNzkwNjUxNSwtMjA2NTQ3MDYxNywxOD
-YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
-ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
-0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbNzUwMjU3MjIsLTIwNjU0NzA2MTcsMTg2Mz
+E2Mzg3OSwtMTM2MjUyOTkzNCwtMTU4MTE5Mzg4LDM4MTU3NTg5
+MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3NSwtMT
+I2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
