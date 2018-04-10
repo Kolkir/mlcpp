@@ -24,9 +24,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    
    <img src="https://latex.codecogs.com/gif.latex?L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2"/>
 
-   Where $Y$ is vector of values from our training data. Next we should take a partial derivatives with respect to each $b_j$ term of polynomial:
+   Where _Y_ is vector of values from our training data. Next we should take a partial derivatives with respect to each <img src="https://latex.codecogs.com/gif.latex?b_j"/> term of polynomial:
 
-   $\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j \in [1,n]$
+   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j \in [1,n]"/>
 
    And use these derivatives to update vector $\vec{b}$ on each learning step:
 
@@ -287,8 +287,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose a power of GPU. 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbOTM1NTQxOTQsMTg5MTUxMzM2NSwtMjA2NT
-Q3MDYxNywxODYzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkz
-ODgsMzgxNTc1ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtOD
-k3NDAxMzc1LC0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbMTYyNzA4MTA1OCwxODkxNTEzMzY1LC0yMD
+Y1NDcwNjE3LDE4NjMxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODEx
+OTM4OCwzODE1NzU4OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC
+04OTc0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
+
 -->
