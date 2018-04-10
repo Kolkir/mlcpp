@@ -182,7 +182,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 9. **Generating additional polynomial components**
 
-    To be able to approximate our data with higher de polynomial I wrote a function for generating additional terms so our function looks like ``y = f(x) = b0 * x^0 + b1*x^1 + b2 * x^2 + b3 * x^3 ... bn * x^n`` where ``n`` is the order of polynomial. Pay attention ``x^0`` term which is used to simplify math calculations and use power of vectorization. So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.
+    To be able to approximate our data with higher degree polynomial I wrote a function for generating additional terms. Pay attention ``x^0`` term which is used to simplify math calculations and use power of vectorization. So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.
     ``` cpp
     auto generate_polynomial(const xt::xarray<DType>& x, size_t degree) {
       assert(x.shape().size() == 1);
@@ -292,7 +292,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTY0ODUyMjUwOCwtMjA2NTQ3MDYxNywxOD
+eyJoaXN0b3J5IjpbMTcwNzg4NzgyMiwtMjA2NTQ3MDYxNywxOD
 YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
 ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
 0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
