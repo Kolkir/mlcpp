@@ -24,9 +24,10 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
  ...&  ...& ...& ...& ... \\ 
  1&  x_i& x_i^2& ...& x_i^n \\ 
   ...&  ...& ...& ...& ... \\ 
- 1&  x_0& x_0^2& ...& x_0^n \\ 
+ 1&  x_k& x_k^2& ...& x_k^n \\ 
 \end{pmatrix}
    $$
+   and _k_ is number of samples if 
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -278,6 +279,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTEyNzMzNDQ2MSwyMTAzMjI2MzE3LC04OT
-c0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
+eyJoaXN0b3J5IjpbLTE5NTU2MDM2ODQsMjEwMzIyNjMxNywtOD
+k3NDAxMzc1LC0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
 -->
