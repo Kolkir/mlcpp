@@ -13,3 +13,6 @@
 [submodule "third_party/xtensor"]
 	path = third_party/xtensor
 	url = https://github.com/QuantStack/xtensor.git
+[submodule "third_party/xtensor-blas"]
+	path = third_party/xtensor-blas
+	url = https://github.com/QuantStack/xtensor-blas

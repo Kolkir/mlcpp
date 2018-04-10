@@ -5,6 +5,7 @@
 // third party includes
 #include <csv.h>
 #include <plot.h>
+#include <xtensor-blas/xlinalg.hpp>
 #include <xtensor/xadapt.hpp>
 #include <xtensor/xarray.hpp>
 #include <xtensor/xbuilder.hpp>
@@ -26,14 +27,17 @@
 namespace fs = std::experimental::filesystem;
 typedef float DType;
 
-auto minmax_scale(const xt::xarray<DType>& v) {
+// linalg package doesn't support dynamic layouts
+using Matrix = xt::xarray<DType, xt::layout_type::row_major>;
+
+auto minmax_scale(const Matrix& v) {
   if (v.shape().size() == 1) {
     auto minmax = xt::minmax(v)();
-    xt::xarray<DType> vs = (v - minmax[0]) / (minmax[1] - minmax[0]);
+    Matrix vs = (v - minmax[0]) / (minmax[1] - minmax[0]);
     return vs;
   } else if (v.shape().size() == 2) {
     auto w = v.shape()[1];
-    xt::xarray<DType> vs = xt::zeros<DType>(v.shape());
+    Matrix vs = xt::zeros<DType>(v.shape());
     for (decltype(w) j = 0; j < w; ++j) {
       auto vc = xt::view(v, xt::all(), j);
       auto vsc = xt::view(vs, xt::all(), j);
@@ -46,11 +50,11 @@ auto minmax_scale(const xt::xarray<DType>& v) {
   }
 }
 
-auto generate_polynomial(const xt::xarray<DType>& x, size_t degree) {
+auto generate_polynomial(const Matrix& x, size_t degree) {
   assert(x.shape().size() == 1);
   auto rows = x.shape()[0];
   auto poly_shape = std::vector<size_t>{rows, degree};
-  xt::xarray<DType> poly_x = xt::zeros<DType>(poly_shape);
+  Matrix poly_x = xt::zeros<DType>(poly_shape);
   // fill additional column for simpler vectorization
   {
     auto xv = xt::view(poly_x, xt::all(), 0);
@@ -70,9 +74,7 @@ auto generate_polynomial(const xt::xarray<DType>& x, size_t degree) {
   return poly_x;
 }
 
-auto bgd(const xt::xarray<DType>& x,
-         const xt::xarray<DType>& y,
-         size_t batch_size) {
+auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
   size_t n_epochs = 100;
   DType lr = 0.03;
 
@@ -80,35 +82,34 @@ auto bgd(const xt::xarray<DType>& x,
   auto cols = x.shape()[1];
 
   size_t batches = rows / batch_size;  // some samples will be skipped
-
-  xt::xarray<DType> b = xt::zeros<DType>({cols});
+  Matrix b = xt::zeros<DType>({cols, size_t(1)});
 
   for (size_t i = 0; i < n_epochs; ++i) {
     for (size_t bi = 0; bi < batches; ++bi) {
       auto s = bi * batch_size;
       auto e = s + batch_size;
-      auto batch_x = xt::view(x, xt::range(s, e), xt::all());
-      auto batch_y = xt::view(y, xt::range(s, e), xt::all());
+      Matrix batch_x = xt::view(x, xt::range(s, e), xt::all());
+      Matrix batch_y = xt::view(y, xt::range(s, e), xt::all());
+      batch_y.reshape({batch_size, 1});
 
-      auto yhat = xt::sum(b * batch_x, {1});
-      xt::xarray<DType> error = yhat - batch_y;
-      error.reshape({batch_size, 1});
+      auto yhat = xt::linalg::dot(batch_x, b);
+      Matrix error = yhat - batch_y;
 
-      auto grad =
-          xt::sum(xt::broadcast(error, batch_x.shape()) * batch_x, {0}) /
-          static_cast<DType>(batch_size);
+      auto grad = xt::linalg::dot(xt::transpose(batch_x), error) /
+                  static_cast<DType>(batch_size);
 
       b = b - lr * grad;
     }
 
-    auto cost = xt::pow(xt::sum(b * x, {1}) - y, 2) / static_cast<DType>(rows);
+    auto cost =
+        xt::pow(xt::linalg::dot(x, b) - y, 2) / static_cast<DType>(rows);
     std::cout << "Iteration : " << i << " Cost = " << cost[0] << std::endl;
   }
   return b;
 }
 
-auto make_regression_model(const xt::xarray<DType>& data_x,
-                           const xt::xarray<DType>& data_y,
+auto make_regression_model(const Matrix& data_x,
+                           const Matrix& data_y,
                            size_t p_degree) {
   // minmax scaling
   auto y = xt::eval(minmax_scale(data_y));
@@ -123,7 +124,7 @@ auto make_regression_model(const xt::xarray<DType>& data_x,
   auto y_minmax = xt::minmax(data_y)();
   auto model = [b, y_minmax, p_degree](const auto& data_x) {
     auto x = xt::eval(generate_polynomial(data_x, p_degree));
-    xt::xarray<DType> yhat = xt::sum(b * x, {1});
+    Matrix yhat = xt::linalg::dot(x, b);
 
     // restore scaling for predicted line values
 
@@ -186,17 +187,16 @@ int main() {
 
   // generate new data
   auto minmax = xt::eval(xt::minmax(data_x));
-  xt::xarray<DType> new_x =
-      xt::linspace<DType>(minmax[0][0], minmax[0][1], 2000);
+  Matrix new_x = xt::linspace<DType>(minmax[0][0], minmax[0][1], 2000);
 
   // straight line
   auto line_model = make_regression_model(data_x, data_y, 2);
-  xt::xarray<DType> line_values = line_model(new_x);
+  Matrix line_values = line_model(new_x);
   std::cout << "Line shape " << line_values.shape() << std::endl;
 
   // poly line
   auto poly_model = make_regression_model(data_x, data_y, 16);
-  xt::xarray<DType> poly_line_values = poly_model(new_x);
+  Matrix poly_line_values = poly_model(new_x);
   std::cout << "Poly line shape " << poly_line_values.shape() << std::endl;
 
   // create adaptors with STL like interfaces
@@ -206,8 +206,7 @@ int main() {
 
   // plot the data we read and approximate
   plotcpp::Plot plt(true);
-  plt.SetTerminal("png");
-  plt.SetOutput("plot.png");
+  plt.SetTerminal("qt");
   plt.SetTitle("Web traffic over the last month");
   plt.SetXLabel("Time");
   plt.SetYLabel("Hits/hour");

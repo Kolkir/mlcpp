@@ -8,20 +8,20 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
 0. **Short polynomial regression definition**
    [Polynomial regression](https://en.wikipedia.org/wiki/Polynomial_regression) is a form of linear regression in which the relationship between the independent variable _x_ and the dependent variable _y_ is modeled as an _n_-th degree polynomial in _x_.
-   
+
    <img src="https://latex.codecogs.com/gif.latex?\hat{y}=f(x)=b_0&space;\cdot&space;x^0&space;&plus;&space;b_1&space;\cdot&space;x^1&plus;b_2&space;\cdot&space;x^2&space;&plus;...&space;&plus;b_n&space;\cdot&space;x^n" title="\hat{y}=f(x)=b_0 \cdot x^0 + b_1 \cdot x^1+b_2 \cdot x^2 +... +b_n \cdot x^n" />
-    
+
     Because our training data consist of multiple samples we  can rewrite this relation in matrix form:
 
-    <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=\vec{b}&space;\cdot&space;X" title="\hat{Y}=\vec{b} \cdot X" />
-   
-   Where 
+    <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=\vec{b}&space;\cdot&space;X" title="\hat{Y}=X \cdot \vec{b}" />
+
+   Where
 
    <img src="https://latex.codecogs.com/gif.latex?X&space;=&space;\begin{pmatrix}&space;1&&space;x_0&&space;x_0^2&&space;...&&space;x_0^n&space;\\&space;1&&space;x_1&&space;x_1^2&&space;...&&space;x_1^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_i&&space;x_i^2&&space;...&&space;x_i^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_k&&space;x_k^2&&space;...&&space;x_k^n&space;\\&space;\end{pmatrix}"/>
 
    and _k_ is a number of samples if the training data.
    So the goal is to estimate the parameters vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/>. In this tutorial I will use gradient descent for this task. First let's define a cost function:
-   
+
    <img src="https://latex.codecogs.com/gif.latex?L(X,Y)&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})^2" title="L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2" />
 
    Where _Y_ is vector of values from our training data. Next we should take a partial derivatives with respect to each <img src="https://latex.codecogs.com/gif.latex?b_j"/> term of polynomial:
@@ -102,15 +102,17 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ``` cpp
     ...
     typedef float DType;
+    // linalg package doesn't support dynamic layouts
+    using Matrix = xt::xarray<DType, xt::layout_type::row_major>;
     ...
-    auto minmax_scale(const xt::xarray<DType>& v) {
+    auto minmax_scale(const Matrix& v) {
       if (v.shape().size() == 1) {
         auto minmax = xt::minmax(v)();
-        xt::xarray<DType> vs = (v - minmax[0]) / (minmax[1] - minmax[0]);
+        Matrix vs = (v - minmax[0]) / (minmax[1] - minmax[0]);
         return vs;
       } else if (v.shape().size() == 2) {
         auto w = v.shape()[1];
-        xt::xarray<DType> vs = xt::zeros<DType>(v.shape());
+        Matrix vs = xt::zeros<DType>(v.shape());
         for (decltype(w) j = 0; j < w; ++j) {
           auto vc = xt::view(v, xt::all(), j);
           auto vsc = xt::view(vs, xt::all(), j);
@@ -128,45 +130,42 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     Here I used ``xt::eval`` function to evaluate XTensor expression in place to get calculation results, because they required for use in ``xt::linspace`` function. ``xt::linspace`` function have same semantic as in ``numpy``.
     ``` cpp
     auto minmax = xt::eval(xt::minmax(data_x));
-    xt::xarray<DType> new_x =
+    Matrix new_x =
       xt::linspace<DType>(minmax[0][0], minmax[0][1], 2000);
     ```
 8. **Batch gradient descent implementation**
 
-    This is straightforward batch gradient implementation. The interesting things here is how I used ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges for required dimensions. Also because there are no automatic broadcasting in XTensor, as in ``numpy``, I have had to implicitly define broadcast direction for math operations with ``xt::broadcast`` function.
+    This is straightforward batch gradient implementation. The interesting things here is how I used ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges for required dimensions.
     ``` cpp
-    auto bgd(const xt::xarray<DType>& x,
-         const xt::xarray<DType>& y,
-         size_t batch_size) {
+    auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
       size_t n_epochs = 100;
-      DType lr = 0.03; //learning rate
+      DType lr = 0.03;
 
       auto rows = x.shape()[0];
       auto cols = x.shape()[1];
 
       size_t batches = rows / batch_size;  // some samples will be skipped
-
-      xt::xarray<DType> b = xt::zeros<DType>({cols});
+      Matrix b = xt::zeros<DType>({cols, size_t(1)});
 
       for (size_t i = 0; i < n_epochs; ++i) {
         for (size_t bi = 0; bi < batches; ++bi) {
           auto s = bi * batch_size;
           auto e = s + batch_size;
-          auto batch_x = xt::view(x, xt::range(s, e), xt::all());
-          auto batch_y = xt::view(y, xt::range(s, e), xt::all());
+          Matrix batch_x = xt::view(x, xt::range(s, e), xt::all());
+          Matrix batch_y = xt::view(y, xt::range(s, e), xt::all());
+          batch_y.reshape({batch_size, 1});
 
-          auto yhat = xt::sum(b * batch_x, {1});
-          xt::xarray<DType> error = yhat - batch_y;
-          error.reshape({batch_size, 1});
+          auto yhat = xt::linalg::dot(batch_x, b);
+          Matrix error = yhat - batch_y;
 
-          auto grad =
-              xt::sum(xt::broadcast(error, batch_x.shape()) * batch_x, {0}) /
-              static_cast<DType>(batch_size);
+          auto grad = xt::linalg::dot(xt::transpose(batch_x), error) /
+                      static_cast<DType>(batch_size);
 
           b = b - lr * grad;
         }
 
-        auto cost = xt::pow(xt::sum(b * x, {1}) - y, 2) / static_cast<DType>(rows);
+        auto cost =
+            xt::pow(xt::linalg::dot(x, b) - y, 2) / static_cast<DType>(rows);
         std::cout << "Iteration : " << i << " Cost = " << cost[0] << std::endl;
       }
       return b;
@@ -176,11 +175,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
     To be able to approximate our data with higher degree polynomial I wrote a function for generating additional terms. Pay attention ``x^0`` term which is used to simplify math calculations and use power of vectorization. So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.
     ``` cpp
-    auto generate_polynomial(const xt::xarray<DType>& x, size_t degree) {
+    auto generate_polynomial(const Matrix& x, size_t degree) {
       assert(x.shape().size() == 1);
       auto rows = x.shape()[0];
       auto poly_shape = std::vector<size_t>{rows, degree};
-      xt::xarray<DType> poly_x = xt::zeros<DType>(poly_shape);
+      Matrix poly_x = xt::zeros<DType>(poly_shape);
       // fill additional column for simpler vectorization
       {
         auto xv = xt::view(poly_x, xt::all(), 0);
@@ -204,9 +203,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
     To be able to test different models which correspond to different polynomial order I made a function which perform data scaling, generate additional polynomial terms, learn polynomial coefficients with BGD and returns function which takes new data for X and return predicted Y values. The most interesting thing here is restoration of scale for predicted Y values.
     ``` cpp
-    auto make_regression_model(const xt::xarray<DType>& data_x,
-                           const xt::xarray<DType>& data_y,
-                           size_t p_degree) {
+    auto make_regression_model(const Matrix& data_x,
+                               const Matrix& data_y,
+                               size_t p_degree) {
       // minmax scaling
       auto y = xt::eval(minmax_scale(data_y));
 
@@ -220,9 +219,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
       auto y_minmax = xt::minmax(data_y)();
       auto model = [b, y_minmax, p_degree](const auto& data_x) {
         auto x = xt::eval(generate_polynomial(data_x, p_degree));
-        xt::xarray<DType> yhat = xt::sum(b * x, {1});
+        Matrix yhat = xt::linalg::dot(x, b);
 
-        // restore scaling for predicted values
+        // restore scaling for predicted line values
 
         yhat = yhat * (y_minmax[1] - y_minmax[0]) + y_minmax[0];
         return yhat;
@@ -236,11 +235,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ``` cpp
     // straight line
     auto line_model = make_regression_model(data_x, data_y, 2);
-    xt::xarray<DType> line_values = line_model(new_x);
+    Matrix line_values = line_model(new_x);
 
     // poly line
     auto poly_model = make_regression_model(data_x, data_y, 16);
-    xt::xarray<DType> poly_line_values = poly_model(new_x);
+    Matrix poly_line_values = poly_model(new_x);
     ```
 12. **Plot results**
 
@@ -286,4 +285,4 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 
-Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU. 
+Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.

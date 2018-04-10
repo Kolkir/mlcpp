@@ -3,12 +3,16 @@ project(polynomial-regression)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++1z -msse3 -fopenmp")
+set(CMAKE_CXX_FLAGS "-std=c++1z -msse3 -fopenmp -Wall -Wextra -Wno-unused-parameter -Wno-unknown-pragmas")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+
 
 include_directories(${CMAKE_SOURCE_DIR}/../third_party/fast-cpp-csv-parser)
 include_directories(${CMAKE_SOURCE_DIR}/../third_party/plotcpp)
 include_directories(${CMAKE_SOURCE_DIR}/../third_party/xtl/include)
 include_directories(${CMAKE_SOURCE_DIR}/../third_party/xtensor/include)
+include_directories(${CMAKE_SOURCE_DIR}/../third_party/xtensor-blas/include)
 
 set(requiredlibs "stdc++fs")
 list(APPEND requiredlibs "stdc++")
