@@ -43,7 +43,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    Where $l$ is a learning rate.
 2. **Downloading data**
 
-   I used STL ``filesystem`` library to check downloaded file existence to prevent multiple downloads, and used `libcurl` library for downloading data files, see ``utils::DownloadFile`` function implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
+   I used STL ``filesystem`` library to check downloaded file existence to prevent multiple downloads, and used `libcurl` library for downloading data files, see ``utils::DownloadFile`` function implementation for details. And I used a data from "Building Machine Learning Systems with Python" book by Willi Richert.
     ``` cpp
     ...
     namespace fs = std::experimental::filesystem;
@@ -60,7 +60,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 3. **Parsing data**
 
-    For reading TSV formated data we use [fast-cpp-csv-parser](https://github.com/ben-strasser/fast-cpp-csv-parser) library. But we configure ``io::CSVReader`` to use tabs as delimiters instead of commas. To parse whole data file we read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how we handle parse exceptions to ignore bad formated items.
+    For reading TSV formated data I used [fast-cpp-csv-parser](https://github.com/ben-strasser/fast-cpp-csv-parser) library. But configure ``io::CSVReader`` to use tabs as delimiters instead of commas. To parse whole data file we read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how we handle parse exceptions to ignore bad formated items.
     ``` cpp
     io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
       data_path);
@@ -292,7 +292,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTc2MjkwNDY0NywtMjA2NTQ3MDYxNywxOD
+eyJoaXN0b3J5IjpbLTE4MDQ0ODI2MywtMjA2NTQ3MDYxNywxOD
 YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
 ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
 0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
