@@ -292,10 +292,10 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 
-You can find full source of this example 
+You can find full source of this example on [GitHub]().
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose a power of GPU. 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExNDg3NDM4NTcsLTIwNjU0NzA2MTcsMT
+eyJoaXN0b3J5IjpbLTE4MDQ1MDkzNDgsLTIwNjU0NzA2MTcsMT
 g2MzE2Mzg3OSwtMTM2MjUyOTkzNCwtMTU4MTE5Mzg4LDM4MTU3
 NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3NS
 wtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
