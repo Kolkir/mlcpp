@@ -28,11 +28,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    <img src="https://latex.codecogs.com/gif.latex?\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j \in [1,n]"/>
 
-   And use these derivatives to update vector $\vec{b}$ on each learning step:
+   And use these derivatives to update vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/> on each learning step:
 
-   $b_i = b_i - l\cdot\frac{\partial L}{\partial b_i}$
+   <img src="https://latex.codecogs.com/gif.latex?b_i = b_i - l\cdot\frac{\partial L}{\partial b_i}"/>
 
-   Where $l$ is a learning rate.
+   Where _l_ is a learning rate.
 2. **Downloading data**
 
    I used STL ``filesystem`` library to check downloaded file existence to prevent multiple downloads, and used `libcurl` library for downloading data files, see ``utils::DownloadFile`` function implementation for details. And I used a data from "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -287,7 +287,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose a power of GPU. 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTYyNzA4MTA1OCwxODkxNTEzMzY1LC0yMD
+eyJoaXN0b3J5IjpbLTgwNTYwMjc5MCwxODkxNTEzMzY1LC0yMD
 Y1NDcwNjE3LDE4NjMxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODEx
 OTM4OCwzODE1NzU4OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC
 04OTc0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
