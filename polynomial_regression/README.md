@@ -28,10 +28,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 \end{pmatrix}
    $$
    and _k_ is a number of samples if the training data.
-   So the goal is to estimate the parameters vector $\vec{b}$. In this tutorial I will use gradient descent for this task. First let's define the cost function:
+   So the goal is to estimate the parameters vector $\vec{b}$. In this tutorial I will use gradient descent for this task. First let's define a cost function:
    
    $L(x,y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y - \hat{Y})^2$
 
+   Where $Y$ is values from our training data
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -283,7 +284,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMzgxNTc1ODkyLDExNzg4Mjk2MTgsMjEwMz
-IyNjMxNywtODk3NDAxMzc1LC0xMjYyNTQ3MTY1LC0xOTU5NTUz
-MjMyXX0=
+eyJoaXN0b3J5IjpbLTEwMDg2NjE0ODYsMzgxNTc1ODkyLDExNz
+g4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC0xMjYyNTQ3
+MTY1LC0xOTU5NTUzMjMyXX0=
 -->
