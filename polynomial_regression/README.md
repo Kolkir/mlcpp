@@ -258,3 +258,6 @@ For this tutorial we will use [XTensor](https://github.com/QuantStack/xtensor) l
     ```
     With this code we get such plots:
     ![plots](plot.png)
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbLTM3MDE3MzYyOF19
+-->
