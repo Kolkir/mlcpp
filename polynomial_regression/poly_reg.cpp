@@ -75,8 +75,8 @@ auto generate_polynomial(const Matrix& x, size_t degree) {
 }
 
 auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
-  size_t n_epochs = 100;
-  DType lr = 0.03;
+  size_t n_epochs = 5000;
+  DType lr = 0.00001;
 
   auto rows = x.shape()[0];
   auto cols = x.shape()[1];
@@ -84,6 +84,7 @@ auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
   size_t batches = rows / batch_size;  // some samples will be skipped
   Matrix b = xt::zeros<DType>({cols, size_t(1)});
 
+  DType prev_cost = std::numeric_limits<DType>::max();
   for (size_t i = 0; i < n_epochs; ++i) {
     for (size_t bi = 0; bi < batches; ++bi) {
       auto s = bi * batch_size;
@@ -95,15 +96,20 @@ auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
       auto yhat = xt::linalg::dot(batch_x, b);
       Matrix error = yhat - batch_y;
 
-      auto grad = xt::linalg::dot(xt::transpose(batch_x), error) /
+      auto grad = 2 * xt::linalg::dot(xt::transpose(batch_x), error) /
                   static_cast<DType>(batch_size);
 
       b = b - lr * grad;
     }
 
-    auto cost =
-        xt::pow(xt::linalg::dot(x, b) - y, 2) / static_cast<DType>(rows);
-    std::cout << "Iteration : " << i << " Cost = " << cost[0] << std::endl;
+    auto cost = (xt::sum(xt::pow(y - xt::linalg::dot(x, b), 2)) /
+                 static_cast<DType>(rows))[0];
+
+    std::cout << "Iteration : " << i << " Cost = " << cost << std::endl;
+    if (cost < prev_cost)
+      prev_cost = cost;
+    else
+      break;  // early stopping
   }
   return b;
 }

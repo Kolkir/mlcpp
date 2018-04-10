@@ -3,7 +3,7 @@ project(polynomial-regression)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_FLAGS "-std=c++1z -msse3 -fopenmp -Wall -Wextra -Wno-unused-parameter -Wno-unknown-pragmas")
+set(CMAKE_CXX_FLAGS "-std=c++1z -msse3 -fopenmp -Wall -Wextra -Wno-unused-parameter -Wno-unknown-pragmas -Wno-parentheses -Wno-unused-local-typedefs")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
