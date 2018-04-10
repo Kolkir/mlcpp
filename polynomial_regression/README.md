@@ -11,7 +11,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    
     $y=f(x)=b_0*x^0 + b_1*x^1+b_2*x^2 +... +b_n*x^n$
     
-    Where $n \in \left [0, d  \right ]$ and $d$ is a degree of a polynomial we want to use for approximation.
+    Because our training data
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -263,6 +263,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTY4OTczOSwtODk3NDAxMzc1LC0xMjYyNT
-Q3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbLTExOTEzMzU2MjgsLTg5NzQwMTM3NSwtMT
+I2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
