@@ -26,11 +26,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    Where _Y_ is vector of values from our training data. Next we should take a partial derivatives with respect to each <img src="https://latex.codecogs.com/gif.latex?b_j"/> term of polynomial:
 
-   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j \in [1,n]"/>
+   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})\cdot{X_i^{(j)}},&space;j&space;\in&space;[1,n]" title="\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j \in [1,n]" />
 
    And use these derivatives to update vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/> on each learning step:
 
-   <img src="https://latex.codecogs.com/gif.latex?b_i = b_i - l\cdot\frac{\partial L}{\partial b_i}"/>
+   <img src="https://latex.codecogs.com/gif.latex?b_i&space;=&space;b_i&space;-&space;l\cdot\frac{\partial&space;L}{\partial&space;b_i}" title="b_i = b_i - l\cdot\frac{\partial L}{\partial b_i}" />
 
    Where _l_ is a learning rate.
 2. **Downloading data**
@@ -287,7 +287,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose a power of GPU. 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTI2Mjc1MTQ3LC04MDU2MDI3OTAsMTg5MT
+eyJoaXN0b3J5IjpbNDg3NDUzNTc2LC04MDU2MDI3OTAsMTg5MT
 UxMzM2NSwtMjA2NTQ3MDYxNywxODYzMTYzODc5LC0xMzYyNTI5
 OTM0LC0xNTgxMTkzODgsMzgxNTc1ODkyLDExNzg4Mjk2MTgsMj
 EwMzIyNjMxNywtODk3NDAxMzc1LC0xMjYyNTQ3MTY1LC0xOTU5
