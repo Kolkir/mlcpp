@@ -17,12 +17,12 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    
    Where 
 
-<a href="https://www.codecogs.com/eqnedit.php?latex=X&space;=&space;\begin{pmatrix}&space;1&&space;x_0&&space;x_0^2&&space;...&&space;x_0^n&space;\\&space;1&&space;x_1&&space;x_1^2&&space;...&&space;x_1^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_i&&space;x_i^2&&space;...&&space;x_i^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_k&&space;x_k^2&&space;...&&space;x_k^n&space;\\&space;\end{pmatrix}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?X&space;=&space;\begin{pmatrix}&space;1&&space;x_0&&space;x_0^2&&space;...&&space;x_0^n&space;\\&space;1&&space;x_1&&space;x_1^2&&space;...&&space;x_1^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_i&&space;x_i^2&&space;...&&space;x_i^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_k&&space;x_k^2&&space;...&&space;x_k^n&space;\\&space;\end{pmatrix}"/></a>
+   <img src="https://latex.codecogs.com/gif.latex?X&space;=&space;\begin{pmatrix}&space;1&&space;x_0&&space;x_0^2&&space;...&&space;x_0^n&space;\\&space;1&&space;x_1&&space;x_1^2&&space;...&&space;x_1^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_i&&space;x_i^2&&space;...&&space;x_i^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_k&&space;x_k^2&&space;...&&space;x_k^n&space;\\&space;\end{pmatrix}"/>
 
    and _k_ is a number of samples if the training data.
-   So the goal is to estimate the parameters vector $\vec{b}$. In this tutorial I will use gradient descent for this task. First let's define a cost function:
+   So the goal is to estimate the parameters vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/>. In this tutorial I will use gradient descent for this task. First let's define a cost function:
    
-   $L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2$
+   <img src="https://latex.codecogs.com/gif.latex?L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2"/>
 
    Where $Y$ is vector of values from our training data. Next we should take a partial derivatives with respect to each $b_j$ term of polynomial:
 
@@ -287,9 +287,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose a power of GPU. 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTczNzQ3MDU0MCwxODkxNTEzMzY1LC0yMD
-Y1NDcwNjE3LDE4NjMxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODEx
-OTM4OCwzODE1NzU4OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC
-04OTc0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
-
+eyJoaXN0b3J5IjpbOTM1NTQxOTQsMTg5MTUxMzM2NSwtMjA2NT
+Q3MDYxNywxODYzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkz
+ODgsMzgxNTc1ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtOD
+k3NDAxMzc1LC0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
 -->
