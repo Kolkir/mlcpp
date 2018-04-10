@@ -6,7 +6,7 @@ I start with simple polynomial regression to make a model to predict an amount o
 
 For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with a minimum effort.
 
-0. **Polynomial regression definition**
+0. **Short polynomial regression definition**
    [Polynomial regression](https://en.wikipedia.org/wiki/Polynomial_regression) is a form of linear regression in which the relationship between the independent variable _x_ and the dependent variable _y_ is modeled as an _n_-th degree polynomial in _x_.
    
     $\hat{y}=f(x)=b_0 \cdot x^0 + b_1 \cdot x^1+b_2 \cdot x^2 +... +b_n \cdot x^n$
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjA2NzAwNjk0MSwtMjA2NTQ3MDYxNywxOD
-YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
-ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
-0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbOTY3OTUzODQ5LC0yMDY1NDcwNjE3LDE4Nj
+MxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODExOTM4OCwzODE1NzU4
+OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC04OTc0MDEzNzUsLT
+EyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
 -->
