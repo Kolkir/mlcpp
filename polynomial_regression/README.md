@@ -36,7 +36,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    $\frac{\partial L}{\partial b_i} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i}$
 
-   And use these derivatives to up
+   And use these derivatives to update vector $\vec{b}$ on each learning step:
+
+   $
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -288,8 +290,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTA3Njg3MjA3NiwtMjA2NTQ3MDYxNywxOD
-YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
-ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
-0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbLTEyMTQzMTY1MzcsLTIwNjU0NzA2MTcsMT
+g2MzE2Mzg3OSwtMTM2MjUyOTkzNCwtMTU4MTE5Mzg4LDM4MTU3
+NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3NS
+wtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
