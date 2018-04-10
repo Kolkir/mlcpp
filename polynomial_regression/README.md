@@ -34,6 +34,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    Where $Y$ is vector of values from our training data. Next we should take a partial derivatives with respect to each $x$ term of polynomial:
 
+   $$
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -285,7 +286,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1ODExOTM4OCwzODE1NzU4OTIsMTE3OD
-gyOTYxOCwyMTAzMjI2MzE3LC04OTc0MDEzNzUsLTEyNjI1NDcx
-NjUsLTE5NTk1NTMyMzJdfQ==
+eyJoaXN0b3J5IjpbLTI5NTEzMTM4MiwtMTU4MTE5Mzg4LDM4MT
+U3NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3
+NSwtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
