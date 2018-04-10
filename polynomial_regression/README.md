@@ -9,8 +9,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 0. **Polynomial regression definition**
 $$
 X \subseteq R
-
-Y \subseteq R
 $$
 2. **Downloading data**
 
@@ -263,5 +261,5 @@ $$
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTY4NDQ5NzgzMSwtMTk1OTU1MzIzMl19
+eyJoaXN0b3J5IjpbOTA4NzczMzE2LC0xOTU5NTUzMjMyXX0=
 -->
