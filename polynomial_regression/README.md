@@ -210,7 +210,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 10. **Creating general regression model**
 
-    To be able to test different models which correspond to different polynomial order we made a function which perform data scaling, generate additional polynomial terms, learn polynomial coefficients with BGD and returns function which takes new data for X and return approximated Y values. The most interesting thing here is restoring scale for predicted Y values.
+    To be able to test different models which correspond to different polynomial order I made a function which perform data scaling, generate additional polynomial terms, learn polynomial coefficients with BGD and returns function which takes new data for X and return predicted Y values. The most interesting thing here is restoration of scale for predicted Y values.
     ``` cpp
     auto make_regression_model(const xt::xarray<DType>& data_x,
                            const xt::xarray<DType>& data_y,
@@ -292,7 +292,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTcwNzg4NzgyMiwtMjA2NTQ3MDYxNywxOD
+eyJoaXN0b3J5IjpbLTY3OTg0OTE1OSwtMjA2NTQ3MDYxNywxOD
 YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
 ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
 0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
