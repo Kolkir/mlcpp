@@ -258,7 +258,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     auto line = xt::view(line_values, xt::all());
     auto polyline = xt::view(poly_line_values, xt::all());
     ```
-    Next we create plot object, configure it and plot data and approximation results.
+    Next I created plot object, configured it and plotted the data and approximation results.
     ``` cpp
     plotcpp::Plot plt(true);
     plt.SetTerminal("qt"); // show ui window with plots
@@ -291,9 +291,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
     With this code we get such plots:
     ![plots](plot.png)
+
+   
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEyNjQ1MDkwMTksLTIwNjU0NzA2MTcsMT
-g2MzE2Mzg3OSwtMTM2MjUyOTkzNCwtMTU4MTE5Mzg4LDM4MTU3
-NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3NS
-wtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
+eyJoaXN0b3J5IjpbMTY5MzcwOTg0MiwtMjA2NTQ3MDYxNywxOD
+YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
+ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
+0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
 -->
