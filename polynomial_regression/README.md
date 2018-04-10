@@ -133,7 +133,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 7. **Generating new data for testing model predictions**
 
-    Here we used ``xt::eval`` function to evaluate XTensor expression in place to get calculation results, because they required for use in ``xt::linspace`` function. ``xt::linspace`` function have same semantic as in ``numpy``.
+    Here I used ``xt::eval`` function to evaluate XTensor expression in place to get calculation results, because they required for use in ``xt::linspace`` function. ``xt::linspace`` function have same semantic as in ``numpy``.
     ``` cpp
     auto minmax = xt::eval(xt::minmax(data_x));
     xt::xarray<DType> new_x =
@@ -141,7 +141,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 8. **Batch gradient descent implementation**
 
-    This is straightforward batch gradient implementation. The interesting things here is how we use ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges over required dimensions. Also because there are no automatic broadcasting in XTensor, as in ``numpy``, we have implicitly define broadcast direction for math operations with ``xt::broadcast`` function.
+    This is straightforward batch gradient implementation. The interesting things here is how I used ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges over required dimensions. Also because there are no automatic broadcasting in XTensor, as in ``numpy``, we have implicitly define broadcast direction for math operations with ``xt::broadcast`` function.
     ``` cpp
     auto bgd(const xt::xarray<DType>& x,
          const xt::xarray<DType>& y,
@@ -292,7 +292,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTkxNjU5NjU1OSwtMjA2NTQ3MDYxNywxOD
+eyJoaXN0b3J5IjpbMTUwNzkwNjUxNSwtMjA2NTQ3MDYxNywxOD
 YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
 ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
 0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
