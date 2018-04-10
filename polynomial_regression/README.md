@@ -7,8 +7,10 @@ I start with simple polynomial regression to make a model to predict an amount o
 For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with a minimum effort.
 
 0. **Polynomial regression definition**
-$y=f(x)=b_0*x^0 + b_1*x^1+b_2*x^2 +... +b_n*x^n$
-Where $n \in \left [0, d  \right ]$ and `d` is a degree of a polynomial we want use for approximation.
+
+    $y=f(x)=b_0*x^0 + b_1*x^1+b_2*x^2 +... +b_n*x^n$
+    
+    Where $n \in \left [0, d  \right ]$ and `d` is a degree of a polynomial we want use for approximation.
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -260,6 +262,6 @@ Where $n \in \left [0, d  \right ]$ and `d` is a degree of a polynomial we want 
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEwMjQ2MTE4NzgsLTEyNjI1NDcxNjUsLT
+eyJoaXN0b3J5IjpbLTEzOTM5Nzk5MDYsLTEyNjI1NDcxNjUsLT
 E5NTk1NTMyMzJdfQ==
 -->
