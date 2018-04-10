@@ -32,7 +32,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    
    $L(x,y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y - \hat{Y})^2$
 
-   Where $Y$ is vector of values from our training data. Next we should take a partial derivatives with respect to each 
+   Where $Y$ is vector of values from our training data. Next we should take a partial derivatives with respect to each $x$ term of polynomial:
+
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -284,7 +285,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTI0NjA0MDA2OSwzODE1NzU4OTIsMTE3OD
+eyJoaXN0b3J5IjpbLTE1ODExOTM4OCwzODE1NzU4OTIsMTE3OD
 gyOTYxOCwyMTAzMjI2MzE3LC04OTc0MDEzNzUsLTEyNjI1NDcx
 NjUsLTE5NTk1NTMyMzJdfQ==
 -->
