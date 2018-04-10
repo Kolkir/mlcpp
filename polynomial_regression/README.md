@@ -1,4 +1,4 @@
-# Polynomial regression tutorial with XTensor library
+# Polynomial regression with XTensor library tutorial
 
 There are a lot of articles about how to use Python for solving Machine Learning problems, with this article I start series of materials on how to use modern C++ for solving same problems and which libraries can be used. I assume that readers are already familiar with Machine Learning concepts and will concentrate on technical issues only.
 
