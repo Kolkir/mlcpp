@@ -240,7 +240,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 11. **Making predictions**
 
-    Here are examples how function for creating different regression models can be used and how  to make predictions.
+    Here are examples how function for creating different regression models can be used and how  to make a predictions.
     ``` cpp
     // straight line
     auto line_model = make_regression_model(data_x, data_y, 2);
@@ -252,7 +252,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 12. **Plot results**
 
-    To plot data we will use [plotcpp](https://github.com/Kolkir/plotcpp) library which is thin wrapper for ``gnuplot`` application. This library use iterators for access to plotting data so we need to adapt ``XTensor`` matrices to objects which can provide STL compatible iterators ``xt::view`` function returns such objects.
+    To plot data I used [plotcpp](https://github.com/Kolkir/plotcpp) library which is thin wrapper for ``gnuplot`` application. This library use iterators for access to plotting data so I needed to adapt ``XTensor`` matrices to objects which can provide STL compatible iterators, ``xt::view`` function returns such objects.
     ``` cpp
     auto x_coord = xt::view(new_x, xt::all());
     auto line = xt::view(line_values, xt::all());
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTQyNDg2NTY5MSwtMjA2NTQ3MDYxNywxOD
-YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
-ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
-0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbLTEyNjQ1MDkwMTksLTIwNjU0NzA2MTcsMT
+g2MzE2Mzg3OSwtMTM2MjUyOTkzNCwtMTU4MTE5Mzg4LDM4MTU3
+NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3NS
+wtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
