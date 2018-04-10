@@ -13,7 +13,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     
     Because our training data consist of multiple samples we  can rewrite this relation in matrix form:
 
-   $$
+   $Y=\vec{b}*X$
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -265,6 +265,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjU0NjA1Nzg1LC04OTc0MDEzNzUsLTEyNj
-I1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
+eyJoaXN0b3J5IjpbMjEwMzIyNjMxNywtODk3NDAxMzc1LC0xMj
+YyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
 -->
