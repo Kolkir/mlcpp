@@ -106,7 +106,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 6. **MinMax scaling**
 
-    We independently scale each column in the input matrix. For one dimensional matrix XTensor's shape is also one dimensional so we have to handle this case separately. Pay attention on using ``xt::view`` for vectorized processing of independent columns, it have the same meaning as ``slices`` in ``numpy``.
+    I independently scaled each column in the input matrices. For one dimensional matrix XTensor's shape is also one dimensional so I have had to handle this case separately. Pay attention on using ``xt::view`` for vectorized processing of independent columns, it have the same meaning as ``slices`` in ``numpy``.
     ``` cpp
     ...
     typedef float DType;
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTgxMzc0NTM1LC0yMDY1NDcwNjE3LDE4Nj
-MxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODExOTM4OCwzODE1NzU4
-OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC04OTc0MDEzNzUsLT
-EyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
+eyJoaXN0b3J5IjpbLTkxNjU5NjU1OSwtMjA2NTQ3MDYxNywxOD
+YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
+ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
+0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
 -->
