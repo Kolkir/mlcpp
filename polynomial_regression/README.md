@@ -40,7 +40,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    $b_i = b_i - l\cdot\frac{\partial L}{\partial b_i}$
 
-   Where
+   Where $l$ is a learning rate.
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMzQxMDY1Mjc0LC0yMDY1NDcwNjE3LDE4Nj
-MxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODExOTM4OCwzODE1NzU4
-OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC04OTc0MDEzNzUsLT
-EyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
+eyJoaXN0b3J5IjpbMjA2NzAwNjk0MSwtMjA2NTQ3MDYxNywxOD
+YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
+ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
+0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
 -->
