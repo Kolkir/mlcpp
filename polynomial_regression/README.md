@@ -8,7 +8,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
 0. **Polynomial regression definition**
 $$
- y=f(x)=b_0 + b_1*x+b_2*
+ y=f(x)=b_0 + b_1*x+b_2*x^2 +... +b_n*
 $$
 2. **Downloading data**
 
@@ -261,5 +261,5 @@ $$
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbODcwNTkwODIyLC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbMTk5MTI2MzA1MSwtMTk1OTU1MzIzMl19
 -->
