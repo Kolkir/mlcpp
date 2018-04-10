@@ -16,6 +16,13 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    $Y=\vec{b} \cdot X$
    
    Where $X$ is matrix of form
+   $$
+   \begin{pmatrix}
+ 1&  4& \\ 
+ 2&  5& \\ 
+ 3&  6& 
+\end{pmatrix}
+   $$
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -267,6 +274,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM2MDUxMjAyNiwyMTAzMjI2MzE3LC04OT
-c0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
+eyJoaXN0b3J5IjpbLTM5ODcyNjU1LDIxMDMyMjYzMTcsLTg5Nz
+QwMTM3NSwtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
