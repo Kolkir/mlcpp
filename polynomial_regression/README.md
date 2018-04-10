@@ -16,17 +16,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=\vec{b} \cdot X"/>
    
    Where 
-   $$
-   X =
-   \begin{pmatrix}
- 1&  x_0& x_0^2& ...& x_0^n \\ 
- 1&  x_1& x_1^2& ...& x_1^n \\ 
- ...&  ...& ...& ...& ... \\ 
- 1&  x_i& x_i^2& ...& x_i^n \\ 
-  ...&  ...& ...& ...& ... \\ 
- 1&  x_k& x_k^2& ...& x_k^n \\ 
-\end{pmatrix}
-   $$
+
+<a href="https://www.codecogs.com/eqnedit.php?latex=X&space;=&space;\begin{pmatrix}&space;1&&space;x_0&&space;x_0^2&&space;...&&space;x_0^n&space;\\&space;1&&space;x_1&&space;x_1^2&&space;...&&space;x_1^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_i&&space;x_i^2&&space;...&&space;x_i^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_k&&space;x_k^2&&space;...&&space;x_k^n&space;\\&space;\end{pmatrix}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?X&space;=&space;\begin{pmatrix}&space;1&&space;x_0&&space;x_0^2&&space;...&&space;x_0^n&space;\\&space;1&&space;x_1&&space;x_1^2&&space;...&&space;x_1^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_i&&space;x_i^2&&space;...&&space;x_i^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_k&&space;x_k^2&&space;...&&space;x_k^n&space;\\&space;\end{pmatrix}"/></a>
+
    and _k_ is a number of samples if the training data.
    So the goal is to estimate the parameters vector $\vec{b}$. In this tutorial I will use gradient descent for this task. First let's define a cost function:
    
@@ -295,9 +287,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose a power of GPU. 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExNzczNjIyNDksMTg5MTUxMzM2NSwtMj
-A2NTQ3MDYxNywxODYzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgx
-MTkzODgsMzgxNTc1ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNy
-wtODk3NDAxMzc1LC0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbMTczNzQ3MDU0MCwxODkxNTEzMzY1LC0yMD
+Y1NDcwNjE3LDE4NjMxNjM4NzksLTEzNjI1Mjk5MzQsLTE1ODEx
+OTM4OCwzODE1NzU4OTIsMTE3ODgyOTYxOCwyMTAzMjI2MzE3LC
+04OTc0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
 
 -->
