@@ -6,11 +6,11 @@ I start with simple polynomial regression to make a model to predict an amount o
 
 For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with a minimum effort.
 
-0. Polynomial regression definition
+0. **Polynomial regression definition**
 
-1. **Downloading data**
+2. **Downloading data**
 
-We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
+   We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
     ``` cpp
     ...
     namespace fs = std::experimental::filesystem;
@@ -25,7 +25,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
       }
     }
     ```
-2. **Parsing data**
+3. **Parsing data**
 
     For reading TSV formated data we use [fast-cpp-csv-parser](https://github.com/ben-strasser/fast-cpp-csv-parser) library. But we configure ``io::CSVReader`` to use tabs as delimiters instead of commas. To parse whole data file we read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how we handle parse exceptions to ignore bad formated items.
     ``` cpp
@@ -50,7 +50,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
       }
     } while (!done);
     ```
-3. **Shuffling data**
+4. **Shuffling data**
 
     Using STL ``shuffle`` algorithm helps us to shuffle data.
     ``` cpp
@@ -60,7 +60,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
     std::shuffle(raw_data_y.begin(), raw_data_y.end(),
                  std::default_random_engine(seed));
     ```
-4. **Loading data to XTensor datastructures**
+5. **Loading data to XTensor datastructures**
 
     We use ``xt::adapt`` function to create views over existent data in ``std::vector`` to prevent data duplicates
     ``` cpp
@@ -71,7 +71,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
      auto shape_y = std::vector<size_t>{rows};
      auto data_y = xt::adapt(raw_data_y, shape_y);
     ```
-5. **MinMax scaling**
+6. **MinMax scaling**
 
     We independently scale each column in the input matrix. For one dimensional matrix XTensor's shape is also one dimensional so we have to handle this case separately. Pay attention on using ``xt::view`` for vectorized processing of independent columns, it have the same meaning as ``slices`` in ``numpy``.
     ``` cpp
@@ -98,7 +98,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
       }
     }
     ```
-6. **Generating new data for testing model predictions**
+7. **Generating new data for testing model predictions**
 
     Here we used ``xt::eval`` function to evaluate XTensor expression in place to get calculation results, because they required for use in ``xt::linspace`` function. ``xt::linspace`` function have same semantic as in ``numpy``.
     ``` cpp
@@ -106,7 +106,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
     xt::xarray<DType> new_x =
       xt::linspace<DType>(minmax[0][0], minmax[0][1], 2000);
     ```
-7. **Batch gradient descent implementation**
+8. **Batch gradient descent implementation**
 
     This is straightforward batch gradient implementation. The interesting things here is how we use ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges over required dimensions. Also because there are no automatic broadcasting in XTensor, as in ``numpy``, we have implicitly define broadcast direction for math operations with ``xt::broadcast`` function.
     ``` cpp
@@ -147,7 +147,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
       return b;
     }
     ```
-8. **Generating additional polynomial components**
+9. **Generating additional polynomial components**
 
     To be able to approximate our data with higher order polynomial we have to write a function for generating additional terms so our function looks like ``y = f(x) = b0 * x^0 + b1*x^1 + b2 * x^2 + b3 * x^3 ... bn * x^n`` where ``n`` is the order of polynomial. Pay attention ``x^0`` term which is used to simplify math calculations and use power of vectorization. So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.
     ``` cpp
@@ -175,7 +175,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
       return poly_x;
     }
     ```
-9. **Creating general regression model**
+10. **Creating general regression model**
 
     To be able to test different models which correspond to different polynomial order we made a function which perform data scaling, generate additional polynomial terms, learn polynomial coefficients with BGD and returns function which takes new data for X and return approximated Y values. The most interesting thing here is restoring scale for predicted Y values.
     ``` cpp
@@ -205,7 +205,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
       return model;
     }
     ```
-10. **Making predictions**
+11. **Making predictions**
 
     Here are examples how we can use our function for creating different regression models, and make predictions.
     ``` cpp
@@ -217,7 +217,7 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
     auto poly_model = make_regression_model(data_x, data_y, 16);
     xt::xarray<DType> poly_line_values = poly_model(new_x);
     ```
-11. **Plot results**
+12. **Plot results**
 
     To plot data we will use [plotcpp](https://github.com/Kolkir/plotcpp) library which is thin wrapper for ``gnuplot`` application. This library use iterators for access to plotting data so we need to adapt ``XTensor`` matrices to objects which can provide STL compatible iterators ``xt::view`` function returns such objects.
     ``` cpp
@@ -259,5 +259,5 @@ We use STL ``filesystem`` library to check file existence to prevent multiple do
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTUwMjMwOTM0XX0=
+eyJoaXN0b3J5IjpbLTE5NTk1NTMyMzJdfQ==
 -->
