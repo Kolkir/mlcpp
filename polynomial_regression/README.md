@@ -30,7 +30,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    and _k_ is a number of samples if the training data.
    So the goal is to estimate the parameters vector $\vec{b}$. In this tutorial I will use gradient descent for this task. First let's define a cost function:
    
-   $L(X,Y) = \frac{1}{k}\cdot\(Y - \hat{Y})^2$
+   $L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2$
 
    Where $Y$ is vector of values from our training data. Next we should take a partial derivatives with respect to each $x$ term of polynomial:
 
@@ -286,7 +286,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTkyMDUyMjU2MiwtMTM2MjUyOTkzNCwtMT
+eyJoaXN0b3J5IjpbLTMwMTYyOTI0MiwtMTM2MjUyOTkzNCwtMT
 U4MTE5Mzg4LDM4MTU3NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYz
 MTcsLTg5NzQwMTM3NSwtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl
 19
