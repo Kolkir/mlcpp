@@ -60,7 +60,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 3. **Parsing data**
 
-    For reading TSV formated data I used [fast-cpp-csv-parser](https://github.com/ben-strasser/fast-cpp-csv-parser) library. But configure ``io::CSVReader`` to use tabs as delimiters instead of commas. To parse whole data file we read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how we handle parse exceptions to ignore bad formated items.
+    For reading TSV formated data I used [fast-cpp-csv-parser](https://github.com/ben-strasser/fast-cpp-csv-parser) library. But changed default configuration of ``io::CSVReader`` object to use tabs as delimiters instead of commas. To parse whole data file I read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how we handle parse exceptions to ignore bad formated items.
     ``` cpp
     io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
       data_path);
@@ -292,8 +292,8 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE4MDQ0ODI2MywtMjA2NTQ3MDYxNywxOD
-YzMTYzODc5LC0xMzYyNTI5OTM0LC0xNTgxMTkzODgsMzgxNTc1
-ODkyLDExNzg4Mjk2MTgsMjEwMzIyNjMxNywtODk3NDAxMzc1LC
-0xMjYyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbLTIwMzM1OTU1ODMsLTIwNjU0NzA2MTcsMT
+g2MzE2Mzg3OSwtMTM2MjUyOTkzNCwtMTU4MTE5Mzg4LDM4MTU3
+NTg5MiwxMTc4ODI5NjE4LDIxMDMyMjYzMTcsLTg5NzQwMTM3NS
+wtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
