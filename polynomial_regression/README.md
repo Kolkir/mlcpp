@@ -1,8 +1,8 @@
 # Polynomial regression tutorial with XTensor library
 
-There are a lot of articles about how to use Python for solving Machine Learning problems, with this article I start series of materials on how to use modern C++ for solving same problems and which libraries can be used. I assume that readers are already familiar with Machine Learning concepts and will concentrate on technical issues.
+There are a lot of articles about how to use Python for solving Machine Learning problems, with this article I start series of materials on how to use modern C++ for solving same problems and which libraries can be used. I assume that readers are already familiar with Machine Learning concepts and will concentrate on technical issues only.
 
-We begin with simple polynomial regression to make a model to predict a amount of traffic at some time point. Our prediction will be based on some data gathered over some time period. The ``X`` data values correspond to time points and ``Y`` values correspond to time points.  
+I start with simple polynomial regression to make a model to predict an amount of traffic passed through the system at some time point. Our prediction will be based on some data gathered over some time period. The ``X`` data values correspond to time points and ``Y`` values correspond to time points.  
 
 For this tutorial we will use [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with minimum effort.
 
@@ -259,5 +259,5 @@ For this tutorial we will use [XTensor](https://github.com/QuantStack/xtensor) l
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM3MDE3MzYyOF19
+eyJoaXN0b3J5IjpbLTU5NzgyODE1M119
 -->
