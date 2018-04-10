@@ -13,7 +13,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     
     Because our training data consist of multiple samples we  can rewrite this relation in matrix form:
 
-   <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=\vec{b} \cdot X"/>
+    <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=\vec{b}&space;\cdot&space;X" title="\hat{Y}=\vec{b} \cdot X" />
    
    Where 
 
@@ -22,7 +22,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    and _k_ is a number of samples if the training data.
    So the goal is to estimate the parameters vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/>. In this tutorial I will use gradient descent for this task. First let's define a cost function:
    
-   <img src="https://latex.codecogs.com/gif.latex?L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2"/>
+   <img src="https://latex.codecogs.com/gif.latex?L(X,Y)&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})^2" title="L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2" />
 
    Where _Y_ is vector of values from our training data. Next we should take a partial derivatives with respect to each <img src="https://latex.codecogs.com/gif.latex?b_j"/> term of polynomial:
 
@@ -287,9 +287,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose a power of GPU. 
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTUzNzkwOTE4MCwtODA1NjAyNzkwLDE4OT
-E1MTMzNjUsLTIwNjU0NzA2MTcsMTg2MzE2Mzg3OSwtMTM2MjUy
-OTkzNCwtMTU4MTE5Mzg4LDM4MTU3NTg5MiwxMTc4ODI5NjE4LD
-IxMDMyMjYzMTcsLTg5NzQwMTM3NSwtMTI2MjU0NzE2NSwtMTk1
-OTU1MzIzMl19
+eyJoaXN0b3J5IjpbMTI2Mjc1MTQ3LC04MDU2MDI3OTAsMTg5MT
+UxMzM2NSwtMjA2NTQ3MDYxNywxODYzMTYzODc5LC0xMzYyNTI5
+OTM0LC0xNTgxMTkzODgsMzgxNTc1ODkyLDExNzg4Mjk2MTgsMj
+EwMzIyNjMxNywtODk3NDAxMzc1LC0xMjYyNTQ3MTY1LC0xOTU5
+NTUzMjMyXX0=
 -->
