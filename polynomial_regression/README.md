@@ -26,11 +26,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    Where _Y_ is vector of values from our training data. Next we should take a partial derivatives with respect to each <img src="https://latex.codecogs.com/gif.latex?b_j"/> term of polynomial:
 
-   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})\cdot{X_i^{(j)}},&space;j&space;\in&space;[1,n]" title="\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j \in [1,n]" />
+   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{2}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})\cdot{-X_i^{(j)}},&space;j&space;\in&space;[1,n]"/>
    
    Or in the matrix form:
    
-   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{1}{k}\cdot&space;X^{T}\cdot&space;(\hat{Y}-Y)"/>
+   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{2}{k}\cdot&space;X^{T}\cdot&space;(\hat{Y}-Y)"/>
 
    And use these derivatives to update vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/> on each learning step:
 
