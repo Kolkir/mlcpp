@@ -8,7 +8,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
 0. **Polynomial regression definition**
 $$
-X \subseteq R
+ f(x)=(x+a)(x+b)
 $$
 2. **Downloading data**
 
@@ -261,5 +261,5 @@ $$
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbOTA4NzczMzE2LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbLTk2ODEwNTE4MSwtMTk1OTU1MzIzMl19
 -->
