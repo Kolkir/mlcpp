@@ -9,11 +9,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 0. **Short polynomial regression definition**
    [Polynomial regression](https://en.wikipedia.org/wiki/Polynomial_regression) is a form of linear regression in which the relationship between the independent variable _x_ and the dependent variable _y_ is modeled as an _n_-th degree polynomial in _x_.
 
-   <img src="https://latex.codecogs.com/gif.latex?\hat{y}=f(x)=b_0&space;\cdot&space;x^0&space;&plus;&space;b_1&space;\cdot&space;x^1&plus;b_2&space;\cdot&space;x^2&space;&plus;...&space;&plus;b_n&space;\cdot&space;x^n" title="\hat{y}=f(x)=b_0 \cdot x^0 + b_1 \cdot x^1+b_2 \cdot x^2 +... +b_n \cdot x^n" />
+   <img src="https://latex.codecogs.com/gif.latex?\hat{y}=f(x)=b_0&space;\cdot&space;x^0&space;&plus;&space;b_1&space;\cdot&space;x^1&plus;b_2&space;\cdot&space;x^2&space;&plus;...&space;&plus;b_n&space;\cdot&space;x^n"/>
 
     Because our training data consist of multiple samples we  can rewrite this relation in matrix form:
 
-    <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=\vec{b}&space;\cdot&space;X" title="\hat{Y}=X \cdot \vec{b}" />
+    <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=X\cdot\vec{b}" />
 
    Where
 
@@ -22,11 +22,15 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    and _k_ is a number of samples if the training data.
    So the goal is to estimate the parameters vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/>. In this tutorial I will use gradient descent for this task. First let's define a cost function:
 
-   <img src="https://latex.codecogs.com/gif.latex?L(X,Y)&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})^2" title="L(X,Y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})^2" />
+   <img src="https://latex.codecogs.com/gif.latex?L(X,Y)&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})^2"/>
 
    Where _Y_ is vector of values from our training data. Next we should take a partial derivatives with respect to each <img src="https://latex.codecogs.com/gif.latex?b_j"/> term of polynomial:
 
    <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})\cdot{X_i^{(j)}},&space;j&space;\in&space;[1,n]" title="\frac{\partial L}{\partial b_j} = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i - \hat{Y_i})\cdot{X_i^{(j)}}, j \in [1,n]" />
+   
+   Or in the matrix form:
+   
+   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{1}{k}\cdot&space;X^{T}\cdot&space;(\hat{Y}-Y)"/>
 
    And use these derivatives to update vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/> on each learning step:
 
