@@ -15,12 +15,13 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
    $Y=\vec{b} \cdot X$
    
-   Where $X$ is matrix of form
+   Where 
    $$
+   X =
    \begin{pmatrix}
  1&  x_0& x_0^2& ...& x_0^n \\ 
  1&  x_1& x_1^2& ...& x_1^n \\ 
- --&  & x_0^2& ...& x_0^n \\ 
+ ...&  & ...& ...& x_0^n \\ 
  1&  x_0& x_0^2& ...& x_0^n \\ 
  1&  x_0& x_0^2& ...& x_0^n \\ 
 \end{pmatrix}
@@ -276,6 +277,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTgwMDQ5NjMwNywyMTAzMjI2MzE3LC04OT
+eyJoaXN0b3J5IjpbMTUxMTUwODk1NSwyMTAzMjI2MzE3LC04OT
 c0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
 -->
