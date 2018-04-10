@@ -9,11 +9,12 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 0. **Polynomial regression definition**
    [Polynomial regression](https://en.wikipedia.org/wiki/Polynomial_regression) is a form of linear regression in which the relationship between the independent variable _x_ and the dependent variable _y_ is modeled as an _n_-th degree polynomial in _x_.
    
-    $y=f(x)=b_0*x^0 + b_1*x^1+b_2*x^2 +... +b_n*x^n$
+    $y=f(x)=b_0 \cdot x^0 + b_1 \cdot x^1+b_2 \cdot x^2 +... +b_n \cdot x^n$
     
     Because our training data consist of multiple samples we  can rewrite this relation in matrix form:
 
-   $Y=\vec{b}*X$
+   $Y=\vec{b} \cdot X$
+	Where
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -265,6 +266,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjEwMzIyNjMxNywtODk3NDAxMzc1LC0xMj
-YyNTQ3MTY1LC0xOTU5NTUzMjMyXX0=
+eyJoaXN0b3J5IjpbMTI0Nzc5MzY2OCwyMTAzMjI2MzE3LC04OT
+c0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
 -->
