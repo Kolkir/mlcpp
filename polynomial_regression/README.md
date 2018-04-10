@@ -9,11 +9,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 0. **Polynomial regression definition**
    [Polynomial regression](https://en.wikipedia.org/wiki/Polynomial_regression) is a form of linear regression in which the relationship between the independent variable _x_ and the dependent variable _y_ is modeled as an _n_-th degree polynomial in _x_.
    
-    $y=f(x)=b_0 \cdot x^0 + b_1 \cdot x^1+b_2 \cdot x^2 +... +b_n \cdot x^n$
+    $\hat{y}=f(x)=b_0 \cdot x^0 + b_1 \cdot x^1+b_2 \cdot x^2 +... +b_n \cdot x^n$
     
     Because our training data consist of multiple samples we  can rewrite this relation in matrix form:
 
-   $Y=\vec{b} \cdot X$
+   $\hat{Y}=\vec{b} \cdot X$
    
    Where 
    $$
@@ -30,7 +30,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    and _k_ is a number of samples if the training data.
    So the goal is to estimate the parameters vector $\vec{b}$. In this tutorial I will use gradient descent for this task. First let's define the cost function:
    
-   $L(x,y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y - \hat{Y)^2$
+   $L(x,y) = \frac{1}{k}\cdot\sum_{i=1}^{k}(Y - \hat{Y})^2$
 2. **Downloading data**
 
    We use STL ``filesystem`` library to check file existence to prevent multiple downloads, and use libcurl library for downloading data files, see ``utils::DownloadFile`` implementation for details. We will use data used in "Building Machine Learning Systems with Python" book by Willi Richert.
@@ -282,7 +282,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTU1ODg1ODYxOSwxMTc4ODI5NjE4LDIxMD
+eyJoaXN0b3J5IjpbMTAyNzIyNDc0MiwxMTc4ODI5NjE4LDIxMD
 MyMjYzMTcsLTg5NzQwMTM3NSwtMTI2MjU0NzE2NSwtMTk1OTU1
 MzIzMl19
 -->
