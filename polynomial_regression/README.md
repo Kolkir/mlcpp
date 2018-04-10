@@ -21,8 +21,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    \begin{pmatrix}
  1&  x_0& x_0^2& ...& x_0^n \\ 
  1&  x_1& x_1^2& ...& x_1^n \\ 
- ...&  & ...& ...& x_0^n \\ 
- 1&  x_0& x_0^2& ...& x_0^n \\ 
+ ...&  ...& ...& ...& ... \\ 
+ 1&  x_i& x_i^2& ...& x_i^n \\ 
+  ...&  ...& ...& ...& ... \\ 
  1&  x_0& x_0^2& ...& x_0^n \\ 
 \end{pmatrix}
    $$
@@ -277,6 +278,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTUxMTUwODk1NSwyMTAzMjI2MzE3LC04OT
+eyJoaXN0b3J5IjpbMTEyNzMzNDQ2MSwyMTAzMjI2MzE3LC04OT
 c0MDEzNzUsLTEyNjI1NDcxNjUsLTE5NTk1NTMyMzJdfQ==
 -->
