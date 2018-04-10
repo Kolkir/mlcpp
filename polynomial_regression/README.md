@@ -18,9 +18,9 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
    Where $X$ is matrix of form
    $$
    \begin{pmatrix}
- 1&  4& \\ 
- 2&  5& \\ 
- 3&  6& 
+ 1&  x_0& x_0^2&  \\ 
+ 1&  x_1& \\ 
+ 1&  x_n& 
 \end{pmatrix}
    $$
 2. **Downloading data**
@@ -274,6 +274,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     With this code we get such plots:
     ![plots](plot.png)
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM5ODcyNjU1LDIxMDMyMjYzMTcsLTg5Nz
+eyJoaXN0b3J5IjpbNDg3NjYwMzk0LDIxMDMyMjYzMTcsLTg5Nz
 QwMTM3NSwtMTI2MjU0NzE2NSwtMTk1OTU1MzIzMl19
 -->
