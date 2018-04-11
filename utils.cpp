@@ -14,7 +14,9 @@ bool DownloadFile(const std::string& url, const std::string& path) {
     FILE* fp = fopen(path.c_str(), "wb");
     if (fp != nullptr) {
       curl_easy_setopt(hnd, CURLOPT_URL, url.c_str());
-      curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, fp);
+      curl_easy_setopt(hnd, CURLOPT_TCP_KEEPALIVE, 1L);
+      curl_easy_setopt(hnd, CURLOPT_TCP_KEEPIDLE, 15L);
+      curl_easy_setopt(hnd, CURLOPT_TCP_KEEPINTVL, 30L);
       curl_easy_setopt(hnd, CURLOPT_FOLLOWLOCATION, 1L);
       curl_easy_setopt(
           hnd, CURLOPT_NOSIGNAL,
