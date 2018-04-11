@@ -33,6 +33,21 @@ struct has_const_iterator : private sfinae_base {
 };
 
 template <typename T>
+struct not_expression : private sfinae_base {
+ private:
+  template <typename C>
+  static no& test(typename C::expression_tag*);
+  template <typename C>
+  static yes& test(...);
+
+ public:
+  static const bool value = sizeof(test<T>(nullptr)) == sizeof(yes);
+  using type = T;
+
+  void dummy();  // for GCC to supress -Wctor-dtor-privacy
+};
+
+template <typename T>
 struct has_printable_value_type : private sfinae_base {
  private:
   template <typename C>
@@ -101,7 +116,8 @@ struct is_container : public std::integral_constant<
                           detail::has_const_iterator<T>::value &&
                               detail::has_begin_end<T>::beg_value &&
                               detail::has_begin_end<T>::end_value &&
-                              detail::has_printable_value_type<T>::value> {};
+                              detail::has_printable_value_type<T>::value &&
+                              detail::not_expression<T>::value> {};
 
 template <>
 struct is_container<std::string> : std::false_type {};
