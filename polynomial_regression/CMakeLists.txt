@@ -16,6 +16,7 @@ include_directories(${CMAKE_SOURCE_DIR}/../third_party/xtensor-blas/include)
 
 set(requiredlibs "stdc++fs")
 list(APPEND requiredlibs "stdc++")
+list(APPEND requiredlibs "lapack")
 
 FIND_PACKAGE(CURL)
 IF(CURL_FOUND)

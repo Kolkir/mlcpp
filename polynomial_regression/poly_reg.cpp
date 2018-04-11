@@ -42,7 +42,7 @@ auto minmax_scale(const Matrix& v) {
       auto vc = xt::view(v, xt::all(), j);
       auto vsc = xt::view(vs, xt::all(), j);
       auto minmax = xt::minmax(vc)();
-      vsc = (vc - minmax[0]) / (minmax[1] - minmax[0]);
+      vsc = (vc - minmax[0]) / (minmax[1] - minmax[0]) + 3;
     }
     return vs;
   } else {
@@ -69,14 +69,14 @@ auto generate_polynomial(const Matrix& x, size_t degree) {
   auto x_col = xt::view(poly_x, xt::all(), 1);
   for (size_t i = 2; i < degree; ++i) {
     auto xv = xt::view(poly_x, xt::all(), i);
-    xv = xt::pow(x_col, static_cast<float>(i));
+    xv = xt::pow(x_col, static_cast<DType>(i));
   }
   return poly_x;
 }
 
 auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
   size_t n_epochs = 5000;
-  DType lr = 0.00001;
+  DType lr = 0.000005;
 
   auto rows = x.shape()[0];
   auto cols = x.shape()[1];
@@ -103,7 +103,7 @@ auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
     }
 
     auto cost = (xt::sum(xt::pow(y - xt::linalg::dot(x, b), 2)) /
-                 static_cast<DType>(rows))[0];
+                 static_cast<DType>(rows))[0];  // evaluate value immediatly
 
     std::cout << "Iteration : " << i << " Cost = " << cost << std::endl;
     if (cost < prev_cost)
@@ -118,13 +118,17 @@ auto make_regression_model(const Matrix& data_x,
                            const Matrix& data_y,
                            size_t p_degree) {
   // minmax scaling
-  auto y = xt::eval(minmax_scale(data_y));
+  Matrix y = xt::eval(minmax_scale(data_y));
 
   // minmax scaling & polynomization
-  auto x = xt::eval(generate_polynomial(data_x, p_degree));
+  Matrix x = xt::eval(generate_polynomial(data_x, p_degree));
+
+  auto xt = xt::transpose(x);
+  auto b = xt::linalg::dot(
+      xt::linalg::dot(xt::linalg::inv(xt::linalg::dot(xt, x)), xt), y);
 
   // learn parameters with Gradient Descent
-  auto b = bgd(x, y, 15);
+  // auto b = bgd(x, y, 15);
 
   // create model
   auto y_minmax = xt::minmax(data_y)();
@@ -201,7 +205,7 @@ int main() {
   std::cout << "Line shape " << line_values.shape() << std::endl;
 
   // poly line
-  auto poly_model = make_regression_model(data_x, data_y, 16);
+  auto poly_model = make_regression_model(data_x, data_y, 5);
   Matrix poly_line_values = poly_model(new_x);
   std::cout << "Poly line shape " << poly_line_values.shape() << std::endl;
 
