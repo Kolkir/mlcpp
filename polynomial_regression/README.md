@@ -132,44 +132,43 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     This is straightforward batch gradient implementation. The interesting things here is how I used ``xt::view`` to extract batches without real copying the data, key features are using ``xt::range`` and ``xt::all`` functions to define slice ranges for required dimensions.
     ``` cpp
     auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
-     size_t n_epochs = 5000;
-     DType lr = 0.00001;
+	  size_t n_epochs = 50000;
+	  DType lr = 0.0055;
 
-     auto rows = x.shape()[0];
-     auto cols = x.shape()[1];
+	  auto rows = x.shape()[0];
+	  auto cols = x.shape()[1];
 
-     size_t batches = rows / batch_size;  // some samples will be skipped
-     Matrix b = xt::zeros<DType>({cols, size_t(1)});
+	  size_t batches = rows / batch_size;  // some samples will be skipped
+	  Matrix b = xt::zeros<DType>({cols});
 
-     DType prev_cost = std::numeric_limits<DType>::max();
-     for (size_t i = 0; i < n_epochs; ++i) {
-       for (size_t bi = 0; bi < batches; ++bi) {
-         auto s = bi * batch_size;
-         auto e = s + batch_size;
-         Matrix batch_x = xt::view(x, xt::range(s, e), xt::all());
-         Matrix batch_y = xt::view(y, xt::range(s, e), xt::all());
-         batch_y.reshape({batch_size, 1});
+	  DType prev_cost = std::numeric_limits<DType>::max();
+	  for (size_t i = 0; i < n_epochs; ++i) {
+	    for (size_t bi = 0; bi < batches; ++bi) {
+	      auto s = bi * batch_size;
+	      auto e = s + batch_size;
+	      Matrix batch_x = xt::view(x, xt::range(s, e), xt::all());
+	      Matrix batch_y = xt::view(y, xt::range(s, e), xt::all());
 
-         auto yhat = xt::linalg::dot(batch_x, b);
-         Matrix error = yhat - batch_y;
+	      auto yhat = xt::linalg::dot(batch_x, b);
+	      Matrix error = yhat - batch_y;
 
-         auto grad = 2 * xt::linalg::dot(xt::transpose(batch_x), error) /
-                     static_cast<DType>(batch_size);
+	      auto grad = xt::linalg::dot(xt::transpose(batch_x), error) /
+	                  static_cast<DType>(batch_size);
 
-         b = b - lr * grad;
-       }
+	      b = b - lr * grad;
+	    }
 
-       auto cost = (xt::sum(xt::pow(y - xt::linalg::dot(x, b), 2)) /
-                    static_cast<DType>(rows))[0]; // evaluate value immediatly 
+	    auto cost = (xt::sum(xt::pow(y - xt::linalg::dot(x, b), 2.f)) /
+	                 static_cast<DType>(rows))(0);  // evaluate value immediatly
 
-       std::cout << "Iteration : " << i << " Cost = " << cost << std::endl;
-       if (cost < prev_cost)
-         prev_cost = cost;
-       else
-         break;  // early stopping
-     }
-     return b;
-    }
+	    std::cout << "Iteration : " << i << " Cost = " << cost << std::endl;
+	    if (cost <= prev_cost)
+	      prev_cost = cost;
+	    else
+	      break;  // early stopping
+	  }
+	  return b;
+	}
     ```
 9. **Generating additional polynomial components**
 
@@ -287,5 +286,5 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE5NTE0NjkyMTMsNDI3MjMxOTM2XX0=
+eyJoaXN0b3J5IjpbLTEwNjc5NzIwNjMsNDI3MjMxOTM2XX0=
 -->
