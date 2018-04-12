@@ -67,13 +67,14 @@ auto generate_polynomial(const Matrix& x, size_t degree) {
   for (size_t i = 2; i < degree; ++i) {
     auto xv = xt::view(poly_x, xt::all(), i);
     xv = xt::pow(x_col, static_cast<DType>(i));
+    xv = std::get<0>(standardize(xv));
   }
   return poly_x;
 }
 
 auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
-  size_t n_epochs = 5000;
-  DType lr = 0.0001;
+  size_t n_epochs = 50000;
+  DType lr = 0.0055;
 
   auto rows = x.shape()[0];
   auto cols = x.shape()[1];
