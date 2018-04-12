@@ -102,7 +102,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 6. **Standardization**
 
-    I independently scaled each column in the input matrices. For one dimensional matrix XTensor's shape is also one dimensional so I have had to handle this case separately. Pay attention on using ``xt::view`` for vectorized processing of independent columns, it have the same meaning as ``slices`` in ``numpy``.
+    To be able to perform  .
     ``` cpp
     ...
     typedef float DType;
@@ -287,5 +287,5 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEyMDk3NzU2MDcsNDI3MjMxOTM2XX0=
+eyJoaXN0b3J5IjpbMTgwOTI3MDYzMyw0MjcyMzE5MzZdfQ==
 -->
