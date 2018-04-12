@@ -172,7 +172,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 9. **Generating additional polynomial components**
 
-    To be able to approximate our data with higher degree polynomial I wrote a function for generating additional terms. Pay attention at ``x^0`` term which is used to simplify math calculations and use power of vectorization. So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.
+    To be able to approximate our data with higher degree polynomial I wrote a function for generating additional terms. Pay attention at ``x^0`` term which is used to simplify math calculations and use power of vectorization, it correcponds to ``b0`` and equals 1.  So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.  Also
     ``` cpp
 	auto generate_polynomial(const Matrix& x, size_t degree) {
 	  assert(x.shape().size() == 1);
@@ -287,5 +287,6 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTE1NDI3MTEzOCw0MjcyMzE5MzZdfQ==
+eyJoaXN0b3J5IjpbLTEyMDk1NDIxMTIsMTE1NDI3MTEzOCw0Mj
+cyMzE5MzZdfQ==
 -->
