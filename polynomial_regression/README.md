@@ -110,16 +110,15 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     using Matrix = xt::xarray<DType, xt::layout_type::row_major>;
     ...
    auto standardize(const Matrix& v) {
-		assert(v.shape().size() == 1);
-		auto m = xt::eval(xt::mean(v))[0];
-		auto n = v.shape()[0];
-		auto sd = xt::eval(
-		xt::sqrt(xt::sum(xt::pow(v - m, 2)) / static_cast<DType>(n - 1)))[0];
-		auto sv = (v - m) / sd;
-		return std::make_tuple(xt::eval(sv), m, sd);
-
-	}
-    ```
+     assert(v.shape().size() == 1);
+     auto m = xt::eval(xt::mean(v))[0];
+     auto n = v.shape()[0];
+     auto sd = xt::eval(
+     xt::sqrt(xt::sum(xt::pow(v - m, 2)) / static_cast<DType>(n - 1)))[0];
+     auto sv = (v - m) / sd;
+     return std::make_tuple(xt::eval(sv), m, sd);
+   }
+   ```
 7. **Generating new data for testing model predictions**
 
     Here I used ``xt::eval`` function to evaluate XTensor expression in place to get calculation results, because they required for use in ``xt::linspace`` function. ``xt::linspace`` function have same semantic as in ``numpy``.
@@ -288,5 +287,5 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTk0MzI1OTAyNyw0MjcyMzE5MzZdfQ==
+eyJoaXN0b3J5IjpbLTEyMDk3NzU2MDcsNDI3MjMxOTM2XX0=
 -->
