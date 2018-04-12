@@ -172,7 +172,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 9. **Generating additional polynomial components**
 
-    To be able to approximate our data with higher degree polynomial I wrote a function for generating additional terms. Pay attention at ``x^0`` term which is used to simplify math calculations and use power of vectorization, it correcponds to ``b0`` and equals 1.  So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.  Also
+    To be able to approximate our data with higher degree polynomial I wrote a function for generating additional terms. Pay attention at ``x^0`` term which is used to simplify math calculations and use power of vectorization, it correcponds to ``b0`` and equals 1.  So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.  Also each column is standardized.
     ``` cpp
 	auto generate_polynomial(const Matrix& x, size_t degree) {
 	  assert(x.shape().size() == 1);
@@ -203,31 +203,41 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
     To be able to test different models which correspond to different polynomial order I made a function which perform data scaling, generate additional polynomial terms, learn polynomial coefficients with BGD and returns function which takes new data for X and return predicted Y values. The most interesting thing here is restoration of scale for predicted Y values.
     ``` cpp
-    auto make_regression_model(const Matrix& data_x,
-                               const Matrix& data_y,
-                               size_t p_degree) {
-      // minmax scaling
-      auto y = xt::eval(minmax_scale(data_y));
+	auto make_regression_model(const Matrix& data_x,
+	                           const Matrix& data_y,
+	                           size_t p_degree,
+	                           bool equation) {
+	  // minmax scaling
+	  auto [y, ym, ysd] = standardize(data_y);
 
-      // minmax scaling & polynomization
-      auto x = xt::eval(generate_polynomial(data_x, p_degree));
+	  // standardization & polynomization
+	  Matrix x = xt::eval(generate_polynomial(data_x, p_degree));
 
-      // learn parameters with Gradient Descent
-      auto b = bgd(x, y, 15);
+	  Matrix b;
+	  if (equation) {
+	    // calculate parameters witn normal equation
+	    auto xt = xt::transpose(x);
+	    b = xt::linalg::dot(
+	        xt::linalg::dot(xt::linalg::inv(xt::linalg::dot(xt, x)), xt), y);
+	    auto cost = (xt::sum(xt::pow(y - xt::linalg::dot(x, b), 2.f)) /
+	                 static_cast<DType>(x.shape()[0]))[0];
+	    std::cout << "calculated cost : " << cost << std::endl;
+	  } else {
+	    // learn parameters with Gradient Descent
+	    b = bgd(x, y, 15);
+	  }
 
-      // create model
-      auto y_minmax = xt::minmax(data_y)();
-      auto model = [b, y_minmax, p_degree](const auto& data_x) {
-        auto x = xt::eval(generate_polynomial(data_x, p_degree));
-        Matrix yhat = xt::linalg::dot(x, b);
+	  // create model
+	  auto model = [b, ym, ysd, p_degree](const auto& data_x) {
+	    auto x = xt::eval(generate_polynomial(data_x, p_degree));
+	    Matrix yhat = xt::linalg::dot(x, b);
+	    // restore scaling for predicted line values
 
-        // restore scaling for predicted line values
-
-        yhat = yhat * (y_minmax[1] - y_minmax[0]) + y_minmax[0];
-        return yhat;
-      };
-      return model;
-    }
+	    yhat = (yhat * ysd) + ym;
+	    return yhat;
+	  };
+	  return model;
+	}
     ```
 11. **Making predictions**
 
@@ -287,6 +297,6 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEyMDk1NDIxMTIsMTE1NDI3MTEzOCw0Mj
-cyMzE5MzZdfQ==
+eyJoaXN0b3J5IjpbMTA0NDA3MzA1NywxMTU0MjcxMTM4LDQyNz
+IzMTkzNl19
 -->
