@@ -174,29 +174,30 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 
     To be able to approximate our data with higher degree polynomial I wrote a function for generating additional terms. Pay attention ``x^0`` term which is used to simplify math calculations and use power of vectorization. So this function returns new matrix for ``X`` data with next terms for each row ``Xi = [1, xi, xi^2, xi^3, ..., xi^n]`` where ``i`` is row index.
     ``` cpp
-    auto generate_polynomial(const Matrix& x, size_t degree) {
-      assert(x.shape().size() == 1);
-      auto rows = x.shape()[0];
-      auto poly_shape = std::vector<size_t>{rows, degree};
-      Matrix poly_x = xt::zeros<DType>(poly_shape);
-      // fill additional column for simpler vectorization
-      {
-        auto xv = xt::view(poly_x, xt::all(), 0);
-        xv = xt::ones<DType>({rows});
-      }
-      // copy initial data
-      {
-        auto xv = xt::view(poly_x, xt::all(), 1);
-        xv = minmax_scale(x);
-      }
-      // generate additional terms
-      auto x_col = xt::view(poly_x, xt::all(), 1);
-      for (size_t i = 2; i < degree; ++i) {
-        auto xv = xt::view(poly_x, xt::all(), i);
-        xv = xt::pow(x_col, static_cast<float>(i));
-      }
-      return poly_x;
-    }
+	auto generate_polynomial(const Matrix& x, size_t degree) {
+	  assert(x.shape().size() == 1);
+	  auto rows = x.shape()[0];
+	  auto poly_shape = std::vector<size_t>{rows, degree};
+	  Matrix poly_x = xt::zeros<DType>(poly_shape);
+	  // fill additional column for simpler vectorization
+	  {
+	    auto xv = xt::view(poly_x, xt::all(), 0);
+	    xv = xt::ones<DType>({rows});
+	  }
+	  // copy initial data
+	  {
+	    auto xv = xt::view(poly_x, xt::all(), 1);
+	    xv = std::get<0>(standardize(x));
+	  }
+	  // generate additional terms
+	  auto x_col = xt::view(poly_x, xt::all(), 1);
+	  for (size_t i = 2; i < degree; ++i) {
+	    auto xv = xt::view(poly_x, xt::all(), i);
+	    xv = xt::pow(x_col, static_cast<DType>(i));
+	    xv = std::get<0>(standardize(xv));
+	  }
+	  return poly_x;
+	}
     ```
 10. **Creating general regression model**
 
@@ -286,5 +287,5 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEwNjc5NzIwNjMsNDI3MjMxOTM2XX0=
+eyJoaXN0b3J5IjpbMTA5MDU4NDY3Myw0MjcyMzE5MzZdfQ==
 -->
