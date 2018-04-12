@@ -115,10 +115,10 @@ auto make_regression_model(const Matrix& data_x,
                            const Matrix& data_y,
                            size_t p_degree,
                            bool equation) {
-  // minmax scaling
+  // Y standardization
   auto [y, ym, ysd] = standardize(data_y);
 
-  // standardization & polynomization
+  // X standardization & polynomization
   Matrix x = xt::eval(generate_polynomial(data_x, p_degree));
 
   Matrix b;
