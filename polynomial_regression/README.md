@@ -296,3 +296,6 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbNDI3MjMxOTM2XX0=
+-->
