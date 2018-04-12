@@ -100,7 +100,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
      auto shape_y = std::vector<size_t>{rows};
      auto data_y = xt::adapt(raw_data_y, shape_y);
     ```
-6. **MinMax scaling**
+6. **Standardization**
 
     I independently scaled each column in the input matrices. For one dimensional matrix XTensor's shape is also one dimensional so I have had to handle this case separately. Pay attention on using ``xt::view`` for vectorized processing of independent columns, it have the same meaning as ``slices`` in ``numpy``.
     ``` cpp
@@ -109,25 +109,16 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     // linalg package doesn't support dynamic layouts
     using Matrix = xt::xarray<DType, xt::layout_type::row_major>;
     ...
-    auto minmax_scale(const Matrix& v) {
-      if (v.shape().size() == 1) {
-        auto minmax = xt::minmax(v)();
-        Matrix vs = (v - minmax[0]) / (minmax[1] - minmax[0]);
-        return vs;
-      } else if (v.shape().size() == 2) {
-        auto w = v.shape()[1];
-        Matrix vs = xt::zeros<DType>(v.shape());
-        for (decltype(w) j = 0; j < w; ++j) {
-          auto vc = xt::view(v, xt::all(), j);
-          auto vsc = xt::view(vs, xt::all(), j);
-          auto minmax = xt::minmax(vc)();
-          vsc = (vc - minmax[0]) / (minmax[1] - minmax[0]);
-        }
-        return vs;
-      } else {
-        throw std::logic_error("Minmax scale unsupported dimensions");
-      }
-    }
+   auto standardize(const Matrix& v) {
+		assert(v.shape().size() == 1);
+		auto m = xt::eval(xt::mean(v))[0];
+		auto n = v.shape()[0];
+		auto sd = xt::eval(
+		xt::sqrt(xt::sum(xt::pow(v - m, 2)) / static_cast<DType>(n - 1)))[0];
+		auto sv = (v - m) / sd;
+		return std::make_tuple(xt::eval(sv), m, sd);
+
+	}
     ```
 7. **Generating new data for testing model predictions**
 
@@ -297,5 +288,5 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNDI3MjMxOTM2XX0=
+eyJoaXN0b3J5IjpbLTk0MzI1OTAyNyw0MjcyMzE5MzZdfQ==
 -->
