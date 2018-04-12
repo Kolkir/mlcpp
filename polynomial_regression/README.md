@@ -102,7 +102,7 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     ```
 6. **Standardization**
 
-    To be able to perform  successful computations for regression analysis we need to standardize our data.
+    To be able to perform  successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data.
     ``` cpp
     ...
     typedef float DType;
@@ -287,5 +287,5 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEyMTUwMjI3NzEsNDI3MjMxOTM2XX0=
+eyJoaXN0b3J5IjpbLTE5NTE0NjkyMTMsNDI3MjMxOTM2XX0=
 -->
