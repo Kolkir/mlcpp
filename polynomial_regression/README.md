@@ -244,11 +244,11 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
     Here are examples how function for creating different regression models can be used and how  to make a predictions.
     ``` cpp
     // straight line
-    auto line_model = make_regression_model(data_x, data_y, 2);
+    auto line_model = make_regression_model(data_x, data_y, 2, false);
     Matrix line_values = line_model(new_x);
 
     // poly line
-    auto poly_model = make_regression_model(data_x, data_y, 16);
+    auto poly_model = make_regression_model(data_x, data_y, 16, false);
     Matrix poly_line_values = poly_model(new_x);
     ```
 12. **Plot results**
@@ -297,6 +297,6 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE0NDUyNjYwNzQsMTE1NDI3MTEzOCw0Mj
-cyMzE5MzZdfQ==
+eyJoaXN0b3J5IjpbNjkzNTk4MTc2LC0xNDQ1MjY2MDc0LDExNT
+QyNzExMzgsNDI3MjMxOTM2XX0=
 -->
