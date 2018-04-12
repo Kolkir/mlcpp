@@ -207,10 +207,10 @@ For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) libra
 	                           const Matrix& data_y,
 	                           size_t p_degree,
 	                           bool equation) {
-	  // minmax scaling
+	  // Y standardization                  
 	  auto [y, ym, ysd] = standardize(data_y);
 
-	  // standardization & polynomization
+	  // X standardization & polynomization
 	  Matrix x = xt::eval(generate_polynomial(data_x, p_degree));
 
 	  Matrix b;
@@ -297,6 +297,6 @@ You can find full source of this example on [GitHub](https://github.com/Kolkir/m
 
 Next time I will solve this task with [MShadow](https://github.com/dmlc/mshadow) library to expose power of a GPU.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTA0NDA3MzA1NywxMTU0MjcxMTM4LDQyNz
-IzMTkzNl19
+eyJoaXN0b3J5IjpbLTE0NDUyNjYwNzQsMTE1NDI3MTEzOCw0Mj
+cyMzE5MzZdfQ==
 -->
