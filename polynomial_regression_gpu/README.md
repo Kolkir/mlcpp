@@ -8,32 +8,35 @@ Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/po
 
 You have pay attention on how sources for this tutorial are compiled, I used CUDA compiler for them, please look at corresponding CMakeLists.txt file for details. Also you should have installed ``gcc-6`` as host compiler for ``CUDA 9``.
 
-1. **Loading data to MShadow datastructures**
+0. **Preparations**
+	
+2. **Loading data to MShadow datastructures**
 
     
-2. **Standardization**
+3. **Standardization**
 
    
-3. **Generating new data for testing model predictions**
+4. **Generating new data for testing model predictions**
 
   
-4. **Batch gradient descent implementation**
+5. **Batch gradient descent implementation**
 
    
-5. **Generating additional polynomial components**
+6. **Generating additional polynomial components**
 
  
-6. **Creating general regression model**
+7. **Creating general regression model**
 
     
-7. **Making predictions**
+8. **Making predictions**
 
    
-8. **Plot results**
+9. **Plot results**
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTE3NzE4NjY2OSwxOTk5NzAyNzYyLDE1Mj
-k2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ==
+eyJoaXN0b3J5IjpbLTIwODM4MjIzOTUsMTE3NzE4NjY2OSwxOT
+k5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5
+NzY2NTddfQ==
 -->
