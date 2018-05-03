@@ -1,8 +1,6 @@
 # Polynomial regression with MShadow library tutorial
 
-There are a lot of articles about how to use Python for solving Machine Learning problems, with this article I start series of materials on how to use modern C++ for solving same problems and which libraries can be used. I assume that readers are already familiar with Machine Learning concepts and will concentrate on technical issues only.
-
-I start with simple polynomial regression to make a model to predict an amount of traffic passed through the system at some time point. Our prediction will be based on data gathered over some time period. The ``X`` data values correspond to time points and ``Y`` data values correspond to time points.
+Hello, this is my second article about how to use modern C++ for solving m polynomial regression to make a model to predict an amount of traffic passed through the system at some time point. Our prediction will be based on data gathered over some time period. The ``X`` data values correspond to time points and ``Y`` data values correspond to time points.
 
 For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with a minimum effort.
 
@@ -301,5 +299,5 @@ eyJoaXN0b3J5IjpbNjkzNTk4MTc2LC0xNDQ1MjY2MDc0LDExNT
 QyNzExMzgsNDI3MjMxOTM2XX0=
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTk1NTU1MzQ2Ml19
+eyJoaXN0b3J5IjpbLTE2MTk2NDcwN119
 -->
