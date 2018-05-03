@@ -29,11 +29,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	ScopedTensorEngine<ms::cpu> tensorEngineCpu;
 	ScopedTensorEngine<ms::gpu> tensorEngineGpu;
 	```
-	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device.allows independent concurrent in-order queues of execution.
-
-  
-
-–Operations in different streams can be interleaved and overlapped, which can be used to hide data transfers between host and device.
+	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device. Streams can be run in independent concurrent in-order queues of execution, and operations in different streams can be interleaved and overlapped. This variable is nessary
 	```
    ms::Stream<ms::gpu>* computeStream = ms::NewStream<ms::gpu>(true, false, -1);
 	```
@@ -64,7 +60,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjQ0NjgwMSw2ODMwMTA4NCwxMTc3MTg2Nj
-Y5LDE5OTk3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwt
-MTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbLTQ3MDA1MTA4NSw2ODMwMTA4NCwxMTc3MT
+g2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0
+OCwtMTcyOTk3NjY1N119
 -->
