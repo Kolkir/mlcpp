@@ -2,7 +2,9 @@
 
 Hello, this is my second article about how to use modern C++ for solving machine learning problems. This time I will show how to make a model for polynomial regression problem described in previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression), but now with another library which allows you to use your GPU easily.
 
-For this tutorial I chose [MShadow](https://github.com/dmlc/mshadow) library, you can find documentation for it [here](https://github.com/dmlc/mshadow/tree/master/doc). This library was chosen because it is actively developed now, and used as a basis for one of a wide used deep learning framework [MXNet](https://mxnet.incubator.apache.org/). Also it is a header only library with minimal dependencies, so it's integration i
+For this tutorial I chose [MShadow](https://github.com/dmlc/mshadow) library, you can find documentation for it [here](https://github.com/dmlc/mshadow/tree/master/doc). This library was chosen because it is actively developed now, and used as a basis for one of a wide used deep learning framework [MXNet](https://mxnet.incubator.apache.org/). Also it is a header only library with minimal dependencies, so it's integration is not hard at all.
+
+Please look previous article to learn how to download, 
 
 1. **Loading data to XTensor datastructures**
 
@@ -216,5 +218,5 @@ eyJoaXN0b3J5IjpbNjkzNTk4MTc2LC0xNDQ1MjY2MDc0LDExNT
 QyNzExMzgsNDI3MjMxOTM2XX0=
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEyMjY3NTcyOCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbMTUwMjE5MTM3OSwtMTcyOTk3NjY1N119
 -->
