@@ -6,7 +6,7 @@ For this tutorial I chose [MShadow](https://github.com/dmlc/mshadow) library, yo
 
 Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression) to learn how to download and parse training data. 
 
-You have pay attention on how sources for this tutorial are compiled, I used CUDA compiler for them, please look at corresponding CMakeLists.txt file for details. Also you should have installed ``gcc-6`` as host compiler for 
+You have pay attention on how sources for this tutorial are compiled, I used CUDA compiler for them, please look at corresponding CMakeLists.txt file for details. Also you should have installed ``gcc-6`` as host compiler for ``CUDA 9``.
 
 1. **Loading data to MShadow datastructures**
 
@@ -34,6 +34,6 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTgwNTc0MDA5MywxOTk5NzAyNzYyLDE1Mj
+eyJoaXN0b3J5IjpbMTE3NzE4NjY2OSwxOTk5NzAyNzYyLDE1Mj
 k2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ==
 -->
