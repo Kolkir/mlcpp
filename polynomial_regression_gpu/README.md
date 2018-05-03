@@ -11,6 +11,8 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 0. **Preparations**
 	MShadow library use special routines to initialize and shutdown itself,  I wrote a simple class to use them in RAII manner:
 	``` cpp
+	#include <mshadow/tensor.h>
+	...
 	namespace ms = mshadow;
 	typedef float DType;
 	...
@@ -22,6 +24,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  ScopedTensorEngine& operator=(const ScopedTensorEngine&) = delete;
 	};
 	```
+	Device template parameter c
 	
 2. **Loading data to MShadow datastructures**
 
@@ -49,7 +52,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTYwNDE3MTk1OSwxMTc3MTg2NjY5LDE5OT
-k3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMTcyOTk3
-NjY1N119
+eyJoaXN0b3J5IjpbLTE2MjU5Mjk2MTEsMTE3NzE4NjY2OSwxOT
+k5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5
+NzY2NTddfQ==
 -->
