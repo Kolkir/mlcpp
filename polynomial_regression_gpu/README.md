@@ -9,7 +9,7 @@ Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/po
 You have pay attention on how sources for this tutorial are compiled, I used CUDA compiler for them, please look at corresponding CMakeLists.txt file for details. Also you should have installed ``gcc-6`` as host compiler for ``CUDA 9``.
 
 0. **Preparations**
-	
+	MShadow library use special routines to initialize and close itself, they are
 2. **Loading data to MShadow datastructures**
 
     
@@ -36,7 +36,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTIwODM4MjIzOTUsMTE3NzE4NjY2OSwxOT
-k5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5
-NzY2NTddfQ==
+eyJoaXN0b3J5IjpbMzgyMjA5ODM5LDExNzcxODY2NjksMTk5OT
+cwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2
+NjU3XX0=
 -->
