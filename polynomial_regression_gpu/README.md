@@ -32,6 +32,6 @@ Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/po
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ
-==
+eyJoaXN0b3J5IjpbMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMT
+cyOTk3NjY1N119
 -->
