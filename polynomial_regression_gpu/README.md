@@ -4,7 +4,9 @@ Hello, this is my second article about how to use modern C++ for solving machine
 
 For this tutorial I chose [MShadow](https://github.com/dmlc/mshadow) library, you can find documentation for it [here](https://github.com/dmlc/mshadow/tree/master/doc). This library was chosen because it is actively developed now, and used as a basis for one of a wide used deep learning framework [MXNet](https://mxnet.incubator.apache.org/). Also it is a header only library with minimal dependencies, so it's integration is not hard at all.
 
-Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression) to learn how to download and parse training data.
+Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression) to learn how to download and parse training data. 
+
+You have pay attention on 
 
 1. **Loading data to MShadow datastructures**
 
@@ -32,6 +34,6 @@ Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/po
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMT
-cyOTk3NjY1N119
+eyJoaXN0b3J5IjpbLTMxMzM3NjAzMSwxNTI5NjQyNjQ3LC0xNz
+M2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
 -->
