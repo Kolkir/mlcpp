@@ -2,92 +2,9 @@
 
 Hello, this is my second article about how to use modern C++ for solving machine learning problems. This time I will show how to make a model for polynomial regression problem described in previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression), but now with another library which allows you to use your GPU easily.
 
-For this tutorial I chose [MShadow](https://github.com/dmlc/mshadow) library, you can find documentation for it [here](https://github.com/dmlc/mshadow/tree/master/doc). This library was chosen because of it is .
+For this tutorial I chose [MShadow](https://github.com/dmlc/mshadow) library, you can find documentation for it [here](https://github.com/dmlc/mshadow/tree/master/doc). This library was chosen because it is .
 
-0. **Short polynomial regression definition**
-   [Polynomial regression](https://en.wikipedia.org/wiki/Polynomial_regression) is a form of linear regression in which the relationship between the independent variable _x_ and the dependent variable _y_ is modeled as an _n_-th degree polynomial in _x_.
-
-   <img src="https://latex.codecogs.com/gif.latex?\hat{y}=f(x)=b_0&space;\cdot&space;x^0&space;&plus;&space;b_1&space;\cdot&space;x^1&plus;b_2&space;\cdot&space;x^2&space;&plus;...&space;&plus;b_n&space;\cdot&space;x^n"/>
-
-    Because our training data consist of multiple samples we  can rewrite this relation in matrix form:
-
-    <img src="https://latex.codecogs.com/gif.latex?\hat{Y}=X\cdot\vec{b}" />
-
-   Where
-
-   <img src="https://latex.codecogs.com/gif.latex?X&space;=&space;\begin{pmatrix}&space;1&&space;x_0&&space;x_0^2&&space;...&&space;x_0^n&space;\\&space;1&&space;x_1&&space;x_1^2&&space;...&&space;x_1^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_i&&space;x_i^2&&space;...&&space;x_i^n&space;\\&space;...&&space;...&&space;...&&space;...&&space;...&space;\\&space;1&&space;x_k&&space;x_k^2&&space;...&&space;x_k^n&space;\\&space;\end{pmatrix}"/>
-
-   and _k_ is a number of samples if the training data.
-   So the goal is to estimate the parameters vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/>. In this tutorial I will use gradient descent for this task. First let's define a cost function:
-
-   <img src="https://latex.codecogs.com/gif.latex?L(X,Y)&space;=&space;\frac{1}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})^2"/>
-
-   Where _Y_ is vector of values from our training data. Next we should take a partial derivatives with respect to each <img src="https://latex.codecogs.com/gif.latex?b_j"/> term of polynomial:
-
-   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{2}{k}\cdot\sum_{i=1}^{k}(Y_i&space;-&space;\hat{Y_i})\cdot{-X_i^{(j)}},&space;j&space;\in&space;[1,n]"/>
-   
-   Or in the matrix form:
-   
-   <img src="https://latex.codecogs.com/gif.latex?\frac{\partial&space;L}{\partial&space;b_j}&space;=&space;\frac{2}{k}\cdot&space;X^{T}\cdot&space;(\hat{Y}-Y)"/>
-
-   And use these derivatives to update vector <img src="https://latex.codecogs.com/gif.latex?\vec{b}"/> on each learning step:
-
-   <img src="https://latex.codecogs.com/gif.latex?b_i&space;=&space;b_i&space;-&space;l\cdot\frac{\partial&space;L}{\partial&space;b_i}" title="b_i = b_i - l\cdot\frac{\partial L}{\partial b_i}" />
-
-   Where _l_ is a learning rate.
-2. **Downloading data**
-
-   I used STL ``filesystem`` library to check downloaded file existence to prevent multiple downloads, and used `libcurl` library for downloading data files, see ``utils::DownloadFile`` function implementation for details. And I used a data from "Building Machine Learning Systems with Python" book by Willi Richert.
-    ``` cpp
-    ...
-    namespace fs = std::experimental::filesystem;
-    ...
-    const std::string data_path{"web_traffic.tsv"};
-    if (!fs::exists(data_path)) {
-      const std::string data_url{
-          R"(https://raw.githubusercontent.com/luispedro/BuildingMachineLearningSystemsWithPython/master/ch01/data/web_traffic.tsv)"};
-      if (!utils::DownloadFile(data_url, data_path)) {
-        std::cerr << "Unable to download the file " << data_url << std::endl;
-        return 1;
-      }
-    }
-    ```
-3. **Parsing data**
-
-    For reading TSV formated data I used [fast-cpp-csv-parser](https://github.com/ben-strasser/fast-cpp-csv-parser) library. But changed default configuration of ``io::CSVReader`` object to use tabs as delimiters instead of commas. To parse whole data file I read the file line by line, see ``CSVReader::read_row`` method. Also pay attention on how I handle parse exceptions to ignore bad formatted items - just skip them.
-    ``` cpp
-    io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> data_tsv(
-      data_path);
-
-    std::vector<DType> raw_data_x;
-    std::vector<DType> raw_data_y;
-
-    bool done = false;
-    do {
-      try {
-        DType x = 0, y = 0;
-        done = !data_tsv.read_row(x, y);
-        if (!done) {
-          raw_data_x.push_back(x);
-          raw_data_y.push_back(y);
-        }
-      } catch (const io::error::no_digit& err) {
-        // ignore bad formated samples
-        std::cout << err.what() << std::endl;
-      }
-    } while (!done);
-    ```
-4. **Shuffling data**
-
-    Using STL ``shuffle`` algorithm helps me to shuffle the data.
-    ``` cpp
-    size_t seed = 3465467546;
-    std::shuffle(raw_data_x.begin(), raw_data_x.end(),
-                 std::default_random_engine(seed));
-    std::shuffle(raw_data_y.begin(), raw_data_y.end(),
-                 std::default_random_engine(seed));
-    ```
-5. **Loading data to XTensor datastructures**
+1. **Loading data to XTensor datastructures**
 
     I used ``xt::adapt`` function to create wrappers around existent data located in ``std::vector`` to prevent data duplicates.
     ``` cpp
@@ -299,5 +216,5 @@ eyJoaXN0b3J5IjpbNjkzNTk4MTc2LC0xNDQ1MjY2MDc0LDExNT
 QyNzExMzgsNDI3MjMxOTM2XX0=
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE2NTI0MzkxOTZdfQ==
+eyJoaXN0b3J5IjpbMTIwNzEzMDQ1Ml19
 -->
