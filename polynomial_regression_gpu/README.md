@@ -1,6 +1,6 @@
 # Polynomial regression with MShadow library tutorial
 
-Hello, this is my second article about how to use modern C++ for solving machine learning problems. This time I will show how t polynomial regression problem described in previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression), but now I will show how can we implement such model.
+Hello, this is my second article about how to use modern C++ for solving machine learning problems. This time I will show how to make a model for polynomial regression problem described in previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression), but now with another library which allows to use your GPU easily.
 
 For this tutorial I chose [XTensor](https://github.com/QuantStack/xtensor) library, you can find documentation for it [here](https://xtensor.readthedocs.io/en/latest). This library was chosen because of its API, which is made similar to ``numpy`` as much as possible. There are a lot of other linear algebra libraries for C++ like ``Eigen`` or ``VieanCL`` but this one allows you to convert ``numpy`` samples to C++ with a minimum effort.
 
@@ -299,5 +299,5 @@ eyJoaXN0b3J5IjpbNjkzNTk4MTc2LC0xNDQ1MjY2MDc0LDExNT
 QyNzExMzgsNDI3MjMxOTM2XX0=
 -->
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTc4Njk2NjQxM119
+eyJoaXN0b3J5IjpbMTg1NjgxMDI5M119
 -->
