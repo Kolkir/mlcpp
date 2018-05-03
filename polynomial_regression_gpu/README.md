@@ -29,7 +29,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	ScopedTensorEngine<ms::cpu> tensorEngineCpu;
 	ScopedTensorEngine<ms::gpu> tensorEngineGpu;
 	```
-	Next I defined 
+	Next I defined a variable which will represent a CUDA stream
 	```
    ms::Stream<ms::gpu>* computeStream = ms::NewStream<ms::gpu>(true, false, -1);
 	```
@@ -60,7 +60,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5Nz
-AyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2
-NTddfQ==
+eyJoaXN0b3J5IjpbLTE4OTYxNDE5NzgsNjgzMDEwODQsMTE3Nz
+E4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcy
+NDgsLTE3Mjk5NzY2NTddfQ==
 -->
