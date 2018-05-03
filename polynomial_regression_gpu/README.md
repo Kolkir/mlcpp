@@ -24,12 +24,12 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  ScopedTensorEngine& operator=(const ScopedTensorEngine&) = delete;
 	};
 	```
-	Device template parameter can be ``ms::cpu`` or ``ms::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code ):
+	Device template parameter can be ``ms::cpu`` or ``ms::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code will remain the same):
 	```
 	ScopedTensorEngine<ms::cpu> tensorEngineCpu;
 	ScopedTensorEngine<ms::gpu> tensorEngineGpu;
 	```
-	Next 
+	Next I defined 
 	```
    ms::Stream<ms::gpu>* computeStream = ms::NewStream<ms::gpu>(true, false, -1);
 	```
@@ -60,7 +60,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE5OTU5MTQ5NjcsMTE3NzE4NjY2OSwxOT
-k5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5
-NzY2NTddfQ==
+eyJoaXN0b3J5IjpbNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5Nz
+AyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2
+NTddfQ==
 -->
