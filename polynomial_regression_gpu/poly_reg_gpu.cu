@@ -21,6 +21,8 @@
 // Namespace and type aliases
 namespace fs = std::experimental::filesystem;
 namespace ms = mshadow;
+using GpuStream = ms::Stream<ms::gpu>;
+using GpuStreamPtr = std::unique_ptr<GpuStream, void (*)(GpuStream*)>;
 typedef float DType;
 
 template <typename Device>
@@ -43,7 +45,7 @@ class Standardizer {
  public:
   using T = ms::TensorContainer<ms::gpu, 2, DType>;
 
-  Standardizer(ms::Stream<ms::gpu>* computeStream, size_t rows)
+  Standardizer(GpuStream* computeStream, size_t rows)
       : min(ms::Shape1(1)),
         max(ms::Shape1(1)),
         mean(ms::Shape1(1)),
@@ -60,7 +62,7 @@ class Standardizer {
   Standardizer(const Standardizer&) = delete;
   Standardizer& operator=(const Standardizer&) = delete;
 
-  void standardize(T& vec, ms::Stream<ms::gpu>* computeStream) {
+  void standardize(T& vec, GpuStream* computeStream) {
     mean = ms::expr::sumall_except_dim<1>(vec);
     mean /= static_cast<DType>(rows);
     temp = ms::expr::F<Pow>(vec - ms::expr::broadcast<1>(mean, temp.shape_), 2);
@@ -85,7 +87,7 @@ class Standardizer {
     ms::Copy(vec, temp, computeStream);
   }
 
-  auto get_moments(ms::Stream<ms::gpu>* computeStream) {
+  auto get_moments(GpuStream* computeStream) {
     ms::TensorContainer<ms::cpu, 1, DType> value(ms::Shape1(1));
     ms::Copy(value, min, computeStream);
     DType v_min = value[0];
@@ -110,7 +112,7 @@ class Standardizer {
 void generate_polynomial(std::vector<DType>& raw_data_x,
                          size_t p_degree,
                          ms::TensorContainer<ms::gpu, 2, DType>& gpu_x,
-                         ms::Stream<ms::gpu>* computeStream) {
+                         GpuStream* computeStream) {
   auto rows = raw_data_x.size();
   ms::Tensor<ms::cpu, 2, DType> host_x(raw_data_x.data(), ms::Shape2(rows, 1));
   ms::TensorContainer<ms::gpu, 2, DType> gpu_basis_x(host_x.shape_);
@@ -177,24 +179,25 @@ int main() {
 
   ScopedTensorEngine<ms::cpu> tensorEngineCpu;
   ScopedTensorEngine<ms::gpu> tensorEngineGpu;
-  ms::Stream<ms::gpu>* computeStream = ms::NewStream<ms::gpu>(true, false, -1);
+  GpuStreamPtr computeStream(ms::NewStream<ms::gpu>(true, false, -1),
+                             [](GpuStream* s) { ms::DeleteStream(s); });
 
   // map data to the tensors
   auto rows = raw_data_x.size();
   ms::Tensor<ms::cpu, 2, DType> host_y(raw_data_y.data(), ms::Shape2(rows, 1));
   ms::TensorContainer<ms::gpu, 2, DType> gpu_y(host_y.shape_);
-  gpu_y.set_stream(computeStream);
-  ms::Copy(gpu_y, host_y, computeStream);
+  gpu_y.set_stream(computeStream.get());
+  ms::Copy(gpu_y, host_y, computeStream.get());
 
   // standardize / normalize
-  Standardizer standardizer(computeStream, rows);
-  standardizer.standardize(gpu_y, computeStream);
-  auto y_moments = standardizer.get_moments(computeStream);
+  Standardizer standardizer(computeStream.get(), rows);
+  standardizer.standardize(gpu_y, computeStream.get());
+  auto y_moments = standardizer.get_moments(computeStream.get());
 
   // generate polynom
   const size_t p_degree = 64;
   ms::TensorContainer<ms::gpu, 2, DType> gpu_x(ms::Shape2(rows, p_degree));
-  generate_polynomial(raw_data_x, p_degree, gpu_x, computeStream);
+  generate_polynomial(raw_data_x, p_degree, gpu_x, computeStream.get());
 
   // learn polynomial regression with Batch Gradient Descent
   size_t n_epochs = 5000;
@@ -206,32 +209,32 @@ int main() {
 
   // it is important to allocate all tensors before assiging
   ms::TensorContainer<ms::gpu, 2, DType> gpu_weights(ms::Shape2(p_degree, 1));
-  gpu_weights.set_stream(computeStream);
+  gpu_weights.set_stream(computeStream.get());
   gpu_weights = 0.0f;
   ms::TensorContainer<ms::cpu, 2, DType> cpu_weights(ms::Shape2(p_degree, 1));
 
   ms::TensorContainer<ms::gpu, 2, DType> gpu_grad(ms::Shape2(p_degree, 1));
-  gpu_grad.set_stream(computeStream);
+  gpu_grad.set_stream(computeStream.get());
 
   ms::TensorContainer<ms::gpu, 2, DType> yhat(ms::Shape2(batch_size, 1));
-  yhat.set_stream(computeStream);
+  yhat.set_stream(computeStream.get());
 
   ms::TensorContainer<ms::gpu, 2, DType> error(ms::Shape2(batch_size, 1));
-  error.set_stream(computeStream);
+  error.set_stream(computeStream.get());
 
   ms::TensorContainer<ms::gpu, 2, DType> error_total(ms::Shape2(rows, 1));
-  error_total.set_stream(computeStream);
+  error_total.set_stream(computeStream.get());
 
   ms::TensorContainer<ms::cpu, 2, DType> error_total_cpu(ms::Shape2(rows, 1));
 
   ms::TensorContainer<ms::gpu, 2, DType> gpu_eg_sum(ms::Shape2(p_degree, 1));
-  gpu_eg_sum.set_stream(computeStream);
+  gpu_eg_sum.set_stream(computeStream.get());
   gpu_eg_sum = 0.f;
   ms::TensorContainer<ms::gpu, 2, DType> gpu_weights_delta(
       ms::Shape2(p_degree, 1));
-  gpu_weights_delta.set_stream(computeStream);
+  gpu_weights_delta.set_stream(computeStream.get());
   ms::TensorContainer<ms::gpu, 2, DType> gpu_ex_sum(ms::Shape2(p_degree, 1));
-  gpu_ex_sum.set_stream(computeStream);
+  gpu_ex_sum.set_stream(computeStream.get());
   gpu_ex_sum = 0.f;
 
   // gradient descent
@@ -261,7 +264,7 @@ int main() {
       // gpu_weights = gpu_weights - (lr * gpu_grad);
 
       // Print weights
-      //      ms::Copy(cpu_weights, gpu_weights, computeStream);
+      //      ms::Copy(cpu_weights, gpu_weights, computeStream.get());
       //      std::cout << "weights : ";
       //      for (size_t r = 0; r < p_degree; ++r)
       //        std::cout << cpu_weights[0][r] << "; ";
@@ -270,7 +273,7 @@ int main() {
     // compute cost
     error_total = ms::expr::dot(gpu_x, gpu_weights);
     error_total = ms::expr::F<Pow>(error_total - gpu_y, 2);
-    ms::Copy(error_total_cpu, error_total, computeStream);
+    ms::Copy(error_total_cpu, error_total, computeStream.get());
     long double cost = 0;
     for (size_t r = 0; r < rows; ++r)
       cost += error_total_cpu[r][0];
@@ -290,11 +293,11 @@ int main() {
     x_val += inc_step;
   }
   ms::TensorContainer<ms::gpu, 2, DType> new_gpu_x(ms::Shape2(n, p_degree));
-  generate_polynomial(new_data_x, p_degree, new_gpu_x, computeStream);
+  generate_polynomial(new_data_x, p_degree, new_gpu_x, computeStream.get());
 
   // make predictions
   ms::TensorContainer<ms::gpu, 2, DType> new_gpu_y(ms::Shape2(n, 1));
-  new_gpu_y.set_stream(computeStream);
+  new_gpu_y.set_stream(computeStream.get());
   new_gpu_y = ms::expr::dot(new_gpu_x, gpu_weights);
 
   // restore scaling
@@ -305,10 +308,7 @@ int main() {
   // get results from gpu
   std::vector<DType> raw_pred_y(n);
   ms::Tensor<ms::cpu, 2, DType> pred_y(raw_pred_y.data(), ms::Shape2(n, 1));
-  ms::Copy(pred_y, new_gpu_y, computeStream);
-
-  // free resources
-  ms::DeleteStream(computeStream);
+  ms::Copy(pred_y, new_gpu_y, computeStream.get());
 
   // plot the data we read and approximate
   plotcpp::Plot plt(true);
