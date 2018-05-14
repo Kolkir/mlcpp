@@ -38,7 +38,8 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     GpuStreamPtr computeStream(ms::NewStream<ms::gpu>(true, false, -1), 
         [](GpuStream* s) { ms::DeleteStream(s); });
 	```
-	C++ smart pointer with custom deleter  
+	C++ smart pointer with custom deleter can be very useful for C style interfaces.  
+	
 2. **Loading data to MShadow datastructures**
 
     
@@ -65,7 +66,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTg5NjQ2MzgsLTk2OTU2NTcxMCw2ODMwMT
-A4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0Nywt
-MTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbMTEzMjk1MTcyMCwtOTY5NTY1NzEwLDY4Mz
+AxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3
+LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
 -->
