@@ -49,7 +49,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  gpu_y.set_stream(computeStream.get());
 	  ms::Copy(gpu_y, host_y, computeStream.get());
 	```
-    When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  
+    When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``ms::TensorContainer`` type which implements RAII idiom for ``ms::Tensor``  
 3. **Standardization**
 
    
@@ -73,8 +73,8 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1NTA3NjIwNTAsMTcwNzIzNjYxMywtOT
-Y5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2
-MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX
-0=
+eyJoaXN0b3J5IjpbLTk0MzU1NTYwMSwxNzA3MjM2NjEzLC05Nj
+k1NjU3MTAsNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYy
+LDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ
+==
 -->
