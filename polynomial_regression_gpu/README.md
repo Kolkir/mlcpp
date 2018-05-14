@@ -41,7 +41,13 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	C++ smart pointer with custom deleter can be very useful for C style interfaces.  
 	
 2. **Loading data to MShadow datastructures**
-
+	```
+	  auto rows = raw_data_x.size();
+	  ms::Tensor<ms::cpu, 2, DType> host_y(raw_data_y.data(), ms::Shape2(rows, 1));
+  ms::TensorContainer<ms::gpu, 2, DType> gpu_y(host_y.shape_);
+  gpu_y.set_stream(computeStream.get());
+  ms::Copy(gpu_y, host_y, computeStream.get());
+```
     
 3. **Standardization**
 
@@ -66,7 +72,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTEzMjk1MTcyMCwtOTY5NTY1NzEwLDY4Mz
+eyJoaXN0b3J5IjpbMTYwNzc4NDU2NSwtOTY5NTY1NzEwLDY4Mz
 AxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3
 LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
 -->
