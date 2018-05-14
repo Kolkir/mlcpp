@@ -31,10 +31,14 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	```
 	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device. Streams can be run in independent concurrent in-order queues of execution, and operations in different streams can be interleaved and overlapped. This variable is necessary for using other MShadow abstractions. 
 	```
+	...
+	using GpuStream = ms::Stream<ms::gpu>;
+    using GpuStreamPtr = std::unique_ptr<GpuStream, void (*)(GpuStream*)>;
+    ...
     GpuStreamPtr computeStream(ms::NewStream<ms::gpu>(true, false, -1), 
         [](GpuStream* s) { ms::DeleteStream(s); });
 	```
-	
+	C++ smart pointer with custom deleter  
 2. **Loading data to MShadow datastructures**
 
     
@@ -61,7 +65,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1Mjc1NTk3MjIsLTk2OTU2NTcxMCw2OD
-MwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0
-NywtMTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbNTg5NjQ2MzgsLTk2OTU2NTcxMCw2ODMwMT
+A4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0Nywt
+MTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
 -->
