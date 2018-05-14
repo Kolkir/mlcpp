@@ -14,9 +14,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	#include <mshadow/tensor.h>
 	...
 	namespace ms = mshadow;
-	using GpuStream = ms::Stream<ms::gpu>;
-    using GpuStreamPtr = std::unique_ptr<GpuStream, void (*)(GpuStream*)>;
-   typedef float DType;
+    typedef float DType;
 	...
 	template <typename Device>
 	struct ScopedTensorEngine {
@@ -63,7 +61,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTc3NzE5NDMzMSwtOTY5NTY1NzEwLDY4Mz
-AxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3
-LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
+eyJoaXN0b3J5IjpbLTE1Mjc1NTk3MjIsLTk2OTU2NTcxMCw2OD
+MwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0
+NywtMTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
 -->
