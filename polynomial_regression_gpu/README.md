@@ -41,7 +41,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	C++ smart pointer with custom deleter can be very useful for C style interfaces.  
 	
 1. **Loading data to MShadow datastructures**
-	There are several approaches to initialize tensors data structures in MShadow library, two of them I used next code section. When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecopying.  
+	There are several approaches to initialize tensors data structures in MShadow library, two of them I used next code section.
 	```
 	  auto rows = raw_data_x.size();
 	  ms::Tensor<ms::cpu, 2, DType> host_y(raw_data_y.data(), ms::Shape2(rows, 1));
@@ -49,7 +49,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  gpu_y.set_stream(computeStream.get());
 	  ms::Copy(gpu_y, host_y, computeStream.get());
 	```
-    
+    When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  
 3. **Standardization**
 
    
@@ -73,7 +73,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExOTI1Mzc5NDQsMTcwNzIzNjYxMywtOT
+eyJoaXN0b3J5IjpbLTE1NTA3NjIwNTAsMTcwNzIzNjYxMywtOT
 Y5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2
 MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX
 0=
