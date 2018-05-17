@@ -121,7 +121,7 @@ To be able to perform successful computations for regression analysis we need to
 	};
 	``` 
 	The interesting moments here are :
-	1.  ``ms::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, like subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it will require earlier expression evaluation which can hurt performance.
+	1.  ``ms::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it will require earlier expression evaluation which can hurt performance.
 	2.  ``ms::expr::sumall_except_dim`` function which calculate sum of elements along not specified tensor dimension. 
 	3.  ``ms::expr::F`` custom user specified operation on tensor elements, I used power and square root operations:
 		```cpp
@@ -133,7 +133,7 @@ To be able to perform successful computations for regression analysis we need to
 		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 		};
 		```
-	5.  ``ms::expr::ReduceTo1DExp``
+	5.  ``ms::expr::ReduceTo1DExp`` 
    
 4. **Generating new data for testing model predictions**
 
@@ -155,9 +155,9 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExOTY5MjcyMTAsMTY4MjcxNTY3MiwtMT
-IwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDcz
-OTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAsNj
-gzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2NDI2
-NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ==
+eyJoaXN0b3J5IjpbMTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMj
+A4ODgyNDA3LDE5NzMzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5
+MTUsODEyNjEyMDk0LDE3MDcyMzY2MTMsLTk2OTU2NTcxMCw2OD
+MwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0
+NywtMTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
 -->
