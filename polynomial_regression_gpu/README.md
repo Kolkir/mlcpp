@@ -25,7 +25,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	};
 	```
 	Device template parameter can be ``ms::cpu`` or ``ms::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code will remain the same):
-	```
+	``` cpp
 	ScopedTensorEngine<ms::cpu> tensorEngineCpu;
 	ScopedTensorEngine<ms::gpu> tensorEngineGpu;
 	```
@@ -74,7 +74,8 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbODEyNjEyMDk0LDE3MDcyMzY2MTMsLTk2OT
-U2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIs
-MTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbLTE0MTAzODUxNTEsODEyNjEyMDk0LDE3MD
+cyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5
+LDE5OTk3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMT
+cyOTk3NjY1N119
 -->
