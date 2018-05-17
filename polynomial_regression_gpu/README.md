@@ -122,7 +122,7 @@ To be able to perform successful computations for regression analysis we need to
 	  size_t rows;
 	};
 	``` 
-	The interesting 
+	The interesting moments here are using ``ms::expr::broadcast`` 
    
 4. **Generating new data for testing model predictions**
 
@@ -144,8 +144,8 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTkzMDAyMTA0NCwyNzI4NTMxMTEsLTE0MT
-Q3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEw
-LDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5Nj
-QyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
+eyJoaXN0b3J5IjpbMjQxODQ5OTUxLDI3Mjg1MzExMSwtMTQxND
+czOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAs
+NjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2ND
+I2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ==
 -->
