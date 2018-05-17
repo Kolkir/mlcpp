@@ -122,7 +122,7 @@ To be able to perform successful computations for regression analysis we need to
 	  size_t rows;
 	};
 	``` 
-	The interesting moments here are using ``ms::expr::broadcast`` function which make possible to perform element wise operations for tensors with single value like multiplication or subtraction  
+	The interesting moments here are using ``ms::expr::broadcast`` function which make possible to perform element wise operations for tensors with single value, like subtraction one number from each tensor element  
    
 4. **Generating new data for testing model predictions**
 
@@ -144,8 +144,9 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MT
-Q3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEw
-LDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5Nj
-QyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
+eyJoaXN0b3J5IjpbLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNz
+I4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYx
+MywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OT
+cwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2
+NjU3XX0=
 -->
