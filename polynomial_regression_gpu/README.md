@@ -133,7 +133,7 @@ To be able to perform successful computations for regression analysis we need to
 		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 		};
 		```
-	5.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``min, max``
+	5.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it take scale factor
    
 4. **Generating new data for testing model predictions**
 
@@ -155,7 +155,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTI2MzIyMDMwLDE0NzU5NDgyODIsMTY4Mj
+eyJoaXN0b3J5IjpbNjcxODk3ODkyLDE0NzU5NDgyODIsMTY4Mj
 cxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzEx
 MSwtMTQxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Nj
 k1NjU3MTAsNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYy
