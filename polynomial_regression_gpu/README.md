@@ -133,7 +133,7 @@ To be able to perform successful computations for regression analysis we need to
 		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 		};
 		```
-	5.  ``ms::expr::ReduceTo1DExp`` 
+	5.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take several predefined operation
    
 4. **Generating new data for testing model predictions**
 
@@ -155,9 +155,10 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMj
-A4ODgyNDA3LDE5NzMzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5
-MTUsODEyNjEyMDk0LDE3MDcyMzY2MTMsLTk2OTU2NTcxMCw2OD
-MwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0
-NywtMTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbMjQ5NjY4ODA2LDE0NzU5NDgyODIsMTY4Mj
+cxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzEx
+MSwtMTQxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Nj
+k1NjU3MTAsNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYy
+LDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ
+==
 -->
