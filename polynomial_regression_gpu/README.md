@@ -25,12 +25,12 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	};
 	```
 	Device template parameter can be ``ms::cpu`` or ``ms::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code will remain the same):
-	``` cpp
+	```cpp
 	ScopedTensorEngine<ms::cpu> tensorEngineCpu;
 	ScopedTensorEngine<ms::gpu> tensorEngineGpu;
 	```
 	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device. Streams can be run in independent concurrent in-order queues of execution, and operations in different streams can be interleaved and overlapped. This variable is necessary for using other MShadow abstractions. 
-	```
+	```cpp
 	...
 	using GpuStream = ms::Stream<ms::gpu>;
     using GpuStreamPtr = std::unique_ptr<GpuStream, void (*)(GpuStream*)>;
@@ -42,7 +42,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	
 1. **Loading data to MShadow datastructures**
 	There are several approaches to initialize tensors data structures in MShadow library, two of them I used next code section.
-	```
+	```cpp
 	  auto rows = raw_data_x.size();
 	  ms::Tensor<ms::cpu, 2, DType> host_y(raw_data_y.data(), ms::Shape2(rows, 1));
 	  ms::TensorContainer<ms::gpu, 2, DType> gpu_y(host_y.shape_);
@@ -74,8 +74,8 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE0MTAzODUxNTEsODEyNjEyMDk0LDE3MD
-cyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5
-LDE5OTk3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMT
-cyOTk3NjY1N119
+eyJoaXN0b3J5IjpbLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNz
+IzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2Njks
+MTk5OTcwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNz
+I5OTc2NjU3XX0=
 -->
