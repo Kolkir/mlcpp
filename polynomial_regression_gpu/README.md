@@ -55,72 +55,72 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to preallocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
 	```cpp
 	class Standardizer {
- public:
-  using T = ms::TensorContainer<ms::gpu, 2, DType>;
+	 public:
+	  using T = ms::TensorContainer<ms::gpu, 2, DType>;
 
-  Standardizer(GpuStream* computeStream, size_t rows)
-      : min(ms::Shape1(1)),
-        max(ms::Shape1(1)),
-        mean(ms::Shape1(1)),
-        temp(ms::Shape2(rows, 1)),
-        sd(ms::Shape1(1)),
-        rows(rows) {
-    min.set_stream(computeStream);
-    max.set_stream(computeStream);
-    mean.set_stream(computeStream);
-    sd.set_stream(computeStream);
-    temp.set_stream(computeStream);
-  }
-  ~Standardizer() {}
-  Standardizer(const Standardizer&) = delete;
-  Standardizer& operator=(const Standardizer&) = delete;
+	  Standardizer(GpuStream* computeStream, size_t rows)
+	      : min(ms::Shape1(1)),
+	        max(ms::Shape1(1)),
+	        mean(ms::Shape1(1)),
+	        temp(ms::Shape2(rows, 1)),
+	        sd(ms::Shape1(1)),
+	        rows(rows) {
+	    min.set_stream(computeStream);
+	    max.set_stream(computeStream);
+	    mean.set_stream(computeStream);
+	    sd.set_stream(computeStream);
+	    temp.set_stream(computeStream);
+	  }
+	  ~Standardizer() {}
+	  Standardizer(const Standardizer&) = delete;
+	  Standardizer& operator=(const Standardizer&) = delete;
 
-  void standardize(T& vec, GpuStream* computeStream) {
-    mean = ms::expr::sumall_except_dim<1>(vec);
-    mean /= static_cast<DType>(rows);
-    temp = ms::expr::F<Pow>(vec - ms::expr::broadcast<1>(mean, temp.shape_), 2);
-    sd = ms::expr::sumall_except_dim<1>(temp);
-    sd = ms::expr::F<Sqrt>(sd) / static_cast<DType>(rows - 1);
-    temp = (vec - ms::expr::broadcast<1>(mean, temp.shape_)) /
-           ms::expr::broadcast<1>(sd, temp.shape_);
+	  void standardize(T& vec, GpuStream* computeStream) {
+	    mean = ms::expr::sumall_except_dim<1>(vec);
+	    mean /= static_cast<DType>(rows);
+	    temp = ms::expr::F<Pow>(vec - ms::expr::broadcast<1>(mean, temp.shape_), 2);
+	    sd = ms::expr::sumall_except_dim<1>(temp);
+	    sd = ms::expr::F<Sqrt>(sd) / static_cast<DType>(rows - 1);
+	    temp = (vec - ms::expr::broadcast<1>(mean, temp.shape_)) /
+	           ms::expr::broadcast<1>(sd, temp.shape_);
 
-    // scale to [-1, 1] range
-    min =
-        ms::expr::ReduceTo1DExp<T, DType, ms::red::minimum,
-                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
-    max =
-        ms::expr::ReduceTo1DExp<T, DType, ms::red::maximum,
-                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
+	    // scale to [-1, 1] range
+	    min =
+	        ms::expr::ReduceTo1DExp<T, DType, ms::red::minimum,
+	                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
+	    max =
+	        ms::expr::ReduceTo1DExp<T, DType, ms::red::maximum,
+	                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
 
-    temp = (temp - ms::expr::broadcast<1>(min, temp.shape_)) /
-           ms::expr::broadcast<1>(max - min, temp.shape_);
+	    temp = (temp - ms::expr::broadcast<1>(min, temp.shape_)) /
+	           ms::expr::broadcast<1>(max - min, temp.shape_);
 
-    temp = (temp * 2.f) - 1.f;
+	    temp = (temp * 2.f) - 1.f;
 
-    ms::Copy(vec, temp, computeStream);
-  }
+	    ms::Copy(vec, temp, computeStream);
+	  }
 
-  auto get_moments(GpuStream* computeStream) {
-    ms::TensorContainer<ms::cpu, 1, DType> value(ms::Shape1(1));
-    ms::Copy(value, min, computeStream);
-    DType v_min = value[0];
-    ms::Copy(value, max, computeStream);
-    DType v_max = value[0];
-    ms::Copy(value, mean, computeStream);
-    DType v_mean = value[0];
-    ms::Copy(value, sd, computeStream);
-    DType v_sd = value[0];
-    return std::vector<DType>{v_min, v_max, v_mean, v_sd};
-  }
+	  auto get_moments(GpuStream* computeStream) {
+	    ms::TensorContainer<ms::cpu, 1, DType> value(ms::Shape1(1));
+	    ms::Copy(value, min, computeStream);
+	    DType v_min = value[0];
+	    ms::Copy(value, max, computeStream);
+	    DType v_max = value[0];
+	    ms::Copy(value, mean, computeStream);
+	    DType v_mean = value[0];
+	    ms::Copy(value, sd, computeStream);
+	    DType v_sd = value[0];
+	    return std::vector<DType>{v_min, v_max, v_mean, v_sd};
+	  }
 
- private:
-  ms::TensorContainer<ms::gpu, 1, DType> min;
-  ms::TensorContainer<ms::gpu, 1, DType> max;
-  ms::TensorContainer<ms::gpu, 1, DType> mean;
-  ms::TensorContainer<ms::gpu, 1, DType> sd;
-  ms::TensorContainer<ms::gpu, 2, DType> temp;
-  size_t rows;
-};
+	 private:
+	  ms::TensorContainer<ms::gpu, 1, DType> min;
+	  ms::TensorContainer<ms::gpu, 1, DType> max;
+	  ms::TensorContainer<ms::gpu, 1, DType> mean;
+	  ms::TensorContainer<ms::gpu, 1, DType> sd;
+	  ms::TensorContainer<ms::gpu, 2, DType> temp;
+	  size_t rows;
+	};
 ``` 
    
 4. **Generating new data for testing model predictions**
@@ -143,8 +143,8 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExMzA3MDA2ODMsMjcyODUzMTExLC0xND
-E0NzM5MTUsODEyNjEyMDk0LDE3MDcyMzY2MTMsLTk2OTU2NTcx
-MCw2ODMwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOT
-Y0MjY0NywtMTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbMTA3NTU5ODQwNSwyNzI4NTMxMTEsLTE0MT
+Q3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEw
+LDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5Nj
+QyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
 -->
