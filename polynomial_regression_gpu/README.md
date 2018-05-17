@@ -99,7 +99,6 @@ To be able to perform successful computations for regression analysis we need to
 
 	    ms::Copy(vec, temp, computeStream);
 	  }
-
 	  auto get_moments(GpuStream* computeStream) {
 	    ms::TensorContainer<ms::cpu, 1, DType> value(ms::Shape1(1));
 	    ms::Copy(value, min, computeStream);
@@ -112,7 +111,6 @@ To be able to perform successful computations for regression analysis we need to
 	    DType v_sd = value[0];
 	    return std::vector<DType>{v_min, v_max, v_mean, v_sd};
 	  }
-
 	 private:
 	  ms::TensorContainer<ms::gpu, 1, DType> min;
 	  ms::TensorContainer<ms::gpu, 1, DType> max;
@@ -144,9 +142,9 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNz
-I4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYx
-MywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OT
-cwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2
-NjU3XX0=
+eyJoaXN0b3J5IjpbLTEyOTQwOTU2NTUsLTEyMDg4ODI0MDcsMT
+k3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIw
+OTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNz
+cxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3
+MjQ4LC0xNzI5OTc2NjU3XX0=
 -->
