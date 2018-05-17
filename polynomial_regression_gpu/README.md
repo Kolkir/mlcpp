@@ -121,7 +121,8 @@ To be able to perform successful computations for regression analysis we need to
 	  ms::TensorContainer<ms::gpu, 2, DType> temp;
 	  size_t rows;
 	};
-``` 
+	``` 
+The in
    
 4. **Generating new data for testing model predictions**
 
@@ -143,7 +144,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTA3NTU5ODQwNSwyNzI4NTMxMTEsLTE0MT
+eyJoaXN0b3J5IjpbMTI2Mjg2MDk5OSwyNzI4NTMxMTEsLTE0MT
 Q3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEw
 LDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5Nj
 QyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2NjU3XX0=
