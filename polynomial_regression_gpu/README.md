@@ -123,8 +123,8 @@ To be able to perform successful computations for regression analysis we need to
 	The interesting moments here are :
 	1.  ``ms::expr::broadcast`` function which make possible to perform element wise operations for tensors with single value, like subtraction one number from each tensor element.
 	2.  ``ms::expr::sumall_except_dim``
-	3.   ``ms::expr::F``
-	4. 
+	3.  ``ms::expr::F``
+	4.  ``ms::expr::ReduceTo1DExp``
    
 4. **Generating new data for testing model predictions**
 
@@ -146,9 +146,9 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTMwMjMwNzI4LC0xMjA4ODgyNDA3LDE5Nz
-MzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0
-LDE3MDcyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MT
-g2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0
-OCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOT
+czMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDczOTE1LDgxMjYxMjA5
+NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAsNjgzMDEwODQsMTE3Nz
+E4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcy
+NDgsLTE3Mjk5NzY2NTddfQ==
 -->
