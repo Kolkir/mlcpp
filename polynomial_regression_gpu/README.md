@@ -52,7 +52,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``ms::TensorContainer`` type which implements RAII idiom for ``ms::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``gpu_y`` initialization and during copy operation. 
     
 3. **Standardization**
-To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to preallocate several  intermediate tensors for 
+To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to preallocate several  intermediate tensors for calculations and to reuse a code I implemented  
    
 4. **Generating new data for testing model predictions**
 
@@ -74,8 +74,8 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEyMDU3NzA0NzUsMjcyODUzMTExLC0xND
-E0NzM5MTUsODEyNjEyMDk0LDE3MDcyMzY2MTMsLTk2OTU2NTcx
-MCw2ODMwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOT
-Y0MjY0NywtMTczNjQ4NzI0OCwtMTcyOTk3NjY1N119
+eyJoaXN0b3J5IjpbNDE0MTU2NTU2LDI3Mjg1MzExMSwtMTQxND
+czOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAs
+NjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2ND
+I2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ==
 -->
