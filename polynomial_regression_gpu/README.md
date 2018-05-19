@@ -134,7 +134,7 @@ To be able to perform successful computations for regression analysis we need to
 		};
 		```
 	4.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it takes scale factor (in out case 1), the first parameter is a tensor for reduction.
-	5. Also I added code to additionally scale data to the range [-1,1]. The reason for that is float type which is used for calculations on GPU, original data  
+	5. Also I added code to additionally scale data to the range [-1,1]. The reason for that is float type which is used for calculations on GPU, original data have pretty big values and 
    
 3. **Generating additional polynomial components**
 
@@ -152,11 +152,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTk2NDc3MTEzOSwtMTcxMzQxNzgwLDE1ND
-U4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NTk0ODI4
-MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5NDksMj
-cyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0LDE3MDcyMzY2
-MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5LDE5OT
-k3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMTcyOTk3
-NjY1N119
+eyJoaXN0b3J5IjpbNTAwOTk5NjA4LC0xNzEzNDE3ODAsMTU0NT
+g1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OTQ4Mjgy
+LDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNz
+I4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYx
+MywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OT
+cwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2
+NjU3XX0=
 -->
