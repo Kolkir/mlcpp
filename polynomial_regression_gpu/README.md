@@ -135,17 +135,13 @@ To be able to perform successful computations for regression analysis we need to
 		```
 	5.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it takes scale factor (in out case 1), the first parameter is a tensor for reduction.
    
-4. **Generating new data for testing model predictions**
+4. **Generating additional polynomial components**
 
-  
-5. **Batch gradient descent implementation**
+5. **Generating new data for testing model predictions**
 
-   
-6. **Generating additional polynomial components**
-
+6. **Batch gradient descent implementation**
  
 7. **Creating general regression model**
-
     
 8. **Making predictions**
 
@@ -155,10 +151,10 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4Mj
-cxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzEx
-MSwtMTQxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Nj
-k1NjU3MTAsNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYy
-LDE1Mjk2NDI2NDcsLTE3MzY0ODcyNDgsLTE3Mjk5NzY2NTddfQ
-==
+eyJoaXN0b3J5IjpbNTQ1NjUxNzM0LDc1MDY3MDIxMiwxNDc1OT
+Q4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0
+OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNz
+IzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2Njks
+MTk5OTcwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNz
+I5OTc2NjU3XX0=
 -->
