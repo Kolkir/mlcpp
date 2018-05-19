@@ -134,7 +134,7 @@ To be able to perform successful computations for regression analysis we need to
 		};
 		```
 	4.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it takes scale factor (in out case 1), the first parameter is a tensor for reduction.
-	5. Also I sca
+	5. Also I added code to additionly scale data to the range 
    
 3. **Generating additional polynomial components**
 
@@ -152,7 +152,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTU1MjAxNzc4MCwtMTY1OTQyOTIzLDc1MD
+eyJoaXN0b3J5IjpbMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MD
 Y3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0
 MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MT
 I2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0
