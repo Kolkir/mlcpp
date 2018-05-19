@@ -51,7 +51,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	```
     When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``ms::TensorContainer`` type which implements RAII idiom for ``ms::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``gpu_y`` initialization and during copy operation. 
     
-3. **Standardization**
+2. **Standardization**
 To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to preallocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
 	```cpp
 	class Standardizer {
@@ -135,26 +135,26 @@ To be able to perform successful computations for regression analysis we need to
 		```
 	5.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it takes scale factor (in out case 1), the first parameter is a tensor for reduction.
    
-4. **Generating additional polynomial components**
+3. **Generating additional polynomial components**
 
-5. **Generating new data for testing model predictions**
 
-6. **Batch gradient descent implementation**
+4. **Generating new data for testing model predictions**
+
+5. **Batch gradient descent implementation**
  
-7. **Creating general regression model**
+6. **Creating general regression model**
     
-8. **Making predictions**
-
+7. **Making predictions**
    
-9. **Plot results**
+8. **Plot results**
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTQ1NjUxNzM0LDc1MDY3MDIxMiwxNDc1OT
-Q4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0
-OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNz
-IzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2Njks
-MTk5OTcwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNz
-I5OTc2NjU3XX0=
+eyJoaXN0b3J5IjpbLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NT
+k0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5
+NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0LDE3MD
+cyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5
+LDE5OTk3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0OCwtMT
+cyOTk3NjY1N119
 -->
