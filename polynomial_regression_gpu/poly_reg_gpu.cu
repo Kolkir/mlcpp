@@ -41,11 +41,13 @@ struct Sqrt {
   MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 };
 
+template <typename Device>
 class Standardizer {
  public:
-  using T = ms::TensorContainer<ms::gpu, 2, DType>;
+  using Tensor = ms::TensorContainer<Device, 2, DType>;
+  using Stream = ms::Stream<Device>;
 
-  Standardizer(GpuStream* computeStream, size_t rows)
+  Standardizer(Stream* computeStream, size_t rows)
       : min(ms::Shape1(1)),
         max(ms::Shape1(1)),
         mean(ms::Shape1(1)),
@@ -62,7 +64,7 @@ class Standardizer {
   Standardizer(const Standardizer&) = delete;
   Standardizer& operator=(const Standardizer&) = delete;
 
-  void standardize(T& vec, GpuStream* computeStream) {
+  void standardize(Tensor& vec, Stream* computeStream) {
     mean = ms::expr::sumall_except_dim<1>(vec);
     mean /= static_cast<DType>(rows);
     temp = ms::expr::F<Pow>(vec - ms::expr::broadcast<1>(mean, temp.shape_), 2);
@@ -72,12 +74,12 @@ class Standardizer {
            ms::expr::broadcast<1>(sd, temp.shape_);
 
     // scale to [-1, 1] range
-    min =
-        ms::expr::ReduceTo1DExp<T, DType, ms::red::minimum,
-                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
-    max =
-        ms::expr::ReduceTo1DExp<T, DType, ms::red::maximum,
-                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
+    min = ms::expr::ReduceTo1DExp<Tensor, DType, ms::red::minimum,
+                                  ms::expr::ExpInfo<Tensor>::kDim - 1>(
+        temp, DType(1));
+    max = ms::expr::ReduceTo1DExp<Tensor, DType, ms::red::maximum,
+                                  ms::expr::ExpInfo<Tensor>::kDim - 1>(
+        temp, DType(1));
 
     temp = (temp - ms::expr::broadcast<1>(min, temp.shape_)) /
            ms::expr::broadcast<1>(max - min, temp.shape_);
@@ -87,7 +89,7 @@ class Standardizer {
     ms::Copy(vec, temp, computeStream);
   }
 
-  auto get_moments(GpuStream* computeStream) {
+  auto get_moments(Stream* computeStream) {
     ms::TensorContainer<ms::cpu, 1, DType> value(ms::Shape1(1));
     ms::Copy(value, min, computeStream);
     DType v_min = value[0];
@@ -101,34 +103,35 @@ class Standardizer {
   }
 
  private:
-  ms::TensorContainer<ms::gpu, 1, DType> min;
-  ms::TensorContainer<ms::gpu, 1, DType> max;
-  ms::TensorContainer<ms::gpu, 1, DType> mean;
-  ms::TensorContainer<ms::gpu, 1, DType> sd;
-  ms::TensorContainer<ms::gpu, 2, DType> temp;
+  ms::TensorContainer<Device, 1, DType> min;
+  ms::TensorContainer<Device, 1, DType> max;
+  ms::TensorContainer<Device, 1, DType> mean;
+  ms::TensorContainer<Device, 1, DType> sd;
+  ms::TensorContainer<Device, 2, DType> temp;
   size_t rows;
 };
 
+template <typename Device>
 void generate_polynomial(std::vector<DType>& raw_data_x,
                          size_t p_degree,
-                         ms::TensorContainer<ms::gpu, 2, DType>& gpu_x,
-                         GpuStream* computeStream) {
+                         ms::TensorContainer<Device, 2, DType>& out_x,
+                         ms::Stream<Device>* computeStream) {
   auto rows = raw_data_x.size();
   ms::Tensor<ms::cpu, 2, DType> host_x(raw_data_x.data(), ms::Shape2(rows, 1));
-  ms::TensorContainer<ms::gpu, 2, DType> gpu_basis_x(host_x.shape_);
+  ms::TensorContainer<Device, 2, DType> gpu_basis_x(host_x.shape_);
   gpu_basis_x.set_stream(computeStream);
   ms::Copy(gpu_basis_x, host_x, computeStream);
 
   // standardize / normalize
-  Standardizer standardizer(computeStream, rows);
+  Standardizer<Device> standardizer(computeStream, rows);
   standardizer.standardize(gpu_basis_x, computeStream);
 
   ms::TensorContainer<ms::gpu, 2, DType> col_temp(ms::Shape2(rows, 1));
   col_temp.set_stream(computeStream);
-  gpu_x.set_stream(computeStream);
+  out_x.set_stream(computeStream);
   for (size_t c = 0; c < p_degree; ++c) {
     auto col =
-        ms::expr::slice(gpu_x, ms::Shape2(0, c), ms::Shape2(rows, c + 1));
+        ms::expr::slice(out_x, ms::Shape2(0, c), ms::Shape2(rows, c + 1));
     col_temp = ms::expr::F<Pow>(gpu_basis_x, static_cast<DType>(c));
     if (c > 1)
       standardizer.standardize(col_temp, computeStream);
@@ -190,7 +193,7 @@ int main() {
   ms::Copy(gpu_y, host_y, computeStream.get());
 
   // standardize / normalize
-  Standardizer standardizer(computeStream.get(), rows);
+  Standardizer<ms::gpu> standardizer(computeStream.get(), rows);
   standardizer.standardize(gpu_y, computeStream.get());
   auto y_moments = standardizer.get_moments(computeStream.get());
 
