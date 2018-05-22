@@ -13,7 +13,7 @@ class Optimizer {
 
   void predict(mshadow::Tensor<Device, 2, DType> const& x,
                mshadow::Tensor<Device, 2, DType>& y) {
-    y = mshadow::expr::dot(x, gpu_weights);
+    y = mshadow::expr::dot(x, weights);
   }
 
   void fit(mshadow::Tensor<Device, 2, DType> const& x,
@@ -28,12 +28,12 @@ class Optimizer {
     size_t n_batches = rows / batch_size;
 
     // it is important to allocate all tensors before assiging
-    gpu_weights.set_stream(x.stream_);
-    gpu_weights.Resize(mshadow::Shape2(cols, 1));
-    gpu_weights = 0.0f;
+    weights.set_stream(x.stream_);
+    weights.Resize(mshadow::Shape2(cols, 1));
+    weights = 0.0f;
 
-    gpu_grad.Resize(mshadow::Shape2(cols, 1));
-    gpu_grad.set_stream(x.stream_);
+    grad.Resize(mshadow::Shape2(cols, 1));
+    grad.set_stream(x.stream_);
 
     yhat.Resize(mshadow::Shape2(batch_size, 1));
     yhat.set_stream(x.stream_);
@@ -46,16 +46,16 @@ class Optimizer {
 
     error_total_cpu.Resize(mshadow::Shape2(rows, 1));
 
-    gpu_eg_sum.Resize(mshadow::Shape2(cols, 1));
-    gpu_eg_sum.set_stream(x.stream_);
-    gpu_eg_sum = 0.f;
+    eg_sum.Resize(mshadow::Shape2(cols, 1));
+    eg_sum.set_stream(x.stream_);
+    eg_sum = 0.f;
 
-    gpu_weights_delta.Resize(mshadow::Shape2(cols, 1));
-    gpu_weights_delta.set_stream(x.stream_);
+    weights_delta.Resize(mshadow::Shape2(cols, 1));
+    weights_delta.set_stream(x.stream_);
 
-    gpu_ex_sum.Resize(mshadow::Shape2(cols, 1));
-    gpu_ex_sum.set_stream(x.stream_);
-    gpu_ex_sum = 0.f;
+    ex_sum.Resize(mshadow::Shape2(cols, 1));
+    ex_sum.set_stream(x.stream_);
+    ex_sum = 0.f;
 
     // gradient descent
     for (size_t epoch = 0; epoch < n_epochs; ++epoch) {
@@ -66,33 +66,32 @@ class Optimizer {
         auto batch_y = y.Slice(bs, be);
 
         // Print weights
-        // print_tensor<DType>(gpu_weights, "weights");
+        // print_tensor<DType>(weights, "weights");
 
         predict(batch_x, yhat);
 
         error = yhat - batch_y;
-        gpu_grad = mshadow::expr::dot(batch_x.T(), error);
-        gpu_grad /= batch_size;
+        grad = mshadow::expr::dot(batch_x.T(), error);
+        grad /= batch_size;
 
-        // print_tensor<DType>(gpu_grad, "grad");
+        // print_tensor<DType>(grad, "grad");
         // print_tensor<DType>(error, "error");
 
         // AdaDelta
-        gpu_eg_sum =
-            lr * gpu_eg_sum + (1.f - lr) * mshadow::expr::F<Pow>(gpu_grad, 2);
-        gpu_weights_delta = -1.f *
-                            (mshadow::expr::F<Sqrt>(gpu_ex_sum + e) /
-                             mshadow::expr::F<Sqrt>(gpu_eg_sum + e)) *
-                            gpu_grad;
-        gpu_ex_sum = lr * gpu_ex_sum +
-                     (1.f - lr) * mshadow::expr::F<Pow>(gpu_weights_delta, 2);
-        gpu_weights = gpu_weights + gpu_weights_delta;
+        eg_sum = lr * eg_sum + (1.f - lr) * mshadow::expr::F<Pow>(grad, 2);
+        weights_delta = -1.f *
+                        (mshadow::expr::F<Sqrt>(ex_sum + e) /
+                         mshadow::expr::F<Sqrt>(eg_sum + e)) *
+                        grad;
+        ex_sum =
+            lr * ex_sum + (1.f - lr) * mshadow::expr::F<Pow>(weights_delta, 2);
+        weights = weights + weights_delta;
 
         // BGD
-        // gpu_weights = gpu_weights - (lr * gpu_grad);
+        // weights = weights - (lr * grad);
       }
       // compute cost
-      error_total = mshadow::expr::dot(x, gpu_weights);
+      error_total = mshadow::expr::dot(x, weights);
       error_total = mshadow::expr::F<Pow>(error_total - y, 2);
 
       mshadow::Copy(error_total_cpu, error_total, error_total.stream_);
@@ -109,8 +108,8 @@ class Optimizer {
   size_t batch_size = 8;
   // DType lr = 0.01;  // BGD
 
-  mshadow::TensorContainer<Device, 2, DType> gpu_weights;
-  mshadow::TensorContainer<Device, 2, DType> gpu_grad;
+  mshadow::TensorContainer<Device, 2, DType> weights;
+  mshadow::TensorContainer<Device, 2, DType> grad;
   mshadow::TensorContainer<Device, 2, DType> yhat;
   mshadow::TensorContainer<Device, 2, DType> error;
   mshadow::TensorContainer<Device, 2, DType> error_total;
@@ -119,9 +118,9 @@ class Optimizer {
   // AdaDelta
   DType lr = 0.99;
   DType e = std::numeric_limits<DType>::epsilon();
-  mshadow::TensorContainer<Device, 2, DType> gpu_eg_sum;
-  mshadow::TensorContainer<Device, 2, DType> gpu_weights_delta;
-  mshadow::TensorContainer<Device, 2, DType> gpu_ex_sum;
+  mshadow::TensorContainer<Device, 2, DType> eg_sum;
+  mshadow::TensorContainer<Device, 2, DType> weights_delta;
+  mshadow::TensorContainer<Device, 2, DType> ex_sum;
 };
 
 #endif  // OPTIMIZER_H
