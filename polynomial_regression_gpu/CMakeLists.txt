@@ -44,7 +44,16 @@ set(COMMON_SOURCES "../utils.h"
                    "../ioutils.h"
 )
 
-CUDA_ADD_EXECUTABLE(polynomial-regression-gpu ${COMMON_SOURCES} poly_reg_gpu.cu)
+SET(requiredlibs ${requiredlibs} cblas)
+
+CUDA_ADD_EXECUTABLE(polynomial-regression-gpu ${COMMON_SOURCES}
+                                              poly_reg_gpu.cu
+                                              standardizer.h
+                                              polynomial.h
+                                              common.h
+                                              optimizer.h)
+
+
 target_link_libraries(polynomial-regression-gpu ${requiredlibs} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY})
 target_compile_definitions(polynomial-regression-gpu PRIVATE
                                                  MSHADOW_USE_CBLAS=1
