@@ -151,7 +151,28 @@ To be able to perform successful computations for regression analysis we need to
 	x *= scale;
 	y *= scale;
 	```
-	Here you can see the example of a dynamic broadcasting. To make additional polynomial components I just raise to power from ``1`` no ``n`` each sample from ``X``. 
+	Here you can see the example of a dynamic broadcasting. To make additional polynomial components I just raise to power from ``1`` no ``n`` each sample from ``X``:
+	``` cpp
+	template <typename Device, typename DType>
+	void generate_polynomial(mshadow::Tensor<Device, 2, DType> const& tensor,
+	                         mshadow::TensorContainer<Device, 2, DType>& poly,
+	                         size_t p_degree) {
+	  assert(tensor.shape_.kDimension == 2);
+	  assert(tensor.shape_[1] == 1);
+
+	  auto rows = tensor.shape_[0];
+	  mshadow::TensorContainer<Device, 2, DType> col_temp(mshadow::Shape2(rows, 1));
+	  col_temp.set_stream(tensor.stream_);
+
+	  for (size_t c = 0; c < p_degree; ++c) {
+	    auto col = mshadow::expr::slice(poly, mshadow::Shape2(0, c),
+	                                    mshadow::Shape2(rows, c + 1));
+	    col_temp = mshadow::expr::F<Pow>(tensor, static_cast<DType>(c));
+	    // print_tensor<DType>(col_temp, "pow");
+	    col = col_temp;
+	  }
+	}
+	``` 
 
 4. **Generating new data for testing model predictions**
 
@@ -166,7 +187,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNDgzNDczOTM4LDQ4MDc1Njk5NiwxMTc3MT
+eyJoaXN0b3J5IjpbMjQ4MTI3NDM3LDQ4MDc1Njk5NiwxMTc3MT
 I3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUs
 NTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzND
 E3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwx
