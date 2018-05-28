@@ -323,13 +323,18 @@ To be able to perform successful computations for regression analysis we need to
 	```
     
 7. **Making predictions**
-   
+  Predictions also are straight forward:
+	``` cpp
+	mshadow::TensorContainer<xpu, 2, DType> new_y(mshadow::Shape2(n, 1));
+	new_y.set_stream(computeStream.get());
+	optimizer.predict(new_poly_x, new_y);
+	``` 
 8. **Plot results**
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE2MDA0Mjg1ODgsOTkxMTk5NjI2LC0xOT
+eyJoaXN0b3J5IjpbLTE1ODUzNjI0MzAsOTkxMTk5NjI2LC0xOT
 gwMjkxMDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4
 Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MT
 I3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUs
