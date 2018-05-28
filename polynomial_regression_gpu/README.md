@@ -205,7 +205,7 @@ To be able to perform successful computations for regression analysis we need to
 	```
 
 6. **Batch gradient descent implementation**
-	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate.
+	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate. 
 	``` cpp
 	template <typename Device, typename DType>
 	class Optimizer {
@@ -298,7 +298,7 @@ To be able to perform successful computations for regression analysis we need to
 	 private:
 	  size_t n_epochs = 5000;
 	  size_t batch_size = 8;
- // DType lr = 0.01;  // BGD
+
 	  mshadow::TensorContainer<Device, 2, DType> weights;
 	  mshadow::TensorContainer<Device, 2, DType> grad;
 	  mshadow::TensorContainer<Device, 2, DType> yhat;
@@ -324,7 +324,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbOTA4Mzg4NDcyLC0xOTgwMjkxMDk5LDIxMz
+eyJoaXN0b3J5IjpbOTkxMTk5NjI2LC0xOTgwMjkxMDk5LDIxMz
 kyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4Nyw3MjAzNzk2MSwt
 NTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MTI3NzgsLTM0NzUyMz
 E3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUsNTI5OTgyNDg5LC0x
