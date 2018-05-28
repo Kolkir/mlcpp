@@ -352,15 +352,16 @@ To be able to perform successful computations for regression analysis we need to
                      "poly line approx", "lc rgb 'green' lw 2"));
     plt.Flush();
 	```
+	![plots](plot.png)
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTU3OTI5ODM3NywtMjkyNjU0MDcwLDk5MT
-E5OTYyNiwtMTk4MDI5MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4
-OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NT
-Y5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwx
-OTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OT
-YwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyM119
-
+eyJoaXN0b3J5IjpbLTEzNjQ0ODQ4MTEsMTU3OTI5ODM3NywtMj
+kyNjU0MDcwLDk5MTE5OTYyNiwtMTk4MDI5MTA5OSwyMTM5MjE5
+MTc5LDk4MzQxMzY4OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MD
+Y0NTI2MCw0ODA3NTY5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIs
+MTUyNDE2MDEyMCwxOTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0OD
+Y1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODdd
+fQ==
 -->
