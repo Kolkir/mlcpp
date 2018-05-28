@@ -177,7 +177,7 @@ To be able to perform successful computations for regression analysis we need to
 	poly_x.set_stream(computeStream.get());
 	generate_polynomial(x, poly_x, p_degree);
 	``` 
-	The
+	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and 
 4. **Generating new data for testing model predictions**
 
 5. **Batch gradient descent implementation**
@@ -191,11 +191,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTExMDY1NzMxODEsLTU5MDY0NTI2MCw0OD
-A3NTY5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEy
-MCwxOTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMD
-k5OTYwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0Mjky
-Myw3NTA2NzAyMTIsMTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMj
-A4ODgyNDA3LDE5NzMzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5
-MTVdfQ==
+eyJoaXN0b3J5IjpbMTE1MjMzMjI2NywtNTkwNjQ1MjYwLDQ4MD
+c1Njk5NiwxMTc3MTI3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIw
+LDE5MTgxOTY0NzUsNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOT
+k5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIz
+LDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMD
+g4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3Mzkx
+NV19
 -->
