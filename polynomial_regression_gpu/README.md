@@ -168,10 +168,11 @@ To be able to perform successful computations for regression analysis we need to
 	    auto col = mshadow::expr::slice(poly, mshadow::Shape2(0, c),
 	                                    mshadow::Shape2(rows, c + 1));
 	    col_temp = mshadow::expr::F<Pow>(tensor, static_cast<DType>(c));
-	    // print_tensor<DType>(col_temp, "pow");
 	    col = col_temp;
 	  }
 	}
+	...
+	
 	``` 
 
 4. **Generating new data for testing model predictions**
@@ -187,7 +188,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjQ4MTI3NDM3LDQ4MDc1Njk5NiwxMTc3MT
+eyJoaXN0b3J5IjpbNzQ3MTc5MjE5LDQ4MDc1Njk5NiwxMTc3MT
 I3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUs
 NTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzND
 E3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwx
