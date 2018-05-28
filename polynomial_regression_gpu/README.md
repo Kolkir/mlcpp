@@ -177,7 +177,7 @@ To be able to perform successful computations for regression analysis we need to
 	poly_x.set_stream(computeStream.get());
 	generate_polynomial(x, poly_x, p_degree);
 	``` 
-	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions.
+	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial`` to return a ``TensorContainer`` object, because there is no 
 	 
 4. **Generating new data for testing model predictions**
 
@@ -192,11 +192,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NT
-Y5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwx
-OTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OT
-YwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3
-NTA2NzAyMTIsMTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMjA4OD
-gyNDA3LDE5NzMzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5MTVd
+eyJoaXN0b3J5IjpbMTYwMzEzNDc3MCw3MjAzNzk2MSwtNTkwNj
+Q1MjYwLDQ4MDc1Njk5NiwxMTc3MTI3NzgsLTM0NzUyMzE3Miwx
+NTI0MTYwMTIwLDE5MTgxOTY0NzUsNTI5OTgyNDg5LC0xNDQ4Nj
+UxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4Nywt
+MTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MT
+U2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTFd
 fQ==
 -->
