@@ -151,7 +151,7 @@ To be able to perform successful computations for regression analysis we need to
 	x *= scale;
 	y *= scale;
 	```
-	Here you can see the example of a dynamic broadcasting. To make additional polynomial components I just raise to power each 
+	Here you can see the example of a dynamic broadcasting. To make additional polynomial components I just raise to power
 
 4. **Generating new data for testing model predictions**
 
@@ -166,11 +166,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNDgwNzU2OTk2LDExNzcxMjc3OCwtMzQ3NT
-IzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1Mjk5ODI0ODks
-LTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1OD
-U4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIs
-MTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mj
-g1MzExMSwtMTQxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEz
+eyJoaXN0b3J5IjpbMTg4MDY4MzAxMSw0ODA3NTY5OTYsMTE3Nz
+EyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MTk2NDc1
+LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMz
+QxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIs
+MTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5Nz
+MzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0
 XX0=
 -->
