@@ -205,7 +205,7 @@ To be able to perform successful computations for regression analysis we need to
 	```
 
 6. **Batch gradient descent implementation**
-	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more 
+	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. 
 	``` cpp
 	template <typename Device, typename DType>
 	class Optimizer {
@@ -324,7 +324,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTgzMDc3OTY3NSwyMTM5MjE5MTc5LDk4Mz
+eyJoaXN0b3J5IjpbLTc2ODkwOTg4MiwyMTM5MjE5MTc5LDk4Mz
 QxMzY4OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0
 ODA3NTY5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MD
 EyMCwxOTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUw
