@@ -64,7 +64,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     When I initialize ``host_data`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``mshadow::TensorContainer`` type which implements RAII idiom for ``mshadow::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``x`` initialization and during copy operation. 
     
 2. **Standardization**
-To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to preallocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
+To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to pre-allocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
 	```cpp
 	class Standardizer {
 	 public:
@@ -164,11 +164,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOT
-k5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIz
-LDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMD
-g4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3Mzkx
-NSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4Mz
-AxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3
-XX0=
+eyJoaXN0b3J5IjpbLTE1NDc4MTAwNTYsNTI5OTgyNDg5LC0xND
+Q4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4
+NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2OD
+I3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMx
+MTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOT
+Y5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2
+Ml19
 -->
