@@ -66,70 +66,59 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 2. **Standardization**
 To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to pre-allocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
 	```cpp
+	// Standardize 2D tensor of shape [rows]x[1]
+	template <typename Device, typename DType>
 	class Standardizer {
 	 public:
-	  using T = ms::TensorContainer<ms::gpu, 2, DType>;
-
-	  Standardizer(GpuStream* computeStream, size_t rows)
-	      : min(ms::Shape1(1)),
-	        max(ms::Shape1(1)),
-	        mean(ms::Shape1(1)),
-	        temp(ms::Shape2(rows, 1)),
-	        sd(ms::Shape1(1)),
-	        rows(rows) {
-	    min.set_stream(computeStream);
-	    max.set_stream(computeStream);
-	    mean.set_stream(computeStream);
-	    sd.set_stream(computeStream);
-	    temp.set_stream(computeStream);
-	  }
+	  using Tensor = mshadow::TensorContainer<Device, 2, DType>;
+	  using Stream = mshadow::Stream<Device>;
+	  Standardizer() {}
 	  ~Standardizer() {}
 	  Standardizer(const Standardizer&) = delete;
 	  Standardizer& operator=(const Standardizer&) = delete;
 
-	  void standardize(T& vec, GpuStream* computeStream) {
-	    mean = ms::expr::sumall_except_dim<1>(vec);
+	  void transform(Tensor& vec) {
+	    assert(vec.shape_.kDimension == 2);
+	    assert(vec.shape_[1] == 1);
+
+	    auto rows = vec.shape_[0];
+
+	    // alloc dst/temp tensors
+	    mean.Resize(mshadow::Shape1(1));
+	    mean.set_stream(vec.stream_);
+	    temp.Resize(mshadow::Shape2(rows, 1));
+	    temp.set_stream(vec.stream_);
+	    sd.Resize(mshadow::Shape1(1));
+	    sd.set_stream(vec.stream_);
+
+	    // calculate
+	    mean = mshadow::expr::sumall_except_dim<1>(vec);
 	    mean /= static_cast<DType>(rows);
-	    temp = ms::expr::F<Pow>(vec - ms::expr::broadcast<1>(mean, temp.shape_), 2);
-	    sd = ms::expr::sumall_except_dim<1>(temp);
-	    sd = ms::expr::F<Sqrt>(sd) / static_cast<DType>(rows - 1);
-	    temp = (vec - ms::expr::broadcast<1>(mean, temp.shape_)) /
-	           ms::expr::broadcast<1>(sd, temp.shape_);
+	    temp = mshadow::expr::F<Pow>(
+	        vec - mshadow::expr::broadcast<1>(mean, temp.shape_), 2);
 
-	    // scale to [-1, 1] range
-	    min =
-	        ms::expr::ReduceTo1DExp<T, DType, ms::red::minimum,
-	                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
-	    max =
-	        ms::expr::ReduceTo1DExp<T, DType, ms::red::maximum,
-	                                ms::expr::ExpInfo<T>::kDim - 1>(temp, DType(1));
+	    sd = mshadow::expr::sumall_except_dim<1>(temp);
+	    sd = mshadow::expr::F<Sqrt>(sd / static_cast<DType>(rows - 1));
 
-	    temp = (temp - ms::expr::broadcast<1>(min, temp.shape_)) /
-	           ms::expr::broadcast<1>(max - min, temp.shape_);
+	    temp = (vec - mshadow::expr::broadcast<1>(mean, temp.shape_)) /
+	           mshadow::expr::broadcast<1>(sd, temp.shape_);
 
-	    temp = (temp * 2.f) - 1.f;
-
-	    ms::Copy(vec, temp, computeStream);
+	    mshadow::Copy(vec, temp, vec.stream_);
 	  }
-	  auto get_moments(GpuStream* computeStream) {
-	    ms::TensorContainer<ms::cpu, 1, DType> value(ms::Shape1(1));
-	    ms::Copy(value, min, computeStream);
-	    DType v_min = value[0];
-	    ms::Copy(value, max, computeStream);
-	    DType v_max = value[0];
-	    ms::Copy(value, mean, computeStream);
+
+	  auto get_moments() {
+	    mshadow::TensorContainer<mshadow::cpu, 1, DType> value(mshadow::Shape1(1));
+	    mshadow::Copy(value, mean, mean.stream_);
 	    DType v_mean = value[0];
-	    ms::Copy(value, sd, computeStream);
+	    mshadow::Copy(value, sd, sd.stream_);
 	    DType v_sd = value[0];
-	    return std::vector<DType>{v_min, v_max, v_mean, v_sd};
+	    return std::vector<DType>{v_mean, v_sd};
 	  }
+
 	 private:
-	  ms::TensorContainer<ms::gpu, 1, DType> min;
-	  ms::TensorContainer<ms::gpu, 1, DType> max;
-	  ms::TensorContainer<ms::gpu, 1, DType> mean;
-	  ms::TensorContainer<ms::gpu, 1, DType> sd;
-	  ms::TensorContainer<ms::gpu, 2, DType> temp;
-	  size_t rows;
+	  mshadow::TensorContainer<Device, 1, DType> mean;
+	  mshadow::TensorContainer<Device, 1, DType> sd;
+	  mshadow::TensorContainer<Device, 2, DType> temp;
 	};
 	``` 
 	The interesting moments here are :
@@ -164,7 +153,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1NDc4MTAwNTYsNTI5OTgyNDg5LC0xND
+eyJoaXN0b3J5IjpbLTE5NTU2OTMxOTYsNTI5OTgyNDg5LC0xND
 Q4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4
 NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2OD
 I3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMx
