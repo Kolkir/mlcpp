@@ -56,8 +56,12 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	mshadow::TensorContainer<xpu, 2, DType> x;
 	x.set_stream(computeStream.get());
 	load_data<xpu>(raw_data_x, x);
+	
+	mshadow::TensorContainer<xpu, 2, DType> y;
+    y.set_stream(computeStream.get());
+    load_data<xpu>(raw_data_y, y);
 	```
-    When I initialize ``host_data`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``mshadow::TensorContainer`` type which implements RAII idiom for ``mshadow::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``gpu_y`` initialization and during copy operation. 
+    When I initialize ``host_data`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``mshadow::TensorContainer`` type which implements RAII idiom for ``mshadow::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``x`` initialization and during copy operation. 
     
 2. **Standardization**
 To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to preallocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
@@ -160,7 +164,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTY4NzU0MjY5LC0xNDQ4NjUxMzMsNTAwOT
+eyJoaXN0b3J5IjpbNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOT
 k5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIz
 LDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMD
 g4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3Mzkx
