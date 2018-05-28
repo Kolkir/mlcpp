@@ -329,17 +329,22 @@ To be able to perform successful computations for regression analysis we need to
 	new_y.set_stream(computeStream.get());
 	optimizer.predict(new_poly_x, new_y);
 	```
-	But before actual using predicted values we need to restore scaling and undo 
+	But before actual using predicted values we need to restore scaling and undo standardization:
+	``` cpp
+	new_y /= scale;
+	new_y = (new_y * y_moments[1]) + y_moments[0];
+	``` 
+	Here ``y_moments[1]`` is a standard de
 8. **Plot results**
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTI1ODI2MjI3NSw5OTExOTk2MjYsLTE5OD
-AyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNzg2NzY3OTg3
-LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDExNzcxMj
-c3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1
-Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MT
-c4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyXX0=
+eyJoaXN0b3J5IjpbLTU5NTQxMjA0LDk5MTE5OTYyNiwtMTk4MD
+I5MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4OCw3ODY3Njc5ODcs
+NzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NTY5OTYsMTE3NzEyNz
+c4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MTk2NDc1LDUy
+OTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNz
+gwLDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTJdfQ==
 
 -->
