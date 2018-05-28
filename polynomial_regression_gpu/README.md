@@ -12,17 +12,14 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	MShadow library use special routines to initialize and shutdown itself,  I wrote a simple class to use them in RAII manner:
 	``` cpp
 	#include <mshadow/tensor.h>
-	...
-	namespace ms = mshadow;
-    typedef float DType;
-	...
 	template <typename Device>
 	struct ScopedTensorEngine {
-	  ScopedTensorEngine() { ms::InitTensorEngine<Device>(); }
-	  ~ScopedTensorEngine() { ms::ShutdownTensorEngine<Device>(); }
+	  ScopedTensorEngine() { mshadow::InitTensorEngine<Device>(); }
+	  ~ScopedTensorEngine() { mshadow::ShutdownTensorEngine<Device>(); }
 	  ScopedTensorEngine(const ScopedTensorEngine&) = delete;
 	  ScopedTensorEngine& operator=(const ScopedTensorEngine&) = delete;
 	};
+
 	```
 	Device template parameter can be ``ms::cpu`` or ``ms::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code will remain the same):
 	```cpp
@@ -152,11 +149,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNTAwOTk5NjA4LC0xNzEzNDE3ODAsMTU0NT
-g1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OTQ4Mjgy
-LDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNz
-I4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYx
-MywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OT
-cwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3MjQ4LC0xNzI5OTc2
-NjU3XX0=
+eyJoaXN0b3J5IjpbLTM5NDk0MjY0Niw1MDA5OTk2MDgsLTE3MT
+M0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEy
+LDE0NzU5NDgyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOT
+czMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDczOTE1LDgxMjYxMjA5
+NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAsNjgzMDEwODQsMTE3Nz
+E4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcy
+NDhdfQ==
 -->
