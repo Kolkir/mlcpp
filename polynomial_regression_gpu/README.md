@@ -205,7 +205,7 @@ To be able to perform successful computations for regression analysis we need to
 	```
 
 6. **Batch gradient descent implementation**
- 
+	 For this example a code for learning model and results predicting I moved to separate file  
  
 7. **Training the regression model**
     
@@ -216,7 +216,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbODc5NjMzMDcxLDIxMzkyMTkxNzksOTgzND
+eyJoaXN0b3J5IjpbNjUzMzI0NTA2LDIxMzkyMTkxNzksOTgzND
 EzNjg4LDc4Njc2Nzk4Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4
 MDc1Njk5NiwxMTc3MTI3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMT
 IwLDE5MTgxOTY0NzUsNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAw
