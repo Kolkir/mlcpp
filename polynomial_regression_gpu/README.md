@@ -143,7 +143,12 @@ To be able to perform successful computations for regression analysis we need to
 		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 		};
 		```
-	5. Also I added code to additionally scale data to the range [-1,1]. The reason for that is float type which is used for calculations on GPU, original data have pretty big values and 
+	4. Also I added code to additionally scale the data. The reason for that is float type which is used for calculations on GPU, 
+			```cpp
+		DType scale = 0.6;
+		x *= scale;
+		y *= scale;
+		```
    
 3. **Generating additional polynomial components**
 
@@ -161,7 +166,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTY4OTM4OTAwMSwxOTE4MTk2NDc1LDUyOT
+eyJoaXN0b3J5IjpbMTc3NTAyNzc4MywxOTE4MTk2NDc1LDUyOT
 k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
 LDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NT
 k0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5
