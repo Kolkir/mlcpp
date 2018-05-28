@@ -205,7 +205,7 @@ To be able to perform successful computations for regression analysis we need to
 	```
 
 6. **Batch gradient descent implementation**
-	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  AdaDelta optimizing technique, because it make learnung process to 
+	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  AdaDelta optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate.
 	``` cpp
 	template <typename Device, typename DType>
 	class Optimizer {
@@ -324,11 +324,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjA2MzIwOTE5NSwyMTM5MjE5MTc5LDk4Mz
-QxMzY4OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0
-ODA3NTY5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MD
-EyMCwxOTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUw
-MDk5OTYwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0Mj
-kyMyw3NTA2NzAyMTIsMTQ3NTk0ODI4MiwxNjgyNzE1NjcyXX0=
+eyJoaXN0b3J5IjpbLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5OD
+M0MTM2ODgsNzg2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAs
+NDgwNzU2OTk2LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNj
+AxMjAsMTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1
+MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5ND
+I5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4MjcxNTY3Ml19
 
 -->
