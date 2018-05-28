@@ -328,17 +328,18 @@ To be able to perform successful computations for regression analysis we need to
 	mshadow::TensorContainer<xpu, 2, DType> new_y(mshadow::Shape2(n, 1));
 	new_y.set_stream(computeStream.get());
 	optimizer.predict(new_poly_x, new_y);
-	``` 
+	```
+	But before actual using predicted values we need to restore scaling and undo 
 8. **Plot results**
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE1ODUzNjI0MzAsOTkxMTk5NjI2LC0xOT
-gwMjkxMDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4
-Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MT
-I3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUs
-NTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzND
-E3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMl19
+eyJoaXN0b3J5IjpbLTI1ODI2MjI3NSw5OTExOTk2MjYsLTE5OD
+AyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNzg2NzY3OTg3
+LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDExNzcxMj
+c3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1
+Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MT
+c4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyXX0=
 
 -->
