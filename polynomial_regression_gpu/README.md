@@ -181,26 +181,26 @@ To be able to perform successful computations for regression analysis we need to
 	 
 4. **Generating new data for testing model predictions**
 	``` cpp
-	size_t n = 2000;
-  auto minmax_x = std::minmax_element(raw_data_x.begin(), raw_data_x.end());
-  auto time_range = *minmax_x.second - *minmax_x.first;
-  auto inc_step = time_range / n;
-  auto x_val = inc_step;
-  std::vector<DType> new_data_x(n);
-  for (auto& x : new_data_x) {
-    x = x_val;
-    x_val += inc_step;
-  }
-  mshadow::TensorContainer<xpu, 2, DType> new_x(mshadow::Shape2(n, 1));
-  new_x.set_stream(computeStream.get());
-  load_data<xpu>(new_data_x, new_x);
-  standardizer.transform(new_x);
-  new_x *= scale;
+	  size_t n = 2000;
+	  auto minmax_x = std::minmax_element(raw_data_x.begin(), raw_data_x.end());
+	  auto time_range = *minmax_x.second - *minmax_x.first;
+	  auto inc_step = time_range / n;
+	  auto x_val = inc_step;
+	  std::vector<DType> new_data_x(n);
+	  for (auto& x : new_data_x) {
+	    x = x_val;
+	    x_val += inc_step;
+	  }
+	  mshadow::TensorContainer<xpu, 2, DType> new_x(mshadow::Shape2(n, 1));
+	  new_x.set_stream(computeStream.get());
+	  load_data<xpu>(new_data_x, new_x);
+	  standardizer.transform(new_x);
+	  new_x *= scale;
 
-  mshadow::TensorContainer<xpu, 2, DType> new_poly_x(
-      mshadow::Shape2(n, p_degree));
-  new_poly_x.set_stream(computeStream.get());
-  generate_polynomial(new_x, new_poly_x, p_degree);
+	  mshadow::TensorContainer<xpu, 2, DType> new_poly_x(
+	      mshadow::Shape2(n, p_degree));
+	  new_poly_x.set_stream(computeStream.get());
+	  generate_polynomial(new_x, new_poly_x, p_degree);
 	```
 
 6. **Batch gradient descent implementation**
@@ -214,11 +214,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEzNDkxNzU3MDEsNzg2NzY3OTg3LDcyMD
-M3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDExNzcxMjc3OCwt
-MzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1Mjk5OD
-I0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MTc4MCwx
-NTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyLDE0NzU5ND
-gyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5
-XX0=
+eyJoaXN0b3J5IjpbMTgzMDA5ODU3MSw3ODY3Njc5ODcsNzIwMz
+c5NjEsLTU5MDY0NTI2MCw0ODA3NTY5OTYsMTE3NzEyNzc4LC0z
+NDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MTk2NDc1LDUyOTk4Mj
+Q4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgwLDE1
+NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NTk0OD
+I4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5NDld
+fQ==
 -->
