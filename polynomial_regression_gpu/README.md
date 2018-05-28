@@ -121,6 +121,14 @@ To be able to perform successful computations for regression analysis we need to
 	  mshadow::TensorContainer<Device, 1, DType> sd;
 	  mshadow::TensorContainer<Device, 2, DType> temp;
 	};
+	...
+	...
+	// standardize data
+	auto rows = raw_data_x.size();
+	Standardizer<xpu, DType> standardizer;
+	standardizer.transform(x);
+	standardizer.transform(y);
+	auto y_moments = standardizer.get_moments(); // used later for scale restoring
 	``` 
 	The interesting moments here are :
 	1.  ``mshadow::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it requires earlier expression evaluation which can hurt performance.
@@ -153,11 +161,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbODk5OTcyODUwLDE5MTgxOTY0NzUsNTI5OT
-gyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODAs
-MTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OT
-Q4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0
-OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNz
-IzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2Njld
-fQ==
+eyJoaXN0b3J5IjpbLTY4OTM4OTAwMSwxOTE4MTk2NDc1LDUyOT
+k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
+LDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NT
+k0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5
+NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0LDE3MD
+cyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5
+XX0=
 -->
