@@ -180,7 +180,7 @@ To be able to perform successful computations for regression analysis we need to
 	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial``  return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
 	 
 4. **Generating new data for testing model predictions**
-	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values. 
+	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values.  
 	``` cpp
 	  size_t n = 2000;
 	  auto minmax_x = std::minmax_element(raw_data_x.begin(), raw_data_x.end());
@@ -215,11 +215,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbOTgzNDEzNjg4LDc4Njc2Nzk4Nyw3MjAzNz
-k2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MTI3NzgsLTM0
-NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUsNTI5OTgyND
-g5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODAsMTU0
-NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OTQ4Mj
-gyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OV19
+eyJoaXN0b3J5IjpbMTA0NDEyMTg1Niw5ODM0MTM2ODgsNzg2Nz
+Y3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDEx
+NzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5Nj
+Q3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3
+MTM0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMj
+EyLDE0NzU5NDgyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwN119
 
 -->
