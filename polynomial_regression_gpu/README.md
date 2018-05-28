@@ -20,10 +20,10 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  ScopedTensorEngine& operator=(const ScopedTensorEngine&) = delete;
 	};
 	```
-	Device template parameter can be ``mshadow::cpu`` or ``mshadow::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code will remain the same):
+	Device template parameter can be ``mshadow::cpu`` or ``mshadow::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``mshadow::cpu`` for all computations, and code will remain the same, ):
 	```cpp
-	ScopedTensorEngine<ms::cpu> tensorEngineCpu;
-	ScopedTensorEngine<ms::gpu> tensorEngineGpu;
+	ScopedTensorEngine<mshadow::cpu> tensorEngineCpu;
+	ScopedTensorEngine<mshadow::gpu> tensorEngineGpu;
 	```
 	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device. Streams can be run in independent concurrent in-order queues of execution, and operations in different streams can be interleaved and overlapped. This variable is necessary for using other MShadow abstractions. 
 	```cpp
@@ -148,11 +148,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEzNjI4MTE0NDQsNTAwOTk5NjA4LC0xNz
-EzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIx
-MiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMT
-k3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIw
-OTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNz
-cxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3
-MjQ4XX0=
+eyJoaXN0b3J5IjpbNzc0Mjc1ODA1LDUwMDk5OTYwOCwtMTcxMz
+QxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIs
+MTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5Nz
+MzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0
+LDE3MDcyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MT
+g2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0NywtMTczNjQ4NzI0
+OF19
 -->
