@@ -134,14 +134,7 @@ To be able to perform successful computations for regression analysis we need to
 		struct Sqrt {
 		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 		};
-		...
-		// standardize data
-	  auto rows = raw_data_x.size();
-	  Standardizer<xpu, DType> standardizer;
-	  standardizer.transform(x);
-	  standardizer.transform(y);
-	  auto y_moments = standardizer.get_moments();
-	```
+		```
 	5. Also I added code to additionally scale data to the range [-1,1]. The reason for that is float type which is used for calculations on GPU, original data have pretty big values and 
    
 3. **Generating additional polynomial components**
@@ -160,11 +153,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTU1ODIyMTM2MiwxOTE4MTk2NDc1LDUyOT
-k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
-LDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NT
-k0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5
-NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0LDE3MD
-cyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5
-XX0=
+eyJoaXN0b3J5IjpbODk5OTcyODUwLDE5MTgxOTY0NzUsNTI5OT
+gyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODAs
+MTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OT
+Q4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0
+OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNz
+IzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2Njld
+fQ==
 -->
