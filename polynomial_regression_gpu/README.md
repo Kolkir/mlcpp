@@ -145,13 +145,13 @@ To be able to perform successful computations for regression analysis we need to
 		```
    
 3. **Generating additional polynomial components**
-Before generating actual polynomial components, we need to scale our data to an appropriate range before raise to power to prevent float overflow in the optimizer, this is restriction of ``float`` type.  A scale factor was chosen after several experiments.
+	Before generating actual polynomial components, we need to scale our data to an appropriate range before raise to power to prevent float overflow in the optimizer, this is restriction of ``float`` type.  A scale factor was chosen after several experiments with polynomial degree of 64.
 	```cpp
 	DType scale = 0.6;
 	x *= scale;
 	y *= scale;
 	```
-
+	Here 
 
 4. **Generating new data for testing model predictions**
 
@@ -166,11 +166,11 @@ Before generating actual polynomial components, we need to scale our data to an 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MT
-gxOTY0NzUsNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4
-LC0xNzEzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MD
-Y3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0
-MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MT
-I2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0
-XX0=
+eyJoaXN0b3J5IjpbMTI1NjE2NDkwNSwtMzQ3NTIzMTcyLDE1Mj
+QxNjAxMjAsMTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEz
+Myw1MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3LC0xNj
+U5NDI5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4MjcxNTY3
+MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzExMSwtMT
+QxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Njk1NjU3
+MTBdfQ==
 -->
