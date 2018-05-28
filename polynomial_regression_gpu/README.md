@@ -20,11 +20,12 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  ScopedTensorEngine& operator=(const ScopedTensorEngine&) = delete;
 	};
 	```
-	Device template parameter can be ``mshadow::cpu`` or ``mshadow::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``mshadow::cpu`` for all computations, and code will remain the same, ):
+	Device template parameter can be ``mshadow::cpu`` or ``mshadow::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``mshadow::cpu`` for all computations, and code will remain the same):
 	```cpp
 	ScopedTensorEngine<mshadow::cpu> tensorEngineCpu;
 	ScopedTensorEngine<mshadow::gpu> tensorEngineGpu;
 	```
+	Take a look on ``USE_GPU`` define in source, it allows you to disable usin
 	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device. Streams can be run in independent concurrent in-order queues of execution, and operations in different streams can be interleaved and overlapped. This variable is necessary for using other MShadow abstractions. 
 	```cpp
 	...
@@ -148,7 +149,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNzc0Mjc1ODA1LDUwMDk5OTYwOCwtMTcxMz
+eyJoaXN0b3J5IjpbNzM2ODM3OTA0LDUwMDk5OTYwOCwtMTcxMz
 QxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIs
 MTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5Nz
 MzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0
