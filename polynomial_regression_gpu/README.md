@@ -205,7 +205,7 @@ To be able to perform successful computations for regression analysis we need to
 	```
 
 6. **Batch gradient descent implementation**
-	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate. You should pay attention on next things:  resizing all tensors before actual usage, using ``mshadow::expr::dot`` function for tensors(matrix) multiplication, using ``Slice`` function for batches extracting nad using ``T()`` method of tensor object for taking a transposed 
+	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate. You should pay attention on next things:  resizing all tensors before actual usage, using ``mshadow::expr::dot`` function for tensors(matrix) multiplication, using ``Slice`` function for batches extracting and using ``T()`` method of tensor object for taking a transposed one.
 	``` cpp
 	template <typename Device, typename DType>
 	class Optimizer {
@@ -324,11 +324,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTU5OTMzMjIyMCw5OTExOTk2MjYsLTE5OD
-AyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNzg2NzY3OTg3
-LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDExNzcxMj
-c3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1
-Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MT
-c4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyXX0=
+eyJoaXN0b3J5IjpbLTEyMTgzMzA2MjYsOTkxMTk5NjI2LC0xOT
+gwMjkxMDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4
+Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MT
+I3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUs
+NTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzND
+E3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMl19
 
 -->
