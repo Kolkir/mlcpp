@@ -72,6 +72,7 @@ To be able to perform successful computations for regression analysis we need to
 	 public:
 	  using Tensor = mshadow::TensorContainer<Device, 2, DType>;
 	  using Stream = mshadow::Stream<Device>;
+	  
 	  Standardizer() {}
 	  ~Standardizer() {}
 	  Standardizer(const Standardizer&) = delete;
@@ -122,7 +123,7 @@ To be able to perform successful computations for regression analysis we need to
 	};
 	``` 
 	The interesting moments here are :
-	1.  ``ms::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it will require earlier expression evaluation which can hurt performance.
+	1.  ``mshadow::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it will require earlier expression evaluation which can hurt performance.
 	2.  ``ms::expr::sumall_except_dim`` function which calculate sum of elements along not specified tensor dimension. 
 	3.  ``ms::expr::F`` custom user specified operation on tensor elements, I used power and square root operations:
 		```cpp
@@ -153,11 +154,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE5NTU2OTMxOTYsNTI5OTgyNDg5LC0xND
-Q4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4
-NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2OD
-I3MTU2NzIsLTEyMDg4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMx
-MTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOT
-Y5NTY1NzEwLDY4MzAxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2
-Ml19
+eyJoaXN0b3J5IjpbMTg2ODcwOTY0Nyw1Mjk5ODI0ODksLTE0ND
+g2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3
+LC0xNjU5NDI5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4Mj
+cxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzEx
+MSwtMTQxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Nj
+k1NjU3MTAsNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYy
+XX0=
 -->
