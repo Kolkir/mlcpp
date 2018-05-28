@@ -19,9 +19,8 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  ScopedTensorEngine(const ScopedTensorEngine&) = delete;
 	  ScopedTensorEngine& operator=(const ScopedTensorEngine&) = delete;
 	};
-
 	```
-	Device template parameter can be ``ms::cpu`` or ``ms::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code will remain the same):
+	Device template parameter can be ``mshadow::cpu`` or ``mshadow::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``ms::cpu`` for all computations, and code will remain the same):
 	```cpp
 	ScopedTensorEngine<ms::cpu> tensorEngineCpu;
 	ScopedTensorEngine<ms::gpu> tensorEngineGpu;
@@ -149,11 +148,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM5NDk0MjY0Niw1MDA5OTk2MDgsLTE3MT
-M0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEy
-LDE0NzU5NDgyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOT
-czMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDczOTE1LDgxMjYxMjA5
-NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAsNjgzMDEwODQsMTE3Nz
-E4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcy
-NDhdfQ==
+eyJoaXN0b3J5IjpbLTEzNjI4MTE0NDQsNTAwOTk5NjA4LC0xNz
+EzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIx
+MiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMT
+k3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIw
+OTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNz
+cxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3
+MjQ4XX0=
 -->
