@@ -9,6 +9,7 @@ Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/po
 You have pay attention on how sources for this tutorial are compiled, I used CUDA compiler for them, please look at corresponding CMakeLists.txt file for details. Also you should have installed ``gcc-6`` as host compiler for ``CUDA 9``.
 
 0. **Preparations**
+
 	MShadow library use special routines to initialize and shutdown itself,  I wrote a simple class to use them in RAII manner:
 	``` cpp
 	#include <mshadow/tensor.h>
@@ -42,6 +43,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	C++ smart pointer with custom deleter can be very useful for C style interfaces.  
 	
 1. **Loading data to MShadow datastructures**
+
 	There are several approaches to initialize tensors data structures in MShadow library, two of them I used next code section.
 	```cpp
 	template <typename Device, typename DType>
@@ -64,6 +66,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     When I initialize ``host_data`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``mshadow::TensorContainer`` type which implements RAII idiom for ``mshadow::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``x`` initialization and during copy operation. 
     
 2. **Standardization**
+
 To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to pre-allocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
 	```cpp
 	// Standardize 2D tensor of shape [rows]x[1]
@@ -122,7 +125,6 @@ To be able to perform successful computations for regression analysis we need to
 	  mshadow::TensorContainer<Device, 2, DType> temp;
 	};
 	...
-	...
 	// standardize data
 	auto rows = raw_data_x.size();
 	Standardizer<xpu, DType> standardizer;
@@ -144,7 +146,8 @@ To be able to perform successful computations for regression analysis we need to
 		};
 		```
    
-3. **Generating additional polynomial components**
+4. **Generating additional polynomial components**
+
 	Before generating actual polynomial components, we need to scale our data to an appropriate range before raise to power to prevent float overflow in the optimizer, this is restriction of ``float`` type.  A scale factor was chosen after several experiments with polynomial degree of 64.
 	```cpp
 	DType scale = 0.6;
@@ -179,7 +182,7 @@ To be able to perform successful computations for regression analysis we need to
 	``` 
 	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial``  return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
 	 
-4. **Generating new data for testing model predictions**
+5. **Generating new data for testing model predictions**
 
 	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values.  The new data are also standardized and scaled, and additional polynomial components are generated.
 	``` cpp
@@ -205,7 +208,7 @@ To be able to perform successful computations for regression analysis we need to
 	  generate_polynomial(new_x, new_poly_x, p_degree);
 	```
 
-5. **Batch gradient descent implementation**
+6. **Batch gradient descent implementation**
 
 	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate. You should pay attention on next things:  resizing all tensors before actual usage, using ``mshadow::expr::dot`` function for tensors(matrix) multiplication, using ``Slice`` function for batches extracting and using ``T()`` method of tensor object for taking a transposed one.
 	``` cpp
@@ -317,7 +320,7 @@ To be able to perform successful computations for regression analysis we need to
 	};
 	``` 
  
-6. **Training the regression model**
+7. **Training the regression model**
 
 	With class defined above I can run training pretty easily:
 	``` cpp
@@ -325,7 +328,7 @@ To be able to perform successful computations for regression analysis we need to
 	optimizer.fit(poly_x, y);
 	```
     
-7. **Making predictions**
+8. **Making predictions**
 
   Predictions also are straight forward:
 	``` cpp
@@ -340,7 +343,7 @@ To be able to perform successful computations for regression analysis we need to
 	``` 
 	Here ``y_moments[1]`` is a standard deviation and ``y_moments[0]`` is a mean.
 	
-8. **Plot results**
+9. **Plot results**
 
 	To plot results I moved  predicted values to C++ vector data structure to have iterators compatible with a plotting library:
 	``` cpp
@@ -362,11 +365,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEzOTg4MDYwNDUsLTEzNjQ0ODQ4MTEsMT
-U3OTI5ODM3NywtMjkyNjU0MDcwLDk5MTE5OTYyNiwtMTk4MDI5
-MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4OCw3ODY3Njc5ODcsNz
-IwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NTY5OTYsMTE3NzEyNzc4
-LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MTk2NDc1LDUyOT
-k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
-XX0=
+eyJoaXN0b3J5IjpbMjAwOTc2MTU5OSwtMTM2NDQ4NDgxMSwxNT
+c5Mjk4Mzc3LC0yOTI2NTQwNzAsOTkxMTk5NjI2LC0xOTgwMjkx
+MDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4Nyw3Mj
+AzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MTI3Nzgs
+LTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUsNTI5OT
+gyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODBd
+fQ==
 -->
