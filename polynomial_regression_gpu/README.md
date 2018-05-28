@@ -180,23 +180,45 @@ To be able to perform successful computations for regression analysis we need to
 	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial``  return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
 	 
 4. **Generating new data for testing model predictions**
+	``` cpp
+	size_t n = 2000;
+  auto minmax_x = std::minmax_element(raw_data_x.begin(), raw_data_x.end());
+  auto time_range = *minmax_x.second - *minmax_x.first;
+  auto inc_step = time_range / n;
+  auto x_val = inc_step;
+  std::vector<DType> new_data_x(n);
+  for (auto& x : new_data_x) {
+    x = x_val;
+    x_val += inc_step;
+  }
+  mshadow::TensorContainer<xpu, 2, DType> new_x(mshadow::Shape2(n, 1));
+  new_x.set_stream(computeStream.get());
+  load_data<xpu>(new_data_x, new_x);
+  standardizer.transform(new_x);
+  new_x *= scale;
 
-5. **Batch gradient descent implementation**
+  mshadow::TensorContainer<xpu, 2, DType> new_poly_x(
+      mshadow::Shape2(n, p_degree));
+  new_poly_x.set_stream(computeStream.get());
+  generate_polynomial(new_x, new_poly_x, p_degree);
+	```
+
+6. **Batch gradient descent implementation**
  
-6. **Creating general regression model**
+7. **Creating general regression model**
     
-7. **Making predictions**
+8. **Making predictions**
    
-8. **Plot results**
+9. **Plot results**
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNzg2NzY3OTg3LDcyMDM3OTYxLC01OTA2ND
-UyNjAsNDgwNzU2OTk2LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1
-MjQxNjAxMjAsMTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NT
-EzMyw1MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3LC0x
-NjU5NDI5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4MjcxNT
-Y3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzExMV19
-
+eyJoaXN0b3J5IjpbLTEzNDkxNzU3MDEsNzg2NzY3OTg3LDcyMD
+M3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDExNzcxMjc3OCwt
+MzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1Mjk5OD
+I0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MTc4MCwx
+NTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyLDE0NzU5ND
+gyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5
+XX0=
 -->
