@@ -337,15 +337,16 @@ To be able to perform successful computations for regression analysis we need to
 	Here ``y_moments[1]`` is a standard deviation and ``y_moments[0]`` is a mean.
 	
 8. **Plot results**
+	To plot results I moved  predicted values to C++ vector
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTI5MjY1NDA3MCw5OTExOTk2MjYsLTE5OD
-AyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNzg2NzY3OTg3
-LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDExNzcxMj
-c3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1
-Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MT
-c4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyXX0=
+eyJoaXN0b3J5IjpbLTI1ODA5OTEzMywtMjkyNjU0MDcwLDk5MT
+E5OTYyNiwtMTk4MDI5MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4
+OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NT
+Y5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwx
+OTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OT
+YwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyM119
 
 -->
