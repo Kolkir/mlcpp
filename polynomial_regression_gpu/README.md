@@ -145,7 +145,7 @@ To be able to perform successful computations for regression analysis we need to
 		```
    
 3. **Generating additional polynomial components**
-Before
+Before 
 
 4. **Generating new data for testing model predictions**
 
@@ -160,11 +160,11 @@ Before
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTUyNDE2MDEyMCwxOTE4MTk2NDc1LDUyOT
-k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
-LDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NT
-k0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5
-NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0LDE3MD
-cyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5
-XX0=
+eyJoaXN0b3J5IjpbNDMyODkyNjI4LDE1MjQxNjAxMjAsMTkxOD
+E5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgs
+LTE3MTM0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNj
+cwMjEyLDE0NzU5NDgyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQw
+NywxOTczMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDczOTE1LDgxMj
+YxMjA5NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAsNjgzMDEwODRd
+fQ==
 -->
