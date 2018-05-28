@@ -134,8 +134,14 @@ To be able to perform successful computations for regression analysis we need to
 		struct Sqrt {
 		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 		};
-		```
-	4.  ``mshadow::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it takes scale factor (in out case 1), the first parameter is a tensor for reduction.
+		...
+		// standardize data
+	  auto rows = raw_data_x.size();
+	  Standardizer<xpu, DType> standardizer;
+	  standardizer.transform(x);
+	  standardizer.transform(y);
+	  auto y_moments = standardizer.get_moments();
+	```
 	5. Also I added code to additionally scale data to the range [-1,1]. The reason for that is float type which is used for calculations on GPU, original data have pretty big values and 
    
 3. **Generating additional polynomial components**
@@ -154,11 +160,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0ND
-g2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3
-LC0xNjU5NDI5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4Mj
-cxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzEx
-MSwtMTQxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Nj
-k1NjU3MTAsNjgzMDEwODQsMTE3NzE4NjY2OSwxOTk5NzAyNzYy
+eyJoaXN0b3J5IjpbMTU1ODIyMTM2MiwxOTE4MTk2NDc1LDUyOT
+k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
+LDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NT
+k0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5
+NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0LDE3MD
+cyMzY2MTMsLTk2OTU2NTcxMCw2ODMwMTA4NCwxMTc3MTg2NjY5
 XX0=
 -->
