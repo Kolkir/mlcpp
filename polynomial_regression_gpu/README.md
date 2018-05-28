@@ -281,9 +281,6 @@ To be able to perform successful computations for regression analysis we need to
 	        ex_sum =
 	            lr * ex_sum + (1.f - lr) * mshadow::expr::F<Pow>(weights_delta, 2);
 	        weights = weights + weights_delta;
-
-	        // BGD
-	        // weights = weights - (lr * grad);
 	      }
 	      // compute cost
 	      error_total = mshadow::expr::dot(x, weights);
@@ -301,8 +298,7 @@ To be able to perform successful computations for regression analysis we need to
 	 private:
 	  size_t n_epochs = 5000;
 	  size_t batch_size = 8;
-	  // DType lr = 0.01;  // BGD
-
+ // DType lr = 0.01;  // BGD
 	  mshadow::TensorContainer<Device, 2, DType> weights;
 	  mshadow::TensorContainer<Device, 2, DType> grad;
 	  mshadow::TensorContainer<Device, 2, DType> yhat;
@@ -328,11 +324,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE0Njg3MDc1ODIsMjEzOTIxOTE3OSw5OD
-M0MTM2ODgsNzg2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAs
-NDgwNzU2OTk2LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNj
-AxMjAsMTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1
-MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5ND
-I5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4MjcxNTY3Ml19
+eyJoaXN0b3J5IjpbMTMxNDc3MDE5NywyMTM5MjE5MTc5LDk4Mz
+QxMzY4OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0
+ODA3NTY5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MD
+EyMCwxOTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUw
+MDk5OTYwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0Mj
+kyMyw3NTA2NzAyMTIsMTQ3NTk0ODI4MiwxNjgyNzE1NjcyXX0=
 
 -->
