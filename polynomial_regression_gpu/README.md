@@ -151,7 +151,7 @@ To be able to perform successful computations for regression analysis we need to
 	x *= scale;
 	y *= scale;
 	```
-	Here 
+	Here you can see the example of a dynamic broadcasting. 
 
 4. **Generating new data for testing model predictions**
 
@@ -166,11 +166,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTI1NjE2NDkwNSwtMzQ3NTIzMTcyLDE1Mj
-QxNjAxMjAsMTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEz
-Myw1MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3LC0xNj
-U5NDI5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4MjcxNTY3
-MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzExMSwtMT
-QxNDczOTE1LDgxMjYxMjA5NCwxNzA3MjM2NjEzLC05Njk1NjU3
-MTBdfQ==
+eyJoaXN0b3J5IjpbMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyND
+E2MDEyMCwxOTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMz
+LDUwMDk5OTYwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NT
+k0MjkyMyw3NTA2NzAyMTIsMTQ3NTk0ODI4MiwxNjgyNzE1Njcy
+LC0xMjA4ODgyNDA3LDE5NzMzNTI5NDksMjcyODUzMTExLC0xND
+E0NzM5MTUsODEyNjEyMDk0LDE3MDcyMzY2MTMsLTk2OTU2NTcx
+MF19
 -->
