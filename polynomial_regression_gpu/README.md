@@ -337,16 +337,22 @@ To be able to perform successful computations for regression analysis we need to
 	Here ``y_moments[1]`` is a standard deviation and ``y_moments[0]`` is a mean.
 	
 8. **Plot results**
-	To plot results I moved  predicted values to C++ vector
+	To plot results I moved  predicted values to C++ vector data structure to have iterators compatible with plotting library:
+	``` cpp
+	std::vector<DType> raw_pred_y(n);
+	mshadow::Tensor<mshadow::cpu, 2, DType> pred_y(raw_pred_y.data(),
+                                                 mshadow::Shape2(n, 1));
+  mshadow::Copy(pred_y, new_y, computeStream.get());
+	```
 
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTI1ODA5OTEzMywtMjkyNjU0MDcwLDk5MT
-E5OTYyNiwtMTk4MDI5MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4
-OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NT
-Y5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwx
-OTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OT
-YwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyM119
-
+eyJoaXN0b3J5IjpbLTEwNjA0MTQ2NjUsLTI5MjY1NDA3MCw5OT
+ExOTk2MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2
+ODgsNzg2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNz
+U2OTk2LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAs
+MTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OT
+k2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjNd
+fQ==
 -->
