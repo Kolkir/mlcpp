@@ -172,7 +172,10 @@ To be able to perform successful computations for regression analysis we need to
 	  }
 	}
 	...
-	
+	size_t p_degree = 64;
+	mshadow::TensorContainer<xpu, 2, DType> poly_x(mshadow::Shape2(rows, p_degree));
+	poly_x.set_stream(computeStream.get());
+	generate_polynomial(x, poly_x, p_degree);
 	``` 
 
 4. **Generating new data for testing model predictions**
@@ -188,11 +191,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNzQ3MTc5MjE5LDQ4MDc1Njk5NiwxMTc3MT
-I3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUs
-NTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzND
-E3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMiwx
-NDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMTk3Mz
-M1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIwOTRd
-fQ==
+eyJoaXN0b3J5IjpbLTU5MDY0NTI2MCw0ODA3NTY5OTYsMTE3Nz
+EyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MTk2NDc1
+LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMz
+QxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIs
+MTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5Nz
+MzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5MTUsODEyNjEyMDk0
+XX0=
 -->
