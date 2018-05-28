@@ -52,6 +52,10 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  dst.Resize(host_data.shape_);
 	  mshadow::Copy(dst, host_data, dst.stream_);
 	}
+	...
+	mshadow::TensorContainer<xpu, 2, DType> x;
+	x.set_stream(computeStream.get());
+	load_data<xpu>(raw_data_x, x);
 	```
     When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``ms::TensorContainer`` type which implements RAII idiom for ``ms::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``gpu_y`` initialization and during copy operation. 
     
@@ -156,11 +160,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNzg2MTQyMjY2LC0xNDQ4NjUxMzMsNTAwOT
-k5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIz
-LDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMD
-g4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3Mzkx
-NSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4Mz
-AxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3
-XX0=
+eyJoaXN0b3J5IjpbLTM2MDEzOTU3NCwtMTQ0ODY1MTMzLDUwMD
+k5OTYwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0Mjky
+Myw3NTA2NzAyMTIsMTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMj
+A4ODgyNDA3LDE5NzMzNTI5NDksMjcyODUzMTExLC0xNDE0NzM5
+MTUsODEyNjEyMDk0LDE3MDcyMzY2MTMsLTk2OTU2NTcxMCw2OD
+MwMTA4NCwxMTc3MTg2NjY5LDE5OTk3MDI3NjIsMTUyOTY0MjY0
+N119
 -->
