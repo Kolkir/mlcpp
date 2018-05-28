@@ -44,11 +44,14 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 1. **Loading data to MShadow datastructures**
 	There are several approaches to initialize tensors data structures in MShadow library, two of them I used next code section.
 	```cpp
-	  auto rows = raw_data_x.size();
-	  ms::Tensor<ms::cpu, 2, DType> host_y(raw_data_y.data(), ms::Shape2(rows, 1));
-	  ms::TensorContainer<ms::gpu, 2, DType> gpu_y(host_y.shape_);
-	  gpu_y.set_stream(computeStream.get());
-	  ms::Copy(gpu_y, host_y, computeStream.get());
+	template <typename Device, typename DType>
+	void load_data(std::vector<DType>& raw_data,
+	               mshadow::TensorContainer<Device, 2, DType>& dst) {
+	  mshadow::Tensor<mshadow::cpu, 2, DType> host_data(
+	      raw_data.data(), mshadow::Shape2(raw_data.size(), 1));
+	  dst.Resize(host_data.shape_);
+	  mshadow::Copy(dst, host_data, dst.stream_);
+	}
 	```
     When I initialize ``host_y`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``ms::TensorContainer`` type which implements RAII idiom for ``ms::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``gpu_y`` initialization and during copy operation. 
     
@@ -153,11 +156,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MT
-M0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEy
-LDE0NzU5NDgyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOT
-czMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDczOTE1LDgxMjYxMjA5
-NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAsNjgzMDEwODQsMTE3Nz
-E4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcy
-NDhdfQ==
+eyJoaXN0b3J5IjpbNzg2MTQyMjY2LC0xNDQ4NjUxMzMsNTAwOT
+k5NjA4LC0xNzEzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIz
+LDc1MDY3MDIxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMD
+g4ODI0MDcsMTk3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3Mzkx
+NSw4MTI2MTIwOTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4Mz
+AxMDg0LDExNzcxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3
+XX0=
 -->
