@@ -261,7 +261,7 @@ To be able to perform successful computations for regression analysis we need to
 	    // gradient descent
 	    for (size_t epoch = 0; epoch < n_epochs; ++epoch) {
 	      for (size_t bi = 0; bi < n_batches; ++bi) {
-	      auto bs = bi * batch_size;
+	        auto bs = bi * batch_size;
 	        auto be = bs + batch_size;
 	        auto batch_x = x.Slice(bs, be);
 	        auto batch_y = y.Slice(bs, be);
@@ -324,7 +324,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTU1ODY1MjcyLC0xOTgwMjkxMDk5LDIxMz
+eyJoaXN0b3J5IjpbOTA4Mzg4NDcyLC0xOTgwMjkxMDk5LDIxMz
 kyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4Nyw3MjAzNzk2MSwt
 NTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MTI3NzgsLTM0NzUyMz
 E3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUsNTI5OTgyNDg5LC0x
