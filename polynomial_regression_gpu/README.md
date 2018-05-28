@@ -180,7 +180,7 @@ To be able to perform successful computations for regression analysis we need to
 	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial``  return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
 	 
 4. **Generating new data for testing model predictions**
-	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values.  The new data are also standardized and scaled, and new 
+	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values.  The new data are also standardized and scaled, and additional polynomial components are generated.
 	``` cpp
 	  size_t n = 2000;
 	  auto minmax_x = std::minmax_element(raw_data_x.begin(), raw_data_x.end());
@@ -206,7 +206,7 @@ To be able to perform successful computations for regression analysis we need to
 
 6. **Batch gradient descent implementation**
  
-7. **Creating general regression model**
+7. **Traning the regression model**
     
 8. **Making predictions**
    
@@ -215,11 +215,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbOTk3MjQxNDEzLDk4MzQxMzY4OCw3ODY3Nj
-c5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NTY5OTYsMTE3
-NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MTk2ND
-c1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcx
-MzQxNzgwLDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMT
-IsMTQ3NTk0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3XX0=
-
+eyJoaXN0b3J5IjpbLTE5NDY3MzA1NDIsOTgzNDEzNjg4LDc4Nj
+c2Nzk4Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5Niwx
+MTc3MTI3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOT
+Y0NzUsNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0x
+NzEzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MD
+IxMiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDdd
+fQ==
 -->
