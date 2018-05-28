@@ -26,6 +26,13 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	ScopedTensorEngine<mshadow::gpu> tensorEngineGpu;
 	```
 	Take a look on ``USE_GPU`` define in source code, it allows you to disable using GPU and run example only on CPU.
+	```cpp
+	#ifdef USE_GPU  // use macros because lack of "if constexpr" in c++14
+	using xpu = mshadow::gpu;
+	#else
+	using xpu = mshadow::cpu;
+	#endif
+	```
 	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device. Streams can be run in independent concurrent in-order queues of execution, and operations in different streams can be interleaved and overlapped. This variable is necessary for using other MShadow abstractions. 
 	```cpp
 	using DType = float;
@@ -146,7 +153,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTc1MTAyNDMxMiw1MDA5OTk2MDgsLTE3MT
+eyJoaXN0b3J5IjpbLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MT
 M0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEy
 LDE0NzU5NDgyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOT
 czMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDczOTE1LDgxMjYxMjA5
