@@ -144,7 +144,7 @@ To be able to perform successful computations for regression analysis we need to
 		};
 		```
 	4. Also I added code to additionally scale the data. The reason for that is float type which is used for calculations on GPU, 
-			```cpp
+		``` cpp
 		DType scale = 0.6;
 		x *= scale;
 		y *= scale;
@@ -166,7 +166,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTc3NTAyNzc4MywxOTE4MTk2NDc1LDUyOT
+eyJoaXN0b3J5IjpbMTE2OTIzMTg2NSwxOTE4MTk2NDc1LDUyOT
 k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
 LDE1NDU4NTg0ODcsLTE2NTk0MjkyMyw3NTA2NzAyMTIsMTQ3NT
 k0ODI4MiwxNjgyNzE1NjcyLC0xMjA4ODgyNDA3LDE5NzMzNTI5
