@@ -316,10 +316,10 @@ To be able to perform successful computations for regression analysis we need to
 	``` 
  
 6. **Training the regression model**
+	With calss defined above I can run training prety easyly:
 	``` cpp
 	Optimizer<xpu, DType> optimizer;
-  optimizer.fit(poly_x, y);
-
+	optimizer.fit(poly_x, y);
 	```
     
 8. **Making predictions**
@@ -329,11 +329,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM1NzI0Njc5OSw5OTExOTk2MjYsLTE5OD
-AyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNzg2NzY3OTg3
-LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2LDExNzcxMj
-c3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxODE5NjQ3NSw1
-Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MT
-c4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEyXX0=
+eyJoaXN0b3J5IjpbLTE2NzMzOTU0NjYsOTkxMTk5NjI2LC0xOT
+gwMjkxMDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4
+Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MT
+I3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUs
+NTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzND
+E3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIxMl19
 
 -->
