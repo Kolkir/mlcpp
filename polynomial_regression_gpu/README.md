@@ -28,12 +28,9 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	Take a look on ``USE_GPU`` define in source code, it allows you to disable using GPU and run example only on CPU.
 	Next I defined a variable which will represent a CUDA stream. A CUDA Stream is a sequence of operations that are performed in order on the GPU device. Streams can be run in independent concurrent in-order queues of execution, and operations in different streams can be interleaved and overlapped. This variable is necessary for using other MShadow abstractions. 
 	```cpp
-	...
-	using GpuStream = ms::Stream<ms::gpu>;
-    using GpuStreamPtr = std::unique_ptr<GpuStream, void (*)(GpuStream*)>;
-    ...
-    GpuStreamPtr computeStream(ms::NewStream<ms::gpu>(true, false, -1), 
-        [](GpuStream* s) { ms::DeleteStream(s); });
+	using DType = float;
+	using GpuStream = mshadow::Stream<xpu>;
+	using GpuStreamPtr = std::unique_ptr<GpuStream, void (*)(GpuStream*)>;
 	```
 	C++ smart pointer with custom deleter can be very useful for C style interfaces.  
 	
@@ -149,11 +146,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE2NDAwMTY3NTksNTAwOTk5NjA4LC0xNz
-EzNDE3ODAsMTU0NTg1ODQ4NywtMTY1OTQyOTIzLDc1MDY3MDIx
-MiwxNDc1OTQ4MjgyLDE2ODI3MTU2NzIsLTEyMDg4ODI0MDcsMT
-k3MzM1Mjk0OSwyNzI4NTMxMTEsLTE0MTQ3MzkxNSw4MTI2MTIw
-OTQsMTcwNzIzNjYxMywtOTY5NTY1NzEwLDY4MzAxMDg0LDExNz
-cxODY2NjksMTk5OTcwMjc2MiwxNTI5NjQyNjQ3LC0xNzM2NDg3
-MjQ4XX0=
+eyJoaXN0b3J5IjpbLTc1MTAyNDMxMiw1MDA5OTk2MDgsLTE3MT
+M0MTc4MCwxNTQ1ODU4NDg3LC0xNjU5NDI5MjMsNzUwNjcwMjEy
+LDE0NzU5NDgyODIsMTY4MjcxNTY3MiwtMTIwODg4MjQwNywxOT
+czMzUyOTQ5LDI3Mjg1MzExMSwtMTQxNDczOTE1LDgxMjYxMjA5
+NCwxNzA3MjM2NjEzLC05Njk1NjU3MTAsNjgzMDEwODQsMTE3Nz
+E4NjY2OSwxOTk5NzAyNzYyLDE1Mjk2NDI2NDcsLTE3MzY0ODcy
+NDhdfQ==
 -->
