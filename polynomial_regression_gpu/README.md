@@ -180,6 +180,7 @@ To be able to perform successful computations for regression analysis we need to
 	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial``  return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
 	 
 4. **Generating new data for testing model predictions**
+
 	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values.  The new data are also standardized and scaled, and additional polynomial components are generated.
 	``` cpp
 	  size_t n = 2000;
@@ -205,6 +206,7 @@ To be able to perform successful computations for regression analysis we need to
 	```
 
 5. **Batch gradient descent implementation**
+
 	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate. You should pay attention on next things:  resizing all tensors before actual usage, using ``mshadow::expr::dot`` function for tensors(matrix) multiplication, using ``Slice`` function for batches extracting and using ``T()`` method of tensor object for taking a transposed one.
 	``` cpp
 	template <typename Device, typename DType>
@@ -316,6 +318,7 @@ To be able to perform successful computations for regression analysis we need to
 	``` 
  
 6. **Training the regression model**
+
 	With class defined above I can run training pretty easily:
 	``` cpp
 	Optimizer<xpu, DType> optimizer;
@@ -323,6 +326,7 @@ To be able to perform successful computations for regression analysis we need to
 	```
     
 7. **Making predictions**
+
   Predictions also are straight forward:
 	``` cpp
 	mshadow::TensorContainer<xpu, 2, DType> new_y(mshadow::Shape2(n, 1));
@@ -337,6 +341,7 @@ To be able to perform successful computations for regression analysis we need to
 	Here ``y_moments[1]`` is a standard deviation and ``y_moments[0]`` is a mean.
 	
 8. **Plot results**
+
 	To plot results I moved  predicted values to C++ vector data structure to have iterators compatible with a plotting library:
 	``` cpp
 	std::vector<DType> raw_pred_y(n);
@@ -357,11 +362,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTEzNjQ0ODQ4MTEsMTU3OTI5ODM3NywtMj
-kyNjU0MDcwLDk5MTE5OTYyNiwtMTk4MDI5MTA5OSwyMTM5MjE5
-MTc5LDk4MzQxMzY4OCw3ODY3Njc5ODcsNzIwMzc5NjEsLTU5MD
-Y0NTI2MCw0ODA3NTY5OTYsMTE3NzEyNzc4LC0zNDc1MjMxNzIs
-MTUyNDE2MDEyMCwxOTE4MTk2NDc1LDUyOTk4MjQ4OSwtMTQ0OD
-Y1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgwLDE1NDU4NTg0ODdd
-fQ==
+eyJoaXN0b3J5IjpbLTEzOTg4MDYwNDUsLTEzNjQ0ODQ4MTEsMT
+U3OTI5ODM3NywtMjkyNjU0MDcwLDk5MTE5OTYyNiwtMTk4MDI5
+MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4OCw3ODY3Njc5ODcsNz
+IwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NTY5OTYsMTE3NzEyNzc4
+LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MTk2NDc1LDUyOT
+k4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOCwtMTcxMzQxNzgw
+XX0=
 -->
