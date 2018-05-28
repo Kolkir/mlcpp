@@ -123,9 +123,9 @@ To be able to perform successful computations for regression analysis we need to
 	};
 	``` 
 	The interesting moments here are :
-	1.  ``mshadow::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it will require earlier expression evaluation which can hurt performance.
-	2.  ``ms::expr::sumall_except_dim`` function which calculate sum of elements along not specified tensor dimension. 
-	3.  ``ms::expr::F`` custom user specified operation on tensor elements, I used power and square root operations:
+	1.  ``mshadow::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it requires earlier expression evaluation which can hurt performance.
+	2.  ``mshadow::expr::sumall_except_dim`` function which calculate sum of elements along not specified tensor dimension. 
+	3.  ``mshadow::expr::F`` custom user specified operation on tensor elements, I used power and square root operations:
 		```cpp
 		struct Pow {
 		  MSHADOW_XINLINE static float Map(float x, float y) { return pow(x, y); }
@@ -135,7 +135,7 @@ To be able to perform successful computations for regression analysis we need to
 		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
 		};
 		```
-	4.  ``ms::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it takes scale factor (in out case 1), the first parameter is a tensor for reduction.
+	4.  ``mshadow::expr::ReduceTo1DExp`` function for reduction to 1 dimension tensor, it can take as template parameter one of several predefined operations like ``minimum and maximum``, and as second parameter it takes scale factor (in out case 1), the first parameter is a tensor for reduction.
 	5. Also I added code to additionally scale data to the range [-1,1]. The reason for that is float type which is used for calculations on GPU, original data have pretty big values and 
    
 3. **Generating additional polynomial components**
@@ -154,7 +154,7 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTg2ODcwOTY0Nyw1Mjk5ODI0ODksLTE0ND
+eyJoaXN0b3J5IjpbMTkxODE5NjQ3NSw1Mjk5ODI0ODksLTE0ND
 g2NTEzMyw1MDA5OTk2MDgsLTE3MTM0MTc4MCwxNTQ1ODU4NDg3
 LC0xNjU5NDI5MjMsNzUwNjcwMjEyLDE0NzU5NDgyODIsMTY4Mj
 cxNTY3MiwtMTIwODg4MjQwNywxOTczMzUyOTQ5LDI3Mjg1MzEx
