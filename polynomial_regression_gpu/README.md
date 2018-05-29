@@ -133,15 +133,15 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	1.  ``mshadow::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it requires earlier expression evaluation which can hurt performance.
 	2.  ``mshadow::expr::sumall_except_dim`` function which calculate sum of elements along not specified tensor dimension. 
 	3.  ``mshadow::expr::F`` custom user specified operation on tensor elements, I used power and square root operations:
-		```cpp
+	```cpp
 		struct Pow {
-		  MSHADOW_XINLINE static float Map(float x, float y) { return pow(x, y); }
-		};
+	  MSHADOW_XINLINE static float Map(float x, float y) { return pow(x, y); }
+	};
 		
-		struct Sqrt {
-		  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
-		};
-		```
+	struct Sqrt {
+	  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
+	};
+	```
    
 4. **Generating additional polynomial components**
 
@@ -362,11 +362,11 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTYxODUzNDUwNSwyMDA5NzYxNTk5LC0xMz
-Y0NDg0ODExLDE1NzkyOTgzNzcsLTI5MjY1NDA3MCw5OTExOTk2
-MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNz
-g2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2
-LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxOD
-E5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDhd
-fQ==
+eyJoaXN0b3J5IjpbMjc0MTU2OTU5LDIwMDk3NjE1OTksLTEzNj
+Q0ODQ4MTEsMTU3OTI5ODM3NywtMjkyNjU0MDcwLDk5MTE5OTYy
+NiwtMTk4MDI5MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4OCw3OD
+Y3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NTY5OTYs
+MTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MT
+k2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOF19
+
 -->
