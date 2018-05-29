@@ -9,7 +9,6 @@ Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/po
 You have pay attention on how sources for this tutorial are compiled, I used CUDA compiler for them, please look at corresponding CMakeLists.txt file for details. Also you should have installed ``gcc-6`` as host compiler for ``CUDA 9``.
 
 0. **Preparations**
-
 	MShadow library use special routines to initialize and shutdown itself,  I wrote a simple class to use them in RAII manner:
 	``` cpp
 	#include <mshadow/tensor.h>
@@ -365,11 +364,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjAwOTc2MTU5OSwtMTM2NDQ4NDgxMSwxNT
-c5Mjk4Mzc3LC0yOTI2NTQwNzAsOTkxMTk5NjI2LC0xOTgwMjkx
-MDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LDc4Njc2Nzk4Nyw3Mj
-AzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5NiwxMTc3MTI3Nzgs
-LTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MTgxOTY0NzUsNTI5OT
-gyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4LC0xNzEzNDE3ODBd
+eyJoaXN0b3J5IjpbMTA2NzA2MzI0OSwyMDA5NzYxNTk5LC0xMz
+Y0NDg0ODExLDE1NzkyOTgzNzcsLTI5MjY1NDA3MCw5OTExOTk2
+MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNz
+g2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2
+LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxOD
+E5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDhd
 fQ==
 -->
