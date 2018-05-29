@@ -143,7 +143,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	};
 	```
    
-4. **Generating additional polynomial components**
+3. **Generating additional polynomial components**
 	Before generating actual polynomial components, we need to scale our data to an appropriate range before raise to power to prevent float overflow in the optimizer, this is restriction of ``float`` type.  A scale factor was chosen after several experiments with polynomial degree of 64.
 	```cpp
 	DType scale = 0.6;
@@ -178,7 +178,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	``` 
 	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial``  return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
 	 
-5. **Generating new data for testing model predictions**
+4. **Generating new data for testing model predictions**
 	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values.  The new data are also standardized and scaled, and additional polynomial components are generated.
 	```cpp
 	  size_t n = 2000;
@@ -203,9 +203,9 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	  generate_polynomial(new_x, new_poly_x, p_degree);
 	```
 
-6. **Batch gradient descent implementation**
+5. **Batch gradient descent implementation**
 	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate. You should pay attention on next things:  resizing all tensors before actual usage, using ``mshadow::expr::dot`` function for tensors(matrix) multiplication, using ``Slice`` function for batches extracting and using ``T()`` method of tensor object for taking a transposed one.
-	``` cpp
+	```cpp
 	template <typename Device, typename DType>
 	class Optimizer {
 	 public:
@@ -314,31 +314,28 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	};
 	``` 
  
-7. **Training the regression model**
-
+6. **Training the regression model**
 	With class defined above I can run training pretty easily:
-	``` cpp
+	```cpp
 	Optimizer<xpu, DType> optimizer;
 	optimizer.fit(poly_x, y);
 	```
     
-8. **Making predictions**
-
-  Predictions also are straight forward:
-	``` cpp
+7. **Making predictions**
+	Predictions also are straight forward:
+	```cpp
 	mshadow::TensorContainer<xpu, 2, DType> new_y(mshadow::Shape2(n, 1));
 	new_y.set_stream(computeStream.get());
 	optimizer.predict(new_poly_x, new_y);
 	```
 	But before actual using of predicted values we need to restore scaling and undo standardization (our model learned to return such types of values):
-	``` cpp
+	```cpp
 	new_y /= scale;
 	new_y = (new_y * y_moments[1]) + y_moments[0];
 	``` 
 	Here ``y_moments[1]`` is a standard deviation and ``y_moments[0]`` is a mean.
 	
 9. **Plot results**
-
 	To plot results I moved  predicted values to C++ vector data structure to have iterators compatible with a plotting library:
 	``` cpp
 	std::vector<DType> raw_pred_y(n);
@@ -359,7 +356,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTI3NTIzODA4MywyMDA5NzYxNTk5LC0xMz
+eyJoaXN0b3J5IjpbLTM2ODMwNjgwNCwyMDA5NzYxNTk5LC0xMz
 Y0NDg0ODExLDE1NzkyOTgzNzcsLTI5MjY1NDA3MCw5OTExOTk2
 MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNz
 g2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2
