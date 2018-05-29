@@ -337,7 +337,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	
 9. **Plot results**
 	To plot results I moved  predicted values to C++ vector data structure to have iterators compatible with a plotting library:
-	``` cpp
+	```cpp
 	std::vector<DType> raw_pred_y(n);
 	mshadow::Tensor<mshadow::cpu, 2, DType> pred_y(raw_pred_y.data(),mshadow::Shape2(n, 1));
 	mshadow::Copy(pred_y, new_y, computeStream.get());
@@ -356,7 +356,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTM2ODMwNjgwNCwyMDA5NzYxNTk5LC0xMz
+eyJoaXN0b3J5IjpbMTc0OTM5OTQwMiwyMDA5NzYxNTk5LC0xMz
 Y0NDg0ODExLDE1NzkyOTgzNzcsLTI5MjY1NDA3MCw5OTExOTk2
 MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNz
 g2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2
