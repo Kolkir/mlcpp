@@ -64,8 +64,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     When I initialize ``host_data`` variable I provide pointer to raw data array in constructor, so in this case tensor will work as wrapper around raw array. It's very useful technique to work with host data to eliminate unnecessary copying.  Next I used ``mshadow::TensorContainer`` type which implements RAII idiom for ``mshadow::Tensor``, it will allocate required amount of memory and free it in a destructor.  I found it useful for managing GPU data, but library authors recommend it mostly for intermediate calculations results. Also pay attention on how CUDA stream is used, for ``x`` initialization and during copy operation. 
     
 2. **Standardization**
-
-To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to pre-allocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
+	To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data. Also because we need to pre-allocate several  intermediate tensors for calculations and to reuse a code I implemented standardization procedure as separate class.
 	```cpp
 	// Standardize 2D tensor of shape [rows]x[1]
 	template <typename Device, typename DType>
@@ -363,11 +362,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTE0NDIxMDAxMzEsMjAwOTc2MTU5OSwtMT
-M2NDQ4NDgxMSwxNTc5Mjk4Mzc3LC0yOTI2NTQwNzAsOTkxMTk5
-NjI2LC0xOTgwMjkxMDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LD
-c4Njc2Nzk4Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5
-NiwxMTc3MTI3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MT
-gxOTY0NzUsNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4
-XX0=
+eyJoaXN0b3J5IjpbLTYxODUzNDUwNSwyMDA5NzYxNTk5LC0xMz
+Y0NDg0ODExLDE1NzkyOTgzNzcsLTI5MjY1NDA3MCw5OTExOTk2
+MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNz
+g2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2
+LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxOD
+E5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDhd
+fQ==
 -->
