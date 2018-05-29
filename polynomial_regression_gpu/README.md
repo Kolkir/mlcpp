@@ -134,7 +134,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	2.  ``mshadow::expr::sumall_except_dim`` function which calculate sum of elements along not specified tensor dimension. 
 	3.  ``mshadow::expr::F`` custom user specified operation on tensor elements, I used power and square root operations:
 	```cpp
-		struct Pow {
+	struct Pow {
 	  MSHADOW_XINLINE static float Map(float x, float y) { return pow(x, y); }
 	};
 		
@@ -144,7 +144,6 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	```
    
 4. **Generating additional polynomial components**
-
 	Before generating actual polynomial components, we need to scale our data to an appropriate range before raise to power to prevent float overflow in the optimizer, this is restriction of ``float`` type.  A scale factor was chosen after several experiments with polynomial degree of 64.
 	```cpp
 	DType scale = 0.6;
@@ -152,7 +151,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	y *= scale;
 	```
 	Here you can see the example of a dynamic broadcasting. To make additional polynomial components I just raise to power from ``1`` no ``n`` each sample from ``X``:
-	``` cpp
+	```cpp
 	template <typename Device, typename DType>
 	void generate_polynomial(mshadow::Tensor<Device, 2, DType> const& tensor,
 	                         mshadow::TensorContainer<Device, 2, DType>& poly,
@@ -180,9 +179,8 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial``  return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
 	 
 5. **Generating new data for testing model predictions**
-
 	Generating new data is very straight forward, I generate contiguous values from min value to max value of original ``X``, with constant step which is defined by total number of values.  The new data are also standardized and scaled, and additional polynomial components are generated.
-	``` cpp
+	```cpp
 	  size_t n = 2000;
 	  auto minmax_x = std::minmax_element(raw_data_x.begin(), raw_data_x.end());
 	  auto time_range = *minmax_x.second - *minmax_x.first;
@@ -206,7 +204,6 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	```
 
 6. **Batch gradient descent implementation**
-
 	 For this example a code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it make learning process to converge quicker and  dynamically adapts learning rate. You should pay attention on next things:  resizing all tensors before actual usage, using ``mshadow::expr::dot`` function for tensors(matrix) multiplication, using ``Slice`` function for batches extracting and using ``T()`` method of tensor object for taking a transposed one.
 	``` cpp
 	template <typename Device, typename DType>
@@ -362,11 +359,11 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjc0MTU2OTU5LDIwMDk3NjE1OTksLTEzNj
-Q0ODQ4MTEsMTU3OTI5ODM3NywtMjkyNjU0MDcwLDk5MTE5OTYy
-NiwtMTk4MDI5MTA5OSwyMTM5MjE5MTc5LDk4MzQxMzY4OCw3OD
-Y3Njc5ODcsNzIwMzc5NjEsLTU5MDY0NTI2MCw0ODA3NTY5OTYs
-MTE3NzEyNzc4LC0zNDc1MjMxNzIsMTUyNDE2MDEyMCwxOTE4MT
-k2NDc1LDUyOTk4MjQ4OSwtMTQ0ODY1MTMzLDUwMDk5OTYwOF19
-
+eyJoaXN0b3J5IjpbLTI3NTIzODA4MywyMDA5NzYxNTk5LC0xMz
+Y0NDg0ODExLDE1NzkyOTgzNzcsLTI5MjY1NDA3MCw5OTExOTk2
+MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNz
+g2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2
+LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxOD
+E5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDhd
+fQ==
 -->
