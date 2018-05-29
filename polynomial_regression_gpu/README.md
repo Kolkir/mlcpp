@@ -10,7 +10,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 
 0. **Preparations**
 	MShadow library use special routines to initialize and shutdown itself,  I wrote a simple class to use them in RAII manner:
-	``` cpp
+	```cpp
 	#include <mshadow/tensor.h>
 	template <typename Device>
 	struct ScopedTensorEngine {
@@ -21,7 +21,7 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	};
 	```
 	Device template parameter can be ``mshadow::cpu`` or ``mshadow::gpu``, I will instantiate ``ScopedTensorEngine`` for both types, because I need to pass data from host side to GPU (but it is allowed to use only ``mshadow::cpu`` for all computations, and code will remain the same):
-	``` cpp
+	```cpp
 	ScopedTensorEngine<mshadow::cpu> tensorEngineCpu;
 	ScopedTensorEngine<mshadow::gpu> tensorEngineGpu;
 	```
@@ -42,7 +42,6 @@ You have pay attention on how sources for this tutorial are compiled, I used CUD
 	C++ smart pointer with custom deleter can be very useful for C style interfaces.  
 	
 1. **Loading data to MShadow datastructures**
-
 	There are several approaches to initialize tensors data structures in MShadow library, two of them I used next code section.
 	```cpp
 	template <typename Device, typename DType>
@@ -364,11 +363,11 @@ To be able to perform successful computations for regression analysis we need to
     
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTg3NjEzNzU1MSwyMDA5NzYxNTk5LC0xMz
-Y0NDg0ODExLDE1NzkyOTgzNzcsLTI5MjY1NDA3MCw5OTExOTk2
-MjYsLTE5ODAyOTEwOTksMjEzOTIxOTE3OSw5ODM0MTM2ODgsNz
-g2NzY3OTg3LDcyMDM3OTYxLC01OTA2NDUyNjAsNDgwNzU2OTk2
-LDExNzcxMjc3OCwtMzQ3NTIzMTcyLDE1MjQxNjAxMjAsMTkxOD
-E5NjQ3NSw1Mjk5ODI0ODksLTE0NDg2NTEzMyw1MDA5OTk2MDhd
-fQ==
+eyJoaXN0b3J5IjpbLTE0NDIxMDAxMzEsMjAwOTc2MTU5OSwtMT
+M2NDQ4NDgxMSwxNTc5Mjk4Mzc3LC0yOTI2NTQwNzAsOTkxMTk5
+NjI2LC0xOTgwMjkxMDk5LDIxMzkyMTkxNzksOTgzNDEzNjg4LD
+c4Njc2Nzk4Nyw3MjAzNzk2MSwtNTkwNjQ1MjYwLDQ4MDc1Njk5
+NiwxMTc3MTI3NzgsLTM0NzUyMzE3MiwxNTI0MTYwMTIwLDE5MT
+gxOTY0NzUsNTI5OTgyNDg5LC0xNDQ4NjUxMzMsNTAwOTk5NjA4
+XX0=
 -->
