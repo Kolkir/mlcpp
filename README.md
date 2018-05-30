@@ -11,3 +11,4 @@ Each folder contains single example with own ``CMakeLists.txt`` file.
 
 Content:
 1. [Polynomial regression with XTensor](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression)
+2. [Polynomial regression with MShadow on GPU](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression_gpu)
