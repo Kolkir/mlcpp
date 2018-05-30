@@ -9,10 +9,11 @@ git submodule update
 ```
 Each folder contains single example with own ``CMakeLists.txt`` file.
 
-**Linear Math**
+**Linear Algebra**
 
 1. [Polynomial regression with XTensor](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression) ``BSD 3-Clause``
 2. [Polynomial regression with MShadow on GPU](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression_gpu) ``Apache License 2.0``
+3. planned [Eigen](http://eigen.tuxfamily.org/) ``Mozilla Public License 2.0``
 
 **Full featured frameworks**
 
