@@ -23,14 +23,6 @@ namespace fs = std::experimental::filesystem;
 typedef double DType;
 using Matrix = Eigen::Matrix<DType, Eigen::Dynamic, Eigen::Dynamic>;
 
-constexpr DType get_scale() {
-  if constexpr (std::is_same_v<DType, double>) {
-    return 1.0;
-  } else {
-    return 0.6;
-  }
-}
-
 auto standardize(const Matrix& v) {
   assert(v.cols() == 1);
   auto m = v.colwise().mean();
@@ -63,38 +55,37 @@ auto generate_polynomial(const Matrix& x, size_t degree) {
   }
   return poly_x;
 }
-/*
-auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
-  size_t n_epochs = 50000;
-  DType lr = 0.0055;
 
-  auto rows = x.shape()[0];
-  auto cols = x.shape()[1];
+auto bgd(const Matrix& x, const Matrix& y) {
+  size_t batch_size = 8;
+  size_t n_epochs = 1000;
+  DType lr = 0.0015;
+
+  auto rows = x.rows();
+  auto cols = x.cols();
 
   size_t batches = rows / batch_size;  // some samples will be skipped
-  Matrix b = xt::zeros<DType>({cols});
+  Matrix b = Matrix::Zero(cols, 1);
 
   DType prev_cost = std::numeric_limits<DType>::max();
   for (size_t i = 0; i < n_epochs; ++i) {
     for (size_t bi = 0; bi < batches; ++bi) {
       auto s = bi * batch_size;
-      auto e = s + batch_size;
-      Matrix batch_x = xt::view(x, xt::range(s, e), xt::all());
-      Matrix batch_y = xt::view(y, xt::range(s, e), xt::all());
+      auto batch_x = x.block(s, 0, batch_size, cols);
+      auto batch_y = y.block(s, 0, batch_size, 1);
 
-      auto yhat = xt::linalg::dot(batch_x, b);
-      Matrix error = yhat - batch_y;
+      auto yhat = batch_x * b;
+      auto error = yhat - batch_y;
 
-      auto grad = xt::linalg::dot(xt::transpose(batch_x), error) /
-                  static_cast<DType>(batch_size);
+      auto grad =
+          (batch_x.transpose() * error) / static_cast<DType>(batch_size);
 
       b = b - lr * grad;
     }
 
-    auto cost = (xt::sum(xt::pow(y - xt::linalg::dot(x, b), 2.f)) /
-                 static_cast<DType>(rows))(0);  // evaluate value immediatly
+    DType cost = (y - x * b).array().pow(2.f).sum() / static_cast<DType>(rows);
 
-    std::cout << "Iteration : " << i << " Cost = " << cost << std::endl;
+    std::cout << "BGD iteration : " << i << " Cost = " << cost << std::endl;
     if (cost <= prev_cost)
       prev_cost = cost;
     else
@@ -103,39 +94,6 @@ auto bgd(const Matrix& x, const Matrix& y, size_t batch_size) {
   return b;
 }
 
-auto make_regression_model(const Matrix& x,
-                           const Matrix& y,
-                           size_t p_degree,
-                           bool equation) {
-  // X standardization & polynomization
-  Matrix poly_x = generate_polynomial(x, p_degree);
-
-  Matrix b;
-  if (equation) {
-    // calculate parameters witn normal equation
-    auto xt = xt::transpose(x);
-    b = xt::linalg::dot(
-        xt::linalg::dot(xt::linalg::inv(xt::linalg::dot(xt, x)), xt), y);
-    auto cost = (xt::sum(xt::pow(y - xt::linalg::dot(x, b), 2.f)) /
-                 static_cast<DType>(x.shape()[0]))[0];
-    std::cout << "calculated cost : " << cost << std::endl;
-  } else {
-    // learn parameters with Gradient Descent
-    //b = bgd(x, y, 15);
-  }
-
-  // create model
-  auto model = [b, ym, ysd, p_degree](const auto& data_x) {
-    auto x = xt::eval(generate_polynomial(data_x, p_degree));
-    Matrix yhat = xt::linalg::dot(x, b);
-    // restore scaling for predicted line values
-
-    yhat = (yhat * ysd) + ym;
-    return yhat;
-  };
-  return model;
-}
-*/
 int main() {
   // Download the data
   const std::string data_path{"web_traffic.tsv"};
@@ -186,24 +144,28 @@ int main() {
 
   const auto data_y = Eigen::Map<Matrix>(raw_data_y.data(), rows, 1);
   std::cout << "Y shape " << data_y.rows() << ":" << data_y.cols() << std::endl;
-  // don't use structured binding, because hard to debug such values
+  // I'm not  using structured binding, because hard to debug such values
   Matrix y;
   DType ym{0};
   DType ysd{0};
   std::tie(y, ym, ysd) = standardize(data_y);
 
-  // Scale data to prevent float overflow
+  // Scale data to prevent float overflow in BGD
   size_t p_degree = 64;
-  const DType scale = get_scale();
+  const DType scale = 0.6;
   x *= scale;
   y *= scale;
 
   // solve normal equation
   Matrix poly_x = generate_polynomial(x, p_degree);
-  Matrix b = (poly_x.transpose() * poly_x).ldlt().solve(poly_x.transpose() * y);
+  Matrix b_eq =
+      (poly_x.transpose() * poly_x).ldlt().solve(poly_x.transpose() * y);
   auto cost =
-      (y - poly_x * b).array().pow(2.f).sum() / static_cast<DType>(rows);
+      (y - poly_x * b_eq).array().pow(2.f).sum() / static_cast<DType>(rows);
   std::cout << "cost for normal equation solution : " << cost << std::endl;
+
+  // optimize with BGD
+  Matrix b = bgd(poly_x, y);
 
   // generate new data
   const size_t new_x_size = 500;
@@ -218,24 +180,19 @@ int main() {
 
   // make predictions
   std::vector<DType> polyline_eq(new_x_size);
-  auto new_y = Eigen::Map<Matrix>(polyline_eq.data(), new_x_size, 1);
+  auto new_y_eq = Eigen::Map<Matrix>(polyline_eq.data(), new_x_size, 1);
+  new_y_eq = new_poly_x * b_eq;
+
+  std::vector<DType> polyline(new_x_size);
+  auto new_y = Eigen::Map<Matrix>(polyline.data(), new_x_size, 1);
   new_y = new_poly_x * b;
 
-  // restore scale
+  // restore scalenew_y
+  new_y_eq /= scale;
+  new_y_eq = (new_y_eq * ysd).array() + ym;
+
   new_y /= scale;
   new_y = (new_y * ysd).array() + ym;
-
-  /*
-      auto poly_model_eq = make_regression_model(x, y, 64, true);
-      Matrix poly_line_values_eq = poly_model_eq(new_x);
-            // poly line
-            auto poly_model = make_regression_model(data_x, data_y, 10, false);
-            Matrix poly_line_values = poly_model(new_x);
-
-            // straight line
-            auto line_model = make_regression_model(data_x, data_y, 2, false);
-            Matrix line_values = line_model(new_x);
-*/
 
   // plot the data we read and approximate
   plotcpp::Plot plt(true);
@@ -257,14 +214,12 @@ int main() {
   }
   plt.SetXTics(xtics);
 
-  plt.Draw2D(plotcpp::Points(raw_data_x.begin(), raw_data_x.end(), raw_data_y.begin(),
-                             "data", "lc rgb 'black' pt 1"),
+  plt.Draw2D(plotcpp::Points(raw_data_x.begin(), raw_data_x.end(),
+                             raw_data_y.begin(), "data", "lc rgb 'black' pt 1"),
              plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline_eq.begin(),
-                            "line approx", "lc rgb 'red' lw 2") /*,
+                            "neq approx", "lc rgb 'red' lw 2"),
              plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline.begin(),
-                            "poly line approx d = 10", "lc rgb 'cyan' lw 2"),
-             plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline_eq.begin(),
-                            "poly line approx d = 64", "lc rgb 'green' lw 2")*/);
+                            "bgd approx", "lc rgb 'cyan' lw 2"));
   plt.Flush();
 
   return 0;
