@@ -16,3 +16,6 @@
 [submodule "third_party/xtensor-blas"]
 	path = third_party/xtensor-blas
 	url = https://github.com/QuantStack/xtensor-blas
+[submodule "third_party/eigen"]
+	path = third_party/eigen
+	url = https://github.com/eigenteam/eigen-git-mirror
