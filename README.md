@@ -25,3 +25,4 @@ Each folder contains single example with own ``CMakeLists.txt`` file.
 
 1. planned [MXNet](https://mxnet.apache.org/) [sources link](https://github.com/apache/incubator-mxnet/tree/master/cpp-package) ``Apache License 2.0``  ``CPU\GPU``
 2. planned [Caffe2](https://caffe2.ai/) [sources link](https://github.com/caffe2/caffe2) ``Apache License 2.0`` ``CPU\GPU``
+3. planned [tiny-dnn](https://github.com/tiny-dnn/tiny-dnn) ``BSD 3-Clause`` ``CPU\embedded``
