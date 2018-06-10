@@ -15,7 +15,7 @@ Each folder contains single example with own ``CMakeLists.txt`` file.
 |-------|-------|---|---|-----------------|
 |[Polynomial regression](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression)|[XTensor](https://github.com/QuantStack/xtensor)|+||BSD 3-Clause|
 |[Polynomial regression](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression_gpu)|[MShadow](https://github.com/dmlc/mshadow)|+|+|Apache License 2.0|
-|[Polynomial regression]()|[Eigen](http://eigen.tuxfamily.org/)|+|?|Mozilla Public License 2.0|
+|[Polynomial regression](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression_eigen)|[Eigen](http://eigen.tuxfamily.org/)|+|?|Mozilla Public License 2.0|
 
 **Full featured frameworks**
 
