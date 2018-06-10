@@ -8,214 +8,148 @@ Please look at previous [article](https://github.com/Kolkir/mlcpp/tree/master/po
 
 1. **Loading data to Eigen data-structures**
 
-	There are several approaches to initialize matrices in Eigen library, couple of them I used in next code sections.
-	```cpp
-	typedef float DType;
-	using Matrix = Eigen::Matrix<DType, Eigen::Dynamic, Eigen::Dynamic>;
-	...
-	size_t rows = raw_data_x.size();
-	const auto data_x = Eigen::Map<Matrix>(raw_data_x.data(), rows, 1);
-	...
-	Matrix poly_x = Matrix::Zero(rows, cols);
-	...
-	Matrix m(rows, cols);
-	```
-	Here I mapped raw C array of floats to ``Eigen::Matrix`` with ``Eigen::Map`` function, used special initialization method ``Matrix::Zero`` to define zero matrix with predefined size, and defined matrix with uninitialized values.
+    There are several approaches to initialize matrices in Eigen library, couple of them I used in next code sections.
+    ```cpp
+    typedef float DType;
+    using Matrix = Eigen::Matrix<DType, Eigen::Dynamic, Eigen::Dynamic>;
+    ...
+    size_t rows = raw_data_x.size();
+    const auto data_x = Eigen::Map<Matrix>(raw_data_x.data(), rows, 1);
+    ...
+    Matrix poly_x = Matrix::Zero(rows, cols);
+    ...
+    Matrix m(rows, cols);
+    ```
+    Here I mapped raw C array of floats to ``Eigen::Matrix`` with ``Eigen::Map`` function, used special initialization method ``Matrix::Zero`` to define zero matrix with predefined size, and defined matrix with uninitialized values.
 
-	 Please look at how I defined ``Matrix`` type, it uses dynamic memory management. I used such strategy because dimensions of training and evaluation data is not known at initial state. Eigen also supports static memory management strategy for matrices which has better performance.
+    Please look how I defined ``Matrix`` type - it uses dynamic memory management. I used such strategy because dimensions of training and evaluation data is not known at initial state. Eigen also supports static memory management strategy for matrices which has better performance.
 
 2. **Standardization**
 
-	To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data.
-	```cpp
-	auto standardize(const Matrix& v) {
-	  auto m = v.colwise().mean();
-	  auto n = v.rows();
-	  DType sd = std::sqrt((v.rowwise() - m).array().pow(2).sum() /
-	                       static_cast<DType>(n - 1));
-	  Matrix sv = (v.rowwise() - m) / sd;
-	  return std::make_tuple(sv, m(0, 0), sd);
-	}
-	...
-	// standardize data
-	Matrix x;
-  std::tie(x, std::ignore, std::ignore) = standardize(data_x);
-	// I'm not  using structured binding, because hard to debug such values
-  Matrix y;
-  DType ym{0};
-  DType ysd{0};
-  std::tie(y, ym, ysd) = standardize(data_y);
-	// used later for scale restoring
-	```
-	The interesting moments here are :
-	1.  ``mshadow::expr::broadcast`` function which make possible to define element wise operations for tensors with single value, for example subtraction one number from each tensor element. There is a dynamic broadcasting in this library, but to use it you need actual value (it doesn't work for expressions), so in some cases it requires earlier expression evaluation which can hurt performance.
-	2.  ``mshadow::expr::sumall_except_dim`` function which calculate sum of elements along not specified tensor dimension.
-	3.  ``mshadow::expr::F`` custom user specified operation on tensor elements, I used power and square root operations:
-	```cpp
-	struct Pow {
-	  MSHADOW_XINLINE static float Map(float x, float y) { return pow(x, y);}
-	};
-
-	struct Sqrt {
-	  MSHADOW_XINLINE static float Map(float x) { return sqrt(x); }
-	};
-	```
+    To be able to perform successful computations for regression analysis we need to [standardize](https://en.wikipedia.org/wiki/Feature_scaling#Standardization) our data.
+    ```cpp
+    auto standardize(const Matrix& v) {
+      auto m = v.colwise().mean();
+      auto n = v.rows();
+      DType sd = std::sqrt((v.rowwise() - m).array().pow(2).sum() /
+      static_cast<DType>(n - 1));
+      Matrix sv = (v.rowwise() - m) / sd;
+      return std::make_tuple(sv, m(0, 0), sd);
+    }
+    ...
+    // standardize data
+    Matrix x;
+    std::tie(x, std::ignore, std::ignore) = standardize(data_x);
+    Matrix y;
+    DType ym{0};
+    DType ysd{0};
+    // mean and std will be used later for scale restoring
+    std::tie(y, ym, ysd) = standardize(data_y);
+    ```
+    For this piece of code I used ``std::tie`` function to unpack tuple parameters instead of using structured binding, because it is hard to debug such values, ``gdb`` don't see actual variables names. Also you should pay attention on Matrix class methods ``colwise`` and ``rowwise`` they used to apply a reduction operation on each column or row and return a column or row vector with the corresponding values. Not very obvious issue is that some trivial operations can be found as methods of ``Eigen::Array``, see how I called ``pow`` method after converting result of subtraction to the array.
 
 3. **Generating additional polynomial components**
 
-	Before generating actual polynomial components, we need to scale our data to an appropriate range before raising to a power to prevent ``float`` type overflow in the optimizer.  A scale factor was chosen after several experiments with polynomial degree of 64.
-	```cpp
-	DType scale = 0.6;
-	x *= scale;
-	y *= scale;
-	```
-	Here you can see the example of a dynamic broadcasting. To make additional polynomial components I just raise to power from ``1`` no ``n`` each sample from ``X`` data set (where ``n`` is a polynomial degree):
-	```cpp
-	template <typename Device, typename DType>
-	void generate_polynomial(mshadow::Tensor<Device, 2, DType> const& tensor,
-	                         mshadow::TensorContainer<Device, 2, DType>& poly,
-	                         size_t p_degree) {
-	  ...
-	  auto rows = tensor.shape_[0];
-	  mshadow::TensorContainer<Device, 2, DType> col_temp(mshadow::Shape2(rows, 1));
-	  col_temp.set_stream(tensor.stream_);
+    To be able to approximate the data with higher degree polynomial I wrote a function for generating additional terms.
 
-	  for (size_t c = 0; c < p_degree; ++c) {
-	    auto col = mshadow::expr::slice(poly, mshadow::Shape2(0, c),
-	                                    mshadow::Shape2(rows, c + 1));
-	    col_temp = mshadow::expr::F<Pow>(tensor, static_cast<DType>(c));
-	    col = col_temp;
-	  }
-	}
-	...
-	size_t p_degree = 64;
-	mshadow::TensorContainer<xpu, 2, DType> poly_x(mshadow::Shape2(rows, p_degree));
-	poly_x.set_stream(computeStream.get());
-	generate_polynomial(x, poly_x, p_degree);
-	```
-	The most interesting thing here is function ``mshadow::expr::slice`` which produce a references slice from original tensor and you can use it as separate tensor object in expressions. I didn't make function ``generate_polinomial`` return a ``TensorContainer`` object, because there is a missing of explicit ``Tensor`` object initialization in its copy constructor which leads to compiler warnings.
+    ```cpp
+    auto generate_polynomial(const Matrix& x, size_t degree) {
+      auto rows = x.rows();
+      Matrix poly_x = Matrix::Zero(rows, degree);
+      poly_x.block(0, 0, rows, 1).setOnes();
+      poly_x.block(0, 1, rows, 1) = x;
+      for (size_t i = 2; i < degree; ++i) {
+        auto xv = poly_x.block(0, i, rows, 1);
+        xv = x.array().pow(static_cast<DType>(i));
+      }
+      return poly_x;
+    }
+    ...
+    Matrix poly_x = generate_polynomial(x, p_degree);
+    ...
+    ```
+    New matrix for ``X`` will look like ``X[i] = [1, x, x^2, x^3, ..., x^n]``, where ``X[i]`` is a row. Here I used ``block`` method to define a rectangular part of matrix on which I perform some operations.
 
-4. **Generating new data for testing model predictions**
+4. **Batch gradient descent implementation**
 
-	Generating new data is very straight forward, I generate contiguous values from ``min`` value to ``max`` value of original ``X`` data set, with constant step, which is defined by total number of values.  The new data are also standardized and scaled, and additional polynomial components are generated.
-	```cpp
-	size_t n = 2000;
-	auto minmax_x = std::minmax_element(raw_data_x.begin(), raw_data_x.end());
-	auto time_range = *minmax_x.second - *minmax_x.first;
-	auto inc_step = time_range / n;
-	auto x_val = inc_step;
-	std::vector<DType> new_data_x(n);
-	for (auto& x : new_data_x) {
-	  x = x_val;
-	  x_val += inc_step;
-	}
-	mshadow::TensorContainer<xpu, 2, DType> new_x(mshadow::Shape2(n, 1));
-	new_x.set_stream(computeStream.get());
-	load_data<xpu>(new_data_x, new_x);
-	standardizer.transform(new_x);
-	new_x *= scale;
+    Batch gradient descent can be implemented very easily with Eigen, I used ``block`` operations to define batches, all matrix operations are implemented with overloaded math operators, so they look very natural. Also library supports automatic broadcasting, you can see an example for a single number on lines where gradients are multiplied with learning rate or are divided by a batch size. broadcasting is supported for a vectors too, and can be very effectively combined with partial reduction operations like ``colwise`` or ``rowwise``.
 
-	mshadow::TensorContainer<xpu, 2, DType> new_poly_x(
-	    mshadow::Shape2(n, p_degree));
-	new_poly_x.set_stream(computeStream.get());
-	generate_polynomial(new_x, new_poly_x, p_degree);
-	```
+    ```cpp
+    auto bgd(const Matrix& x, const Matrix& y) {
+      ...
+      Matrix b = Matrix::Zero(cols, 1);
+      for (size_t i = 0; i < n_epochs; ++i) {
+        for (size_t bi = 0; bi < n_batches; ++bi) {
+          auto s = bi * batch_size;
+          auto batch_x = x.block(s, 0, batch_size, cols);
+          auto batch_y = y.block(s, 0, batch_size, 1);
+          auto yhat = batch_x * b;
+          auto error = yhat - batch_y;
+          auto grad =
+              (batch_x.transpose() * error) / static_cast<DType>(batch_size);
+          b = b - learning_rate * grad;
+        }
+      }
+      ...
+      return b;
+    }
+    ...
+    Matrix b = bgd(poly_x, y);
+    ...
+    ```
 
-5. **Batch gradient descent implementation**
+5. **Generating new data for testing model predictions**
 
-	For this example code for learning model and results predicting I moved to separate class. It helps to reuse code more easily and make its usage more clear. Also here I implemented  [AdaDelta](https://arxiv.org/abs/1212.5701) optimizing technique, because it makes learning process to converge quicker and  dynamically adapts learning rate during training. You should pay attention on next things:
-		1. using ``mshadow::expr::dot`` function for tensors(matrix) multiplication
-		2. using ``Slice`` function for batches extracting
-		3. usung ``T()`` method of tensor object for taking a transposed one.
+      Before evaluation of a model, I generated a bunch of new data to make the test looks more naturaly. As underlaying data storage for a new data I used ``std::vector`` which was used in ``Eigen::Map`` operation to define a new matrix. It was made to have a C++ compatible iterators for a plotting library I used.
 
-	```cpp
-	template <typename Device, typename DType>
-	class Optimizer {
-	 public:
+      Here I used matrix reduction functions ``minCoeff`` and ``maxCoeff`` to retrieve min and max coeficients. And I used  ``LinSpaced`` function to generate a range of consequent elements, pay attention on a type which used for LinSpaced call - it is a vector not a matrix (see last template parameter).
 
-	  void predict(mshadow::Tensor<Device, 2, DType> const& x,
-	               mshadow::Tensor<Device, 2, DType>& y) {
-	    y = mshadow::expr::dot(x, weights);
-	  }
+      ```cpp
+      ...
+      const size_t new_x_size = 500;
+      std::vector<DType> x_coord(new_x_size);
+      auto new_x = Eigen::Map<Matrix>(x_coord.data(), new_x_size, 1);
+      new_x = Eigen::Matrix<DType, Eigen::Dynamic, 1>::LinSpaced(
+          new_x_size, data_x.minCoeff(), data_x.maxCoeff());
+      ...
+      ```
 
-	  void fit(mshadow::Tensor<Device, 2, DType> const& x,
-	           mshadow::Tensor<Device, 2, DType> const& y) {
-	    size_t cols = x.shape_[1];
-	    size_t rows = x.shape_[0];
-	    size_t n_batches = rows / batch_size;
-	    ...
-	    for (size_t epoch = 0; epoch < n_epochs; ++epoch) {
-	      for (size_t bi = 0; bi < n_batches; ++bi) {
-	        auto bs = bi * batch_size;
-	        auto be = bs + batch_size;
-	        auto batch_x = x.Slice(bs, be);
-	        auto batch_y = y.Slice(bs, be);
+6. **Making predictions**
 
-	        predict(batch_x, yhat);
+    Making prediction can be expressed and simple matrix multiplication, and here I also defined a result matrix with ``std::vector`` to use it easily with plotting library.
 
-	        error = yhat - batch_y;
-	        grad = mshadow::expr::dot(batch_x.T(), error);
-	        grad /= batch_size;
+    ```cpp
+    ...
+    std::vector<DType> polyline(new_x_size);
+    auto new_y = Eigen::Map<Matrix>(polyline.data(), new_x_size, 1);
+    new_y = new_poly_x * b;
+    ...
+    ```
 
-	        // AdaDelta
-	        eg_sum = lr * eg_sum + (1.f - lr) * mshadow::expr::F<Pow>(grad, 2);
-	        weights_delta = -1.f *
-	                        (mshadow::expr::F<Sqrt>(ex_sum + e) /
-	                         mshadow::expr::F<Sqrt>(eg_sum + e)) *
-	                        grad;
-	        ex_sum =
-	            lr * ex_sum + (1.f - lr) * mshadow::expr::F<Pow>(weights_delta, 2);
-	        weights = weights + weights_delta;
-	      }
-	      ...
-	    }
-	  }
-	...
-	};
-	```
-	``predict`` method doesn't return a value and takes an output parameter to prevent compiler warnings.
+7. **Plotting**
 
-6. **Training the regression model**
+    To plot data I wrote [plotcpp]() library which is a thin wrapper for ``gnuplot`` application, and can show plots immediately in a new window.
 
-	With class defined above I can run training pretty easily:
-	```cpp
-	Optimizer<xpu, DType> optimizer;
-	optimizer.fit(poly_x, y);
-	```
+    ```cpp
+    plotcpp::Plot plt(true);
+    plt.SetTerminal("qt");
+    plt.SetTitle("Web traffic over the last month");
+    plt.SetXLabel("Time");
+    plt.SetYLabel("Hits/hour");
+    plt.SetAutoscale();
+    plt.GnuplotCommand("set grid");
+    ...
+    plt.Draw2D(plotcpp::Points(raw_data_x.begin(), raw_data_x.end(),
+                             raw_data_y.begin(), "data", "lc rgb 'black' pt 1"),
+               plotcpp::Lines(x_coord.begin(), x_coord.end(), polyline.begin(),
+                            "bgd approx", "lc rgb 'cyan' lw 2"));
+    ...
+    plt.flush();
+    ```
+    ![plots](plot.png)
 
-7. **Making predictions**
+8. **Conclusion**
 
-	Predictions also are straight forward:
-	```cpp
-	mshadow::TensorContainer<xpu, 2, DType> new_y(mshadow::Shape2(n, 1));
-	new_y.set_stream(computeStream.get());
-	optimizer.predict(new_poly_x, new_y);
-	```
-	But before actual using of predicted values we need to restore scaling and undo standardization (our model learned to return such types of values):
-	```cpp
-	new_y /= scale;
-	new_y = (new_y * y_moments[1]) + y_moments[0];
-	```
-	Here ``y_moments[1]`` is a standard deviation and ``y_moments[0]`` is a mean.
-
-9. **Plot results**
-
-	To plot results I moved  predicted values to C++ vector data structure to have iterators compatible with a plotting library:
-	```cpp
-	std::vector<DType> raw_pred_y(n);
-	mshadow::Tensor<mshadow::cpu, 2, DType> pred_y(raw_pred_y.data(),mshadow::Shape2(n, 1));
-	mshadow::Copy(pred_y, new_y, computeStream.get());
-	...
-	plotcpp::Plot plt(true);
-	...
-	plt.Draw2D(
-    plotcpp::Points(raw_data_x.begin(), raw_data_x.end(), raw_data_y.begin(),
-                      "points", "lc rgb 'black' pt 1"),
-    plotcpp::Lines(new_data_x.begin(), new_data_x.end(), raw_pred_y.begin(),
-                     "poly line approx", "lc rgb 'green' lw 2"));
-    plt.Flush();
-	```
-	![plots](plot.png)
-
+    I found Eigen as the most useful library for linear algebra in C++. It has intuitive interfaces and implements modern C++ approaches, for example you can use ``std::move`` to eliminate matrix coping in some cases. Also it has great [documentation](https://eigen.tuxfamily.org/dox/) with examples and search engine. It supports Intel® Math Kernel Library (MKL), which provides highly optimized multi-threaded mathematical routines for x86-compatible architectures. And it can be used in CUDA kernels, but this is still an experimental feature.
 
 You can find full source of this example on [GitHub](https://github.com/Kolkir/mlcpp).
