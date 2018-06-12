@@ -1,6 +1,6 @@
 # Polynomial regression with Eigen library tutorial
 
-Hello, this is my third article about how to use modern C++ for solving machine learning problems. This time I will show how to make a model for polynomial regression problem described in previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression), with well known linear algebra library called [Eigen](eigen.tuxfamily.org).
+Hello, this is my third article about how to use modern C++ for solving machine learning problems. This time I will show how to make a model for polynomial regression problem described in previous [article](https://github.com/Kolkir/mlcpp/tree/master/polynomial_regression), with well known linear algebra library called [Eigen](https://eigen.tuxfamily.org).
 
 Eigen was chosen because it is widely used and has a long history, it is highly optimized for CPU, and is a header only library. One of the famous project using it is [TensorFlow](https://www.tensorflow.org/).
 
