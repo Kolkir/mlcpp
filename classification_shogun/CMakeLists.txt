@@ -5,7 +5,7 @@ set(LIBRARIES_DIR "" CACHE PATH "path to shogun install dir")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_FLAGS "-std=c++1z -msse3 -fopenmp -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "-std=c++14 -msse3 -fopenmp -Wall -Wextra -Wno-unused-parameter  -Wno-deprecated")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
@@ -24,5 +24,6 @@ set(COMMON_SOURCES "../ioutils.h"
 )
 
 add_executable(${PROJECT_NAME} ${COMMON_SOURCES} "classify_shogun.cpp")
-target_link_libraries(${PROJECT_NAME} ${requiredlibs} shogun)
+target_link_libraries(${PROJECT_NAME} ${requiredlibs})
+target_link_libraries(${PROJECT_NAME} optimized shogun debug shogun_d)
 
