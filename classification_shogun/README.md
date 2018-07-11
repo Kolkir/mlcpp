@@ -1,5 +1,6 @@
 ## Classification with Shogun machine learning library
 
+0. **Library installation**
 1. **Loading data**
     * Mistake in CSV parser
     * Transposed loader
@@ -12,11 +13,11 @@
     * PCA Dimension reduction
 3. **SVM**
     * Initializing SVM parameters
-    * Configuring CrossValidation process
+    * Configuring Cross-Validation process
     * Training and getting parameters
     * Evaluating accuracy
 4. **Random Forest**
     * Initializing parameters
-    * Multi-threading error - unable to use CrossValidation
+    * Multi-threading error - unable to use Cross-Validation
     * Training
     * Evaluating accuracy
