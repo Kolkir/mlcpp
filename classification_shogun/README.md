@@ -108,12 +108,73 @@ In this article I will show how use this library to solve classification problem
     From this samples you can see that library uses unified API in different algorithms, ``init`` and ``apply_to_feature_matrix`` method are common for this kind of algorithms, so when you will try another one you can start with them.
 
 4. **SVM**
-    * Initializing SVM parameters
-    * Configuring Cross-Validation process
-    * Training and getting parameters
-    * Evaluating accuracy
+
+     Lets configure and train SVM classifier, first of all we need initialize required parameters, and pass them to the classifier object:
+    ```cpp
+    auto kernel = shogun::wrap(new shogun::CGaussianKernel(5));
+    auto svm = shogun::some<shogun::CMulticlassLibSVM>();
+    svm->set_kernel(kernel);
+    svm->set_C(1);
+    svm->set_epsilon(0.00001);
+    ```
+
+    Shogun library provides classes to perform automatic cross validation during training, also there is a class for configuring grid search for models parameters. In this example I'm showing only cross validation:
+    ```cpp
+    // means that data will be splited in training and validation sets
+    const int num_subsets = 2;
+
+    // this class splits data in equal ranges, there are other splitting strategies in shogun
+    auto splitting_strategy = shogun::some<shogun::CCrossValidationSplitting>(
+       labels, num_subsets);
+
+    auto evaluation_criterium = shogun::wrap(new shogun::CMulticlassAccuracy());
+
+    auto cross = shogun::some<shogun::CCrossValidation>(
+       svm, features, labels, splitting_strategy,
+       evaluation_criterium);
+    cross->set_num_runs(1);
+    cross->set_autolock(false); // If true, machine will tried to be locked before evaluation
+    ```
+    Before actual training we need to setup special observer for cross validation object to be able to get trained parameters, training and validation proccess can be launched with ``evaluate`` method:
+    ```cpp
+    auto obs = shogun::some<shogun::CParameterObserverCV>(true);
+    cross->subscribe_to_parameters(obs);
+    auto result =
+       shogun::CCrossValidationResult::obtain_from_generic(cross->evaluate());
+    std::cout << "Validation accuracy = " << result->get_mean() << std::endl;
+    ```
+
+    To get parameters we need to get ``trained machine``, all algorithms which can be trained in Shogun are sub-classes from ``CMachine`` class. I took required machine with ``get_trained_machine`` method from fold inside my observer. To manually evaluate algorithms on some new data machines usually have some kind of ``apply`` methods and I used ``apply_multiclass`` in this case.
+    ```cpp
+    auto machine = obs->get_observation(0)->get_fold(0)->get_trained_machine();
+    auto svm_predict =
+      shogun::wrap(machine->apply_multiclass(features));
+      auto mult_accuracy_eval = shogun::wrap(new shogun::CMulticlassAccuracy());
+    auto accuracy = mult_accuracy_eval->evaluate(svm_predict, labels);
+    std::cout << "accuracy = " << accuracy << std::endl;
+    ```
 5. **Random Forest**
     * Initializing parameters
+    ```cpp
+    auto vote = shogun::some<shogun::CMajorityVote>();
+    auto rand_forest = shogun::some<shogun::CRandomForest>(0, 10);
+    rand_forest->set_combination_rule(vote);
+    auto featureTypes =
+       shogun::SGVector<bool>(features->get_num_features());
+    shogun::SGVector<bool>::fill_vector(featureTypes.vector, featureTypes.size(), false);  // features are continuous
+    rand_forest->set_feature_types(featureTypes);
+    rand_forest->set_labels(labels);
+    rand_forest->set_machine_problem_type(shogun::EProblemType::PT_MULTICLASS);
+    ```
     * Multi-threading error - unable to use Cross-Validation
     * Training
+    ```cpp
+    and_forest->train(features);
+    ```
     * Evaluating accuracy
+    ```cpp
+    auto forest_predict = shogun::wrap(rand_forest->apply_multiclass(features));
+    auto mult_accuracy_eval = shogun::wrap(new shogun::CMulticlassAccuracy());
+    auto accuracy = mult_accuracy_eval->evaluate(svm_predict, labels);
+    std::cout << "accuracy = " << accuracy << std::endl;
+    ```
