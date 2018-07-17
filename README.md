@@ -24,7 +24,7 @@ Each folder contains single example with own ``CMakeLists.txt`` file.
 |-------|-------|---|---|-----------------|
 |planned|[Shark-ML](http://image.diku.dk/shark/)|+|+|LGPL|
 |planned|[mlpack](https://github.com/mlpack/mlpack)|+||BSD 3-Clause, Mozilla Public License 2, Boost Software License 1.0|
-|planned|[shogun-toolbox](http://www.shogun-toolbox.org/)|+|+|BSD 3-Clause|
+|[Classification](https://github.com/Kolkir/mlcpp/tree/master/classification_shogun)|[shogun-toolbox](http://www.shogun-toolbox.org/)|+|+|BSD 3-Clause|
 |planned|[Dlib](http://dlib.net)|+|+|Boost Software License - Version 1.0|
 
 **Deep Learning**
