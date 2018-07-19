@@ -1,10 +1,13 @@
 // third party includes
+#include <shark/Algorithms/DirectSearch/GridSearch.h>
+#include <shark/Algorithms/JaakkolaHeuristic.h>
 #include <shark/Algorithms/Trainers/CSvmTrainer.h>
 #include <shark/Algorithms/Trainers/NormalizeComponentsUnitVariance.h>
 #include <shark/Data/Csv.h>
 #include <shark/Models/ConcatenatedModel.h>
 #include <shark/Models/Kernels/GaussianRbfKernel.h>
 #include <shark/Models/Normalizer.h>
+#include <shark/ObjectiveFunctions/CrossValidationError.h>
 #include <shark/ObjectiveFunctions/Loss/ZeroOneLoss.h>
 
 // stl includes
@@ -77,28 +80,67 @@ int main(int, char* []) {
 
     // ----------- SVM classificatoin
     // https://github.com/Shark-ML/Shark/blob/master/examples/Supervised/McSvm.tpp
-    double c{10.0};
+    // http://www.shark-ml.org/sphinx_pages/build/html/rest_sources/tutorials/algorithms/svm.html
+    // http://www.shark-ml.org/sphinx_pages/build/html/rest_sources/tutorials/algorithms/svmModelSelection.html
+
+    double c{1.0};
     double gamma{0.5};
-    shark::GaussianRbfKernel<> kernel(gamma);
+    bool offset = true;
+    bool unconstrained = true;
+    shark::GaussianRbfKernel<> kernel(gamma, unconstrained);
     shark::KernelClassifier<shark::RealVector> svm;
-    shark::ZeroOneLoss<unsigned int> loss;
-    shark::CSvmTrainer<shark::RealVector> trainer(&kernel, c, false);
+
+    shark::CSvmTrainer<shark::RealVector> trainer(&kernel, c, offset,
+                                                  unconstrained);
     trainer.setMcSvmType(shark::McSvm::OVA);  // one-versus-all
+
+    // direct training
+    // trainer.train(svm, train_data);
+
+    const unsigned int k = 5;  // number of folds
+    shark::ZeroOneLoss<unsigned int> loss;
+    shark::CVFolds<shark::ClassificationDataset> folds =
+        createCVSameSizeBalanced(train_data, k);
+
+    shark::CrossValidationError<shark::KernelClassifier<shark::RealVector>,
+                                unsigned int>
+        cv_error(folds, &trainer, &svm, &trainer, &loss);
+
+    // estimate initial parametes values
+    shark::JaakkolaHeuristic ja(train_data);
+    double ljg = log(ja.gamma());
+
+    // we have two hyperparameters so define the grid accordingly
+    shark::GridSearch grid;
+    std::vector<double> min(2);
+    std::vector<double> max(2);
+    std::vector<size_t> sections(2);
+    // kernel parameter gamma
+    min[0] = ljg - 4.;
+    max[0] = ljg + 4;
+    sections[0] = 9;
+    // regularization parameter C
+    min[1] = 0.0;
+    max[1] = 10.0;
+    sections[1] = 11;
+    grid.configure(min, max, sections);
+    grid.step(cv_error);
+
+    trainer.setParameterVector(grid.solution().point);
     trainer.train(svm, train_data);
+
+    // evaluate model
     auto output = svm(train_data.inputs());
     auto train_error = loss.eval(train_data.labels(), output);
     std::cout << "svm train error = " << train_error << std::endl;
-    // We can't use shark::ConcatenatedModel class because there is a different
-    // return type in KernelClassifier model
-    // shark::ConcatenatedModel<shark::RealVector> svm_model;
-    // svm_model.add(&normalizer, true);
-    // svm_model.add(&svm, true);
+
     output = svm(normalizer(test_data.inputs()));
     auto test_error = loss.eval(test_data.labels(), output);
     std::cout << "svm test error = " << test_error << std::endl;
 
     // ----------- Random Forest classificatoin
-    // http://image.diku.dk/shark/sphinx_pages/build/html/rest_sources/tutorials/algorithms/rf.html
+    // http://www.shark-ml.org/sphinx_pages/build/html//rest_sources/tutorials/algorithms/rf.html
+
   } catch (const std::exception& err) {
     std::cout << "Program crashed : " << err.what() << std::endl;
   }
