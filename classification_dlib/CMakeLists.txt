@@ -19,26 +19,20 @@ include_directories(${CMAKE_SOURCE_DIR}/../third_party/plotcpp)
 
 set(requiredlibs "stdc++fs")
 list(APPEND requiredlibs "stdc++")
-#list(APPEND requiredlibs "cblas")
+list(APPEND requiredlibs "cblas")
+list(APPEND requiredlibs "lapack")
 
 find_package(CURL REQUIRED)
 if(CURL_FOUND)
   set(requiredlibs ${requiredlibs} ${CURL_LIBRARIES} )
 endif()
 
-#set(Boost_USE_STATIC_LIBS ON)
-#set(Boost_USE_STATIC_RUNTIME ON)
-#find_package(Boost REQUIRED serialization)
-#if(Boost_FOUND)
-#  set(requiredlibs ${requiredlibs} ${Boost_LIBRARIES} )
-#endif()
-
 set(COMMON_SOURCES "../ioutils.h"
                    "../utils.h"
                    "../utils.cpp")
 
 add_executable(${PROJECT_NAME} ${COMMON_SOURCES} "classify_dlib.cpp")
-target_link_libraries(${PROJECT_NAME} dlib)
+target_link_libraries(${PROJECT_NAME} optimized dlib debug dlibd)
 target_link_libraries(${PROJECT_NAME} ${requiredlibs})
 
 
