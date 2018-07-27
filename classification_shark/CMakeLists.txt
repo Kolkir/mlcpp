@@ -38,7 +38,7 @@ set(COMMON_SOURCES "../ioutils.h"
                    "../utils.h"
                    "../utils.cpp")
 
-add_executable(${PROJECT_NAME} ${COMMON_SOURCES} "classify_shark.cpp")
+add_executable(${PROJECT_NAME} ${COMMON_SOURCES} "classify_shark.cpp" "class_iterator.h")
 target_link_libraries(${PROJECT_NAME} shark)
 target_link_libraries(${PROJECT_NAME} ${requiredlibs})
 #target_link_libraries(${PROJECT_NAME} optimized shark debug shark_d)

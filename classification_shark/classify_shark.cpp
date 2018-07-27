@@ -24,6 +24,7 @@
 // application includes
 #include "../ioutils.h"
 #include "../utils.h"
+#include "class_iterator.h"
 
 // Namespace and type aliases
 namespace fs = std::experimental::filesystem;
@@ -68,65 +69,6 @@ shark::ClassificationDataset LoadData() {
 }
 
 // ----------- Show predictions
-struct ClassIterator {
-  // iterator traits
-  using difference_type = size_t;
-  using value_type = double;
-  using pointer = const double*;
-  using reference = const double&;
-  using iterator_category = std::forward_iterator_tag;
-  ClassIterator()
-      : label(0),
-        data_index(0),
-        index(std::numeric_limits<unsigned int>::max()),
-        data(nullptr),
-        labels(nullptr) {}
-  ClassIterator(const shark::Data<shark::RealVector>* data,
-                const shark::Data<unsigned int>* labels,
-                unsigned int label,
-                unsigned int data_index)
-      : label(label),
-        data_index(data_index),
-        index(0),
-        data(data),
-        labels(labels) {
-    bool found = false;
-    while (index < labels->numberOfElements()) {
-      if (labels->element(index) == label) {
-        found = true;
-        break;
-      }
-      ++index;
-    }
-    if (!found)
-      index = std::numeric_limits<unsigned int>::max();
-  }
-  ClassIterator& operator++() {
-    while (index < labels->numberOfElements()) {
-      ++index;
-      if (index < labels->numberOfElements() &&
-          labels->element(index) == label) {
-        return *this;
-      }
-    }
-    index = std::numeric_limits<unsigned int>::max();
-    return *this;
-  }
-  double operator*() { return data->element(index)[data_index]; }
-  unsigned int label;
-  unsigned int data_index;
-  unsigned int index;
-  const shark::Data<shark::RealVector>* data;
-  const shark::Data<unsigned int>* labels;
-};
-
-bool operator==(const ClassIterator& a, const ClassIterator& b) {
-  return a.index == b.index;
-}
-
-bool operator!=(const ClassIterator& a, const ClassIterator& b) {
-  return a.index != b.index;
-}
 
 void ShowModel(const shark::ClassificationDataset& true_data,
                const shark::Data<unsigned int>& predictions) {
@@ -202,6 +144,7 @@ struct SVMModel {
   SVMModel(double gamma, bool unconstrained) : kernel(gamma, unconstrained) {}
   // it was not obvious which objects life time you should take care
   shark::GaussianRbfKernel<> kernel;
+  // template parameter is input type
   shark::KernelClassifier<shark::RealVector> model;
 };
 auto TrySVM(const shark::ClassificationDataset& train_data,
@@ -211,7 +154,6 @@ auto TrySVM(const shark::ClassificationDataset& train_data,
   bool offset = true;
   bool unconstrained = true;
 
-  // tamplate parameter is input type
   auto svm = std::make_shared<SVMModel>(gamma, unconstrained);
 
   shark::CSvmTrainer<shark::RealVector> trainer(&svm->kernel, c, offset,
@@ -225,7 +167,7 @@ auto TrySVM(const shark::ClassificationDataset& train_data,
                               unsigned int>
       cv_error(folds, &trainer, &svm->model, &trainer, &loss);
 
-  // estimate initial parametes values
+  // estimate initial parameters values
   shark::JaakkolaHeuristic ja(train_data);
   double ljg = log(ja.gamma());
 
@@ -250,11 +192,11 @@ auto TrySVM(const shark::ClassificationDataset& train_data,
   return svm;
 }
 
-// ----------- Random Forest classificatoin
+// ----------- Random Forest classification
 // http://www.shark-ml.org/sphinx_pages/build/html/rest_sources/tutorials/algorithms/rf.html
 auto TryRF(const shark::ClassificationDataset& train_data,
            const shark::CVFolds<shark::ClassificationDataset>& folds) {
-  // tamplate parameter is label type
+  // template parameter is label type
   shark::RFTrainer<unsigned int> trainer;
   auto rf = std::make_shared<shark::RFClassifier<unsigned int>>();
   trainer.train(*rf, train_data);
