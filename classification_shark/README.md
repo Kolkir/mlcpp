@@ -2,7 +2,7 @@
 
 [Shark-ML](http://www.shark-ml.org/) is an open-source machine learning library, it's site tells next: "_It provides methods for linear and nonlinear optimization, kernel-based learning algorithms, neural networks, and various other machine learning techniques. It serves as a powerful toolbox for real world applications as well as for research. Shark works on Windows, MacOS X, and Linux. It comes with extensive documentation. Shark is licensed under the GNU Lesser General Public License._" I can confirm that it offers a wide range of machine learning algorithms together with nice documentation, tutorials and samples. So in this article I will show the basic API concepts, details can be easily found in official [documentation](http://www.shark-ml.org/sphinx_pages/build/html/rest_sources/tutorials/tutorials.html). 
 
-In this article I will show how to use this library for solving a classification problem. I've used [Iris](https://www.kaggle.com/uciml/iris) data set in this example, so loading data will depend on on it's format.
+In this article I will show how to use this library for solving a classification problem. I've used [Iris](https://www.kaggle.com/uciml/iris) data set in this example, so loading data will depend on it's format.
 
 0. **Library installation**
 
