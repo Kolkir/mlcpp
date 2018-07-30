@@ -97,7 +97,6 @@ In this article I will show how to use this library for solving a classification
     bool offset = true;
     bool unconstrained = true;
     
-    // template parameter is input type
     auto svm = std::make_shared<SVMModel>(gamma, unconstrained);
     
     shark::CSvmTrainer<shark::RealVector> trainer(&svm->kernel, c, offset,
@@ -109,7 +108,7 @@ In this article I will show how to use this library for solving a classification
     struct SVMModel {
     SVMModel(double gamma, bool unconstrained) : kernel(gamma, unconstrained) {}
         shark::GaussianRbfKernel<> kernel;
-        //---------- Template parameter is input type
+        //---------- Template parameter is an input type
         shark::KernelClassifier<shark::RealVector> model;
     };
     ``` 
@@ -165,7 +164,7 @@ In this article I will show how to use this library for solving a classification
 
     To compare SVM classifier with other models and to show Shark-ML API I defined Random Forest classifier, as in previous example I defined a trainer and a model:  
     ```cpp
-    //---------- Template parameter is label type
+    //---------- Template parameter is a label type
     shark::RFTrainer<unsigned int> trainer;
     auto rf = std::make_shared<shark::RFClassifier<unsigned int>>();
     trainer.train(*rf, train_data);
