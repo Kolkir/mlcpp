@@ -92,7 +92,7 @@ svm_funct_type TrainSVMClassifier(DataSet dataset) {
   // Here we normalize all the samples by subtracting their mean and
   // dividing by their standard deviation.
   svm_normalizer_type normalizer;
-  // let the normalizer learn the mean and standard deviation of the samples
+  // Let the normalizer learn the mean and standard deviation of the samples
   // normalizer.train(samples, 0.9); // configure how much dimensions will be
   // left after PCA
   normalizer.train(samples);
@@ -121,7 +121,7 @@ svm_funct_type TrainSVMClassifier(DataSet dataset) {
     trainer.set_num_threads(4);
     trainer.set_trainer(svm_trainer);
 
-    // Finally, perform 10-fold cross validation and then print and return the
+    // Perform 10-fold cross validation and then print and return the
     // results - confusion matrix.
     Matrix result =
         dlib::cross_validate_multiclass_trainer(trainer, samples, labels, 10);
@@ -136,7 +136,7 @@ svm_funct_type TrainSVMClassifier(DataSet dataset) {
     return accuracy;
   };
 
-  // And finally, we call this global optimizer that will search for the best
+  // Call this global optimizer that will search for the best
   // parameters. It will call cross_validation_score() 50 times with different
   // settings and return the best parameter setting it finds.
   auto result = dlib::find_max_global(

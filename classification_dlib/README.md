@@ -1,181 +1,241 @@
-## Classification with Shogun machine learning library
+## Classification with DLib machine learning library
 
-[Shogun](http://www.shogun-toolbox.org/) is an open-source machine learning library that offers a wide range of machine learning algorithms. From my point of view it's not very popular among professionals, but it have a lot of fans among enthusiasts and students. Library offers unified API for algorithms, so they can be easily managed, it somehow looks like to ``scikit-learn`` approach. There is a set of [examples](http://www.shogun-toolbox.org/examples/latest/index.html) which can help you in learning of the library, but holistic documentation is missed.
+[Dlib](http://dlib.net/) is an open source C++ framework containing various machine learning algorithms and many other complementary stuff which can be used for image processing, computer vision, linear algebra calculations and many other things. It has very good documentation and a lot of useful examples. 
 
-In this article I will show how to use this library for solving a classification problem, and describe some not obvious details. I've used [Iris](https://www.kaggle.com/uciml/iris) dataset in this example, so loading data will depend on on it's format.
+In this article I will show how to use this library for solving a classification problem on [Iris](https://www.kaggle.com/uciml/iris) data set, so loading data will depend on its format.
 
 0. **Library installation**
 
-    The easiest way to install the library is to compile it from sources, build scripts can be generated with CMake. Also I recommend to compile debug version too, because of lack of details in the documentation, it have sense to see what are happened in a debugger. Some Linux distributions offer complete package which can be installed directly to the system.
+    I think the easiest way to get recent version of DLib is compile it from sources, there is a [tutorial](http://dlib.net/compile.html) on its site. Also you can find binary packages for Ubuntu, Debian and Arch Linux distributions. I've compiled library with ``Cuda`` support, but for doing this I've installed also ``gcc-6`` compiler for a host code and manually specified it in ``CMake`` parameters with ``CMAKE_CXX_COMPILER`` and ``CMAKE_C_COMPILER``, without such settings ``Cuda`` support can't be correctly configured. Also it have sense to compile DLib in debug mode with DLIB_ENABLE_ASSERTS CMake option enabled, to see inconvenience in data types, because it's often not obvious what value for template parameter is required to pass.
 
-1. **Memory management**
+1. **Loading data**
 
-      Most of data-structures in Shogun use reference counting approach to manage memory and resources, there are two base classes from which most of types are derived:
-    * CSGObject - objects of this type can't be created on stack
-    * SGReferencedData - objects of this type can be created on stack, and they usually use reference counting only for internal data.
-
-    Library provides a kind on smart pointer to manage CSGObject type objects life-time, it called ``Some`` and you can use two functions to wrap objects in this smart pointer ``some`` and ``wrap``, here are examples how to use them:
+    Dlib matrix class provides possibility to load in data from CSV formatted string. But initially I loaded data from network, read it to string:
     ```cpp
-    // some - hides a new operator in the same way as std::make_shared does
-    auto data_file = shogun::some<shogun::CCSVFile>(file_name);
-
-    // wrap - automates creating of smart pointer object,
-    // it can be useful in case of complex constructors
-    auto labels = shogun::wrap(new shogun::CMulticlassLabels());
-
-    // direct creation of the smart pointer
-    auto labels = shogun::Some<shogun::CMulticlassLabels>(new shogun::CMulticlassLabels());
+    // ----------- Download the data
+    const std::string data_path{"iris.csv"};
+    if (!fs::exists(data_path)) {
+        if (!utils::DownloadFile(train_data_url, data_path)) {
+          std::cerr << "Unable to download the file " << train_data_url
+                    << std::endl;
+          return {};
+        }
+    }
+    // ----------- Load data to string
+    std::ifstream data_file(data_path);
+    std::string train_data_str((std::istreambuf_iterator<char>(data_file)),
+                                std::istreambuf_iterator<char>());
+    
+    // ----------- Remove first line - columns labels
+    train_data_str.erase(0, train_data_str.find_first_of("\n") + 1);
+    
+    // ----------- Replace string labels with ints
+    train_data_str =
+      std::regex_replace(train_data_str, std::regex("Iris-setosa"), "0");
+    train_data_str =
+      std::regex_replace(train_data_str, std::regex("Iris-versicolor"), "1");
+    train_data_str =
+      std::regex_replace(train_data_str, std::regex("Iris-virginica"), "2");    
     ```
-
-    You can't use objects of CSGObject type with c++ smart pointers because it uses internal implementation of reference counter.
-
-    SGReferencedData type objects can be created on stack, but you should pay attention on how they are copied, because usually they don't support deep copying through the assignment operator and you should call a ``clone`` method if you need a real copy of object. Example of such types are SGMatrix and SGString.
-
-2. **Loading data**
-
-    First of all we need load data in SGMatrix object to be able to start processing. Library provides CVS file reader, which can be used for this task. This is an example how to do it:
-
+    To load data from string to DLib matrix, I specified exact size of the matrix, because library unable to determine it by itself. Also DLib internally uses double for a lot of calculations internally so in many cases it is impossible to use float as a base type for a Matrix (It will lead for a compilation errors).
     ```cpp
-      auto data_file = shogun::some<shogun::CCSVFile>(file_name.c_str());
-
-      // skip columns labels row
-      data_file->set_lines_to_skip(1);
-
-      // Load data from CSV to matrix
-      Matrix data;
-      data.load(data_file);
-    ```
-    Shogun CSV reader transposes data after read it, this issue can be solved by configuring reader with such call:
-    ```cpp
-    data_file->set_transpose(true);
-    ```
-    But pay attention, because on some files CSV reader ``crashed`` if this setting is enabled (Iris dataset is one of them). Also Shogun API treat matrix columns as samples and rows as features, so sometimes such type of automatic transposing can be useful.
-
-    After we loaded the data to the matrix object we need to create a features and labels objects compatible with algorithms API in Shogun, you can't use SGMatrix with algorithms directly.
-
-    Lets break Iris dataset matrix in two sets - samples+features and labels:
-    ```cpp
-    Matrix data;
+    using DType = double;
+    using Matrix = dlib::matrix<DType>;
     ...
-    Matrix::transpose_matrix(data.matrix, data.num_rows, data.num_cols);
-    // Exclude classification info from the data
-    Matrix data_no_class = data.submatrix(0, data.num_cols - 1);  // make a view
-    data_no_class = data_no_class.clone();  // copy exact data
-    // Transpose matrix because shogun algorithms expect that samples are in columns
-    Matrix::transpose_matrix(data_no_class.matrix, data_no_class.num_rows,
-                             data_no_class.num_cols);
-    auto features = shogun::some<shogun::CDenseFeatures<DType>>(data_no_class);
-    auto labels =
-        shogun::wrap(new shogun::CMulticlassLabels(features->get_num_vectors()));
-    // data in the file is ordered by classes, so we can label it consequentially
-    for (int i = 0; i < labels->get_num_labels() / 3; ++i) {
-      labels->set_int_label(i, 0);
-      labels->set_int_label(i + 50, 1);
-      labels->set_int_label(i + 100, 2);
+    Matrix train_data(150, 5);
+    std::stringstream ss(train_data_str);
+    ss >> train_data;
+    ```
+    Next I split whole matrix to samples and labels, there are several methods to make a slice from matrix in DLib. Also pay attention that library use templates expressions for matrix calculations so final value for expression will be calculated in the assign operator. And next operations allocate new Matrix object and copy the data in them. 
+    ```cpp
+    // ----------- Extract labels - take last column
+    Matrix labels = dlib::colm(train_data, 4);
+    
+    // ----------- Extract samples - take submatrix rectangle
+    Matrix samples = dlib::subm_clipped(train_data, 0, 0, train_data.nr(),
+                                        train_data.nc() - 1);
+    ```
+    
+    Before pass data to DLib algorithms I converted samples matrix to c++ ``std::vector`` object, because its a library requirement. I've took each row with ``dlib::subm_clipped`` function, converted it to column vector and pushed to a vector.
+    ```cpp
+    using DataSet = std::pair<std::vector<Matrix>, std::vector<DType>>;
+    ...
+    DataSet dataset;
+    for (long row = 0; row < samples.nr(); ++row) {
+        dataset.first.push_back(dlib::reshape_to_column_vector(
+        dlib::subm_clipped(samples, row, 0, 1, samples.nc())));
+    }
+    dataset.second.assign(labels.begin(), labels.end());
+    ```
+
+2. **Pre-processing data**
+    
+    Before going to classification algorithms I've shuffled the data.
+    
+    ```cpp
+    ...
+    auto& [samples, labels] = dataset;
+    dlib::randomize_samples(samples, labels);
+    ```
+
+    And extracted some set of samples and labels as a test data.
+    
+    ```cpp
+    std::vector<Matrix> test_data;
+    std::ptrdiff_t split_point = 135;
+    test_data.assign(samples.begin() + split_point, samples.end());
+    samples.erase(samples.begin() + split_point, samples.end());
+    std::vector<double> test_labels;
+    test_labels.assign(labels.begin() + split_point, labels.end());
+    labels.erase(labels.begin() + split_point, labels.end());
+    ```
+    
+    After training some classification algorithm in DLib you will have a descision function, some of them possible to combine with normalization procedure so normalization will be added as part of the models.
+
+3. **SVM**
+
+    I used this official [sample](http://dlib.net/model_selection_ex.cpp.html) as base for my tutorial. At first I defined types for SVM classifier to be able to use it outside of training function.
+    
+    ```cpp
+    using svm_normalizer_type = dlib::vector_normalizer<Matrix>;
+    using svm_kernel_type = dlib::radial_basis_kernel<Matrix>;
+    using svm_ova_trainer = dlib::one_vs_all_trainer<dlib::any_trainer<Matrix>>;
+    //---------- Classifier descision function 
+    using svm_dec_funct_type = dlib::one_vs_all_decision_function<svm_ova_trainer>;   
+    //--------- Classification function type which includes normalizer
+    using svm_funct_type = dlib::normalized_function<svm_dec_funct_type, svm_normalizer_type>;
+    ```
+    
+    Next step I made was training normalizer for the data and its normalizing. 
+       
+    ```cpp
+    svm_normalizer_type normalizer;
+    //---------- Let the normalizer learn the mean and standard deviation of the samples
+    normalizer.train(samples);
+    // --------- Here we normalize all the samples by subtracting their mean and dividing by their standard deviation.
+    for (size_t i = 0; i < samples.size(); ++i) {
+        samples[i] = normalizer(samples[i]);
     }
     ```
-    Look at ``submatrix`` method which I used to create a slice(view) of data in matrix, but it can be used only for columns range. Also I used a ``clone`` method to create a deep copy of data slice.
-
-3. **Pre-processing data**
-
-    Usually before passing a data to some machine learning algorithm it make sense to do some pre-processing like shuffling, scaling, dimensions reduction ... .
-
-     Shogun provides useful functionality called `indices subsets` which can be used with features and labels to specify order of a data or define a reduced subset of data without copying or duplication. You can define indices subset with object of ``SGVector`` type.
-
-    Example of shuffling a data with the indices subset:
+    Also there exists a combined with PCA normalizer type in Dlib, it allows to reduce data dimensions too.
     ```cpp
-    shogun::SGVector<index_t> indices(labels->get_num_labels());
-    indices.range_fill(); // values from 0 to indices vector length
-    shogun::CMath::permute(indices);
-    labels->add_subset(indices);
-    features->add_subset(indices);
+    using svm_normalizer_type = dlib::vector_normalizer_pca<Matrix>;
+    svm_normalizer_type normalizer;
+    normalizer.train(samples, 0.9); // configure how much dimensions will be left after PCA    
     ```
-    To perform data scaling we have to create an object of a special type ``CRescaleFeatures``, initialize it with the data (to calculate mean and/or standard deviation), and then apply it to a data we want to scale:
+    Next I defined a function, that will do the cross-validation and return a number indicating how good a particular setting of gamma, c1, and c2 is.
     ```cpp
-    auto scaler = shogun::wrap(new shogun::CRescaleFeatures());
-    scaler->init(features);
-    scaler->apply_to_feature_matrix(features);
+    auto cross_validation_score = [&](const DType gamma, const DType c1,
+                                    const DType c2) {
+        //-------- Make a RBF SVM trainer and tell it what the parameters are supposed to be.
+        dlib::svm_c_trainer<svm_kernel_type> svm_trainer;
+        svm_trainer.set_kernel(svm_kernel_type(gamma));
+        svm_trainer.set_c_class1(c1);
+        svm_trainer.set_c_class2(c2);
+        
+        //-------- Make one vs all trainer and add svm trainer to it
+        svm_ova_trainer trainer;
+        trainer.set_num_threads(4); // How much calculation threads to use
+        trainer.set_trainer(svm_trainer);
+        
+        //-------- Perform 10-fold cross validation and return the results - confusion matrix.
+        Matrix result =
+            dlib::cross_validate_multiclass_trainer(trainer, samples, labels, 10);
+         
+        //-------- Return a number indicating how good the parameters are.  Bigger is better in this example.
+        auto accuracy = sum(diag(result)) / sum(result);
+        return accuracy;
+    };
     ```
-    ``CRescaleFeatures`` can be applied only to the type derived from ``SGFeatures``, so you can't use it with a matrix directly, but it will modify the matrix you used to create features object.
-
-    The same approach is used to perform dimensions reduction with PCA algorithm:
+    With cross-validation function I used global optimizer that searched the best parameters. It calls cross_validation_score() function 50 times with different settings and returns the best parameter setting it finds.
     ```cpp
-    auto pca = shogun::wrap(new shogun::CPCA());
-    pca->set_target_dim(2);  // before calling init method
-    pca->init(features);
-    pca->apply_to_feature_matrix(features);
+    auto result = dlib::find_max_global(
+      cross_validation_score,
+      {1e-5, 1e-5,
+       1e-5},  // lower bound constraints on gamma, c1, and c2, respectively
+      {100, 1e6,
+       1e6},   // upper bound constraints on gamma, c1, and c2, respectively
+      dlib::max_function_calls(50));
+    
+    double best_gamma = result.x(0);
+    double best_c1 = result.x(1);
+    double best_c2 = result.x(2);
     ```
-    From this samples you can see that library uses unified API in different algorithms, ``init`` and ``apply_to_feature_matrix`` method are common for this kind of algorithms, so when you will try another one you can start with them.
-
-4. **SVM**
-
-     Lets configure and train SVM classifier, first of all we need initialize required parameters, and pass them to the classifier object:
+    
+    After I got best values for parameters I repeated training the model with these parameters and saved results to a decision function.
+    
     ```cpp
-    auto svm = shogun::some<shogun::CMulticlassLibSVM>();
-    auto kernel = shogun::wrap(new shogun::CGaussianKernel(5));
-    svm->set_kernel(kernel);
-    svm->set_C(1);
-    svm->set_epsilon(0.00001);
+    dlib::svm_c_trainer<svm_kernel_type> svm_trainer;
+    svm_trainer.set_kernel(svm_kernel_type(best_gamma));
+    svm_trainer.set_c_class1(best_c1);
+    svm_trainer.set_c_class2(best_c2);
+    svm_ova_trainer trainer;
+    trainer.set_num_threads(4);
+    trainer.set_trainer(svm_trainer);
+    
+    svm_funct_type learned_function;
+    learned_function.normalizer = normalizer;  // save normalization information
+    //------- Perform the actual SVM training and save the results
+    learned_function.function = trainer.train(samples, labels);
     ```
-
-    Shogun library provides classes to perform automatic cross validation during training, also there is a class for configuring grid search for models parameters. In this example I'm showing only cross validation:
-    ```cpp
-    // it means that data will be splitted in a training and a validation sets
-    const int num_subsets = 2;
-
-    // this class splits data in the equal ranges, also there are other splitting strategies in shogun
-    auto splitting_strategy = shogun::some<shogun::CCrossValidationSplitting>(
-       labels, num_subsets);
-
-    auto evaluation_criterium = shogun::wrap(new shogun::CMulticlassAccuracy());
-
-    auto cross = shogun::some<shogun::CCrossValidation>(
-       svm, features, labels, splitting_strategy,
-       evaluation_criterium);
-    cross->set_num_runs(1);
-    cross->set_autolock(false); // If true, machine will tried to be locked before evaluation
-    ```
-    Before actual training we need to setup special observer object for cross validation to be able to get machine(algorithm) parameters after the training. Training and validation processes can be launched with ``evaluate`` method:
-    ```cpp
-    auto obs = shogun::some<shogun::CParameterObserverCV>(true);
-    cross->subscribe_to_parameters(obs);
-    auto result =
-       shogun::CCrossValidationResult::obtain_from_generic(cross->evaluate());
-    std::cout << "Validation accuracy = " << result->get_mean() << std::endl;
+        
+    For using this classifier model we can just call decision function with some sample data as argument, it will do normalization too.
+    
+    ```cpp   
+    DType matches_num = 0;
+    for (size_t i = 0; i < test_data.size(); ++i) {
+        auto predicted_class = learned_function(test_data[i]);
+        auto true_class = test_labels[i];
+        if (predicted_class == true_class) {
+          ++matches_num;
+        }
+    }
+    auto accuracy = matches_num / test_data.size();
     ```
 
-    To get parameters we need to get a ``trained machine``, all algorithms which can be trained in Shogun are sub-classes of ``CMachine`` class. I took trained machine with ``get_trained_machine`` method from a fold object inside my observer. To manually evaluate algorithms on new data, machines usually have some kind of ``apply`` method and I used ``apply_multiclass`` in this case. After I got predictions I passed them to the ``evaluate`` method of object of ``CMulticlassAccuracy`` type:
-    ```cpp
-    auto machine = obs->get_observation(0)->get_fold(0)->get_trained_machine();
-    auto svm_predict =
-      shogun::wrap(machine->apply_multiclass(features));
-      auto mult_accuracy_eval = shogun::wrap(new shogun::CMulticlassAccuracy());
-    auto accuracy = mult_accuracy_eval->evaluate(svm_predict, labels);
-    std::cout << "accuracy = " << accuracy << std::endl;
-    ```
-5. **Random Forest**
+5. **Multilayer Perceptron**
 
-    To show the unified API of Shogun library I will show how to use Random Forest algorithm for the same classification task. At first I created object of ``CRandomForest`` type and configured it with required parameters:
+    I planned to show another classification algorithm for DLib, but Decision trees and Random Forest algorithms are missed in DLib, there are another ones based on SVM. So to show something different for classification I used functionality to define and train neural networks, and made simple Multilayer Perceptron for this task. I used this [sample](http://dlib.net/dnn_introduction_ex.cpp.html) as base for this tutorial. 
+    
+    As first step I changed labels type from double to unsigned int, because it is an API requirement.
+    
     ```cpp
-    auto rand_forest = shogun::some<shogun::CRandomForest>(0, 10);
-    auto vote = shogun::some<shogun::CMajorityVote>();
-    rand_forest->set_combination_rule(vote);
-    // say to algorithm that our features are continuous
-    auto featureTypes =
-       shogun::SGVector<bool>(features->get_num_features());
-    shogun::SGVector<bool>::fill_vector(featureTypes.vector, featureTypes.size(), false);
-    rand_forest->set_feature_types(featureTypes);
-    rand_forest->set_labels(labels);
-    rand_forest->set_machine_problem_type(shogun::EProblemType::PT_MULTICLASS);
+    std::vector<unsigned long> labels;
+    labels.assign(real_labels.begin(), real_labels.end());
     ```
-    I've planned to use same cross-validation training process as for SVM classifier, but there was a data race error (a multi-threading error) in the version of Shogun I used. So I just used a ``train`` method for the random forest machine:
+    Next I did normalization for training data in the same way as I did for SVM. 
+    
+    To configure NN we need to define its structure as a type with nested template arguments. I started with ``dlib::loss_multiclass_log`` type for a loss function and finished with ``dlib::input<delib::matrix<DType>>`` type for an input layer. As you can see you should define NN structure in DLib in revers order.
     ```cpp
-    rand_forest->train(features);
+    using namespace dlib;
+    using net_type = loss_multiclass_log<
+      fc<3, relu<fc<10, relu<fc<5, input<matrix<DType>>>>>>>>;
+    net_type net;
     ```
-    For evaluation I used ``apply_multiclass`` method in this case too. After I got predictions I passed them to the ``evaluate`` method of object of ``CMulticlassAccuracy`` type as in the previous case:
+    After I got NN object, I configured trainer and performed training. This trainer also tests if progress is still being made and if it isn't then it will reduce learning rate by setting it to ``learning_rate * learning_rate_shrink_factor``. But, it will not reduce it below ``min_learning_rate``. Once this minimum learning rate is crossed the training will terminate.
     ```cpp
-    auto forest_predict = shogun::wrap(rand_forest->apply_multiclass(features));
-    auto mult_accuracy_eval = shogun::wrap(new shogun::CMulticlassAccuracy());
-    auto accuracy = mult_accuracy_eval->evaluate(svm_predict, labels);
-    std::cout << "accuracy = " << accuracy << std::endl;
+    dnn_trainer<net_type> trainer(net);
+    trainer.set_learning_rate(0.01);
+    trainer.set_min_learning_rate(0.00001);
+    trainer.set_mini_batch_size(8);
+    trainer.be_verbose();
+    trainer.train(samples, labels);
+    net.clean(); // Clean some intermediate data which is not used for evaluation
+    ```
+
+    It is impossible to define a combined with normalizer decision function for NN so you should do normalization of input data before evaluation manually. Evaluation of NN also can be done as a simple function call, but its decision function takes usually a batch(vector) of samples as argument in opposite to SVM decision function which takes only one sample for a call.
+    ```cpp    
+    for (auto& ts : test_data)
+        ts = normalizer(ts);
+    
+    auto predicted_labels = net(test_data);
+    DType matches_num = 0;
+    for (size_t i = 0; i < test_data.size(); ++i) {
+        auto predicted_class = predicted_labels[i];
+        auto true_class = test_labels[i];
+        if (predicted_class == true_class) {
+          ++matches_num;
+        }
+    }
+    auto accuracy = matches_num / test_data.size();
     ```
