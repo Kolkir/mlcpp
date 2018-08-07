@@ -2,7 +2,7 @@
 
 [Dlib](http://dlib.net/) is an open source C++ framework containing various machine learning algorithms and many other complementary stuff which can be used for image processing, computer vision, linear algebra calculations and many other things. It has very good documentation and a lot of useful examples. 
 
-In this article I will show how to use this library for solving a classification problem on [Iris](https://www.kaggle.com/uciml/iris) data set, so loading data will depend on its format.
+In this article I will show how to use this library for solving a classification problem on [Iris](https://www.kaggle.com/uciml/iris) data set, so process of loading data will depend on its format.
 
 0. **Library installation**
 
@@ -10,7 +10,7 @@ In this article I will show how to use this library for solving a classification
 
 1. **Loading data**
 
-    Dlib matrix class provides possibility to load in data from CSV formatted string. But initially I loaded data from network, read it to string:
+    Dlib matrix class provides possibility to load in data from CSV formatted string. But initially I loaded data from network, and read it to a string:
     ```cpp
     // ----------- Download the data
     const std::string data_path{"iris.csv"};
@@ -37,7 +37,7 @@ In this article I will show how to use this library for solving a classification
     train_data_str =
       std::regex_replace(train_data_str, std::regex("Iris-virginica"), "2");    
     ```
-    To load data from string to DLib matrix, I specified exact size of the matrix, because library unable to determine it by itself. Also DLib internally uses double for a lot of calculations internally so in many cases it is impossible to use float as a base type for a Matrix (It will lead for a compilation errors).
+    To load data from string to DLib matrix, I specified exact size of the matrix, because library unable to determine it by itself. Also DLib internally uses double for a lot of calculations internally so in many cases it is impossible to use float as a base type for a Matrix (It will lead for compilation errors).
     ```cpp
     using DType = double;
     using Matrix = dlib::matrix<DType>;
@@ -46,7 +46,7 @@ In this article I will show how to use this library for solving a classification
     std::stringstream ss(train_data_str);
     ss >> train_data;
     ```
-    Next I split whole matrix to samples and labels, there are several methods to make a slice from matrix in DLib. Also pay attention that library use templates expressions for matrix calculations so final value for expression will be calculated in the assign operator. And next operations allocate new Matrix object and copy the data in them. 
+    Next I split whole matrix to samples and labels, there are several methods to make a slice from matrix in DLib. Also pay attention that library use templates expressions for matrix calculations so final value for expression will be calculated in the assign operator. And next operations allocate new Matrix objects and copy data in them. 
     ```cpp
     // ----------- Extract labels - take last column
     Matrix labels = dlib::colm(train_data, 4);
@@ -70,7 +70,7 @@ In this article I will show how to use this library for solving a classification
 
 2. **Pre-processing data**
     
-    Before going to classification algorithms I've shuffled the data.
+    Before going to classification algorithms I've shuffled data.
     
     ```cpp
     ...
@@ -78,7 +78,7 @@ In this article I will show how to use this library for solving a classification
     dlib::randomize_samples(samples, labels);
     ```
 
-    And extracted some set of samples and labels as a test data.
+    And extracted some set of samples and labels as test data.
     
     ```cpp
     std::vector<Matrix> test_data;
@@ -90,11 +90,11 @@ In this article I will show how to use this library for solving a classification
     labels.erase(labels.begin() + split_point, labels.end());
     ```
     
-    After training some classification algorithm in DLib you will have a descision function, some of them possible to combine with normalization procedure so normalization will be added as part of the models.
+    After training some classification algorithm in DLib you will have a descision function, some of them possible to combine with normalization procedure so it can be a part of a model.
 
 3. **SVM**
 
-    I used this official [sample](http://dlib.net/model_selection_ex.cpp.html) as base for my tutorial. At first I defined types for SVM classifier to be able to use it outside of training function.
+    I used this official [sample](http://dlib.net/model_selection_ex.cpp.html) as a base for my tutorial. At first I defined types for SVM classifier to be able to use it outside of a training function.
     
     ```cpp
     using svm_normalizer_type = dlib::vector_normalizer<Matrix>;
@@ -106,7 +106,7 @@ In this article I will show how to use this library for solving a classification
     using svm_funct_type = dlib::normalized_function<svm_dec_funct_type, svm_normalizer_type>;
     ```
     
-    Next step I made was training normalizer for the data and its normalizing. 
+    Next step I made, was training a normalizer and data normalization. 
        
     ```cpp
     svm_normalizer_type normalizer;
@@ -117,13 +117,13 @@ In this article I will show how to use this library for solving a classification
         samples[i] = normalizer(samples[i]);
     }
     ```
-    Also there exists a combined with PCA normalizer type in Dlib, it allows to reduce data dimensions too.
+    Also there exists normalizer type combined with PCA method in Dlib, it allows to reduce data dimensions too.
     ```cpp
     using svm_normalizer_type = dlib::vector_normalizer_pca<Matrix>;
     svm_normalizer_type normalizer;
     normalizer.train(samples, 0.9); // configure how much dimensions will be left after PCA    
     ```
-    Next I defined a function, that will do the cross-validation and return a number indicating how good a particular setting of gamma, c1, and c2 is.
+    Next I defined a function, that will do the Cross-Validation and return a number indicating how good a particular settings of gamma, c1, and c2 are.
     ```cpp
     auto cross_validation_score = [&](const DType gamma, const DType c1,
                                     const DType c2) {
@@ -147,7 +147,7 @@ In this article I will show how to use this library for solving a classification
         return accuracy;
     };
     ```
-    With cross-validation function I used global optimizer that searched the best parameters. It calls cross_validation_score() function 50 times with different settings and returns the best parameter setting it finds.
+    I used global optimizer that searched the best parameters using the cross-validation function. It calls cross_validation_score() function 50 times with different settings and returns the best parameter settings it finds.
     ```cpp
     auto result = dlib::find_max_global(
       cross_validation_score,
@@ -162,7 +162,7 @@ In this article I will show how to use this library for solving a classification
     double best_c2 = result.x(2);
     ```
     
-    After I got best values for parameters I repeated training the model with these parameters and saved results to a decision function.
+    After I got best values for parameters I repeated the training for the model with these parameters and saved results to a decision function.
     
     ```cpp
     dlib::svm_c_trainer<svm_kernel_type> svm_trainer;
@@ -195,7 +195,7 @@ In this article I will show how to use this library for solving a classification
 
 5. **Multilayer Perceptron**
 
-    I planned to show another classification algorithm for DLib, but Decision trees and Random Forest algorithms are missed in DLib, there are another ones based on SVM. So to show something different for classification I used functionality to define and train neural networks, and made simple Multilayer Perceptron for this task. I used this [sample](http://dlib.net/dnn_introduction_ex.cpp.html) as base for this tutorial. 
+    I planned to show another classification algorithm for DLib, but Decision trees and Random Forest algorithms are missed in DLib, there are another ones based on SVM. So to show something different for classification I used functionality to define and train neural networks, and made simple Multilayer Perceptron for this task. I used this [sample](http://dlib.net/dnn_introduction_ex.cpp.html) as a base for this tutorial. 
     
     As first step I changed labels type from double to unsigned int, because it is an API requirement.
     
@@ -203,7 +203,7 @@ In this article I will show how to use this library for solving a classification
     std::vector<unsigned long> labels;
     labels.assign(real_labels.begin(), real_labels.end());
     ```
-    Next I did normalization for training data in the same way as I did for SVM. 
+    Next I did normalization of training data in the same way as I did for SVM. 
     
     To configure NN we need to define its structure as a type with nested template arguments. I started with ``dlib::loss_multiclass_log`` type for a loss function and finished with ``dlib::input<delib::matrix<DType>>`` type for an input layer. As you can see you should define NN structure in DLib in revers order.
     ```cpp
@@ -223,7 +223,7 @@ In this article I will show how to use this library for solving a classification
     net.clean(); // Clean some intermediate data which is not used for evaluation
     ```
 
-    It is impossible to define a combined with normalizer decision function for NN so you should do normalization of input data before evaluation manually. Evaluation of NN also can be done as a simple function call, but its decision function takes usually a batch(vector) of samples as argument in opposite to SVM decision function which takes only one sample for a call.
+    It is impossible to define a combined with normalizer decision function for NN so you should do normalization of input data for evaluation manually. Evaluation of NN also can be done as a simple function call, but its decision function takes usually a batch(vector) of samples as argument in opposite to SVM decision function which takes only one sample for a call.
     ```cpp    
     for (auto& ts : test_data)
         ts = normalizer(ts);
