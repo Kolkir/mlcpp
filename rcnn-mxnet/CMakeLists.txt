@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(resnext)
+project(rcnn)
 
 set(LIBRARIES_DIR "" CACHE PATH "path to mxnet install dir")
 
@@ -10,6 +10,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 message(STATUS "mxnet install path: ${LIBRARIES_DIR}")
+
+include_directories(${CMAKE_SOURCE_DIR}/../third_party/json/include)
 
 include_directories(${LIBRARIES_DIR}/include)
 include_directories(${LIBRARIES_DIR}/include/mxnet)
@@ -26,7 +28,17 @@ list(APPEND requiredlibs "stdc++")
 list(APPEND requiredlibs "mxnet")
 list(APPEND requiredlibs "mkldnn")
 
-add_executable(${PROJECT_NAME} ${COMMON_SOURCES} "resnext.cpp" "README.md" "get_model.sh")
+set(SOURCES
+    rcnn.cpp
+    resnet.h
+    resnet.cpp
+    coco.h
+    coco.cpp
+    README.md
+    get_model.sh
+    )
+
+add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${requiredlibs})
 target_link_libraries(${PROJECT_NAME} ${BLAS_LIBRARIES} ${OpenCV_LIBS})
 
