@@ -36,3 +36,4 @@ build
 
 # Build system
 *.user
+model*/
