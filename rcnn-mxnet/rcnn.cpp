@@ -1,3 +1,4 @@
+#include "anchorgenerator.h"
 #include "coco.h"
 
 #include <opencv2/opencv.hpp>
@@ -32,6 +33,9 @@ int main(int argc, char** argv) {
   try {
     coco_path = fs::canonical(fs::absolute(coco_path));
     if (fs::exists(coco_path)) {
+      AnchorGenerator ag;
+      ag.Generate(63, 36);
+      exit(0);
       std::cout << "Path to the data set : " << coco_path << std::endl;
       Coco coco(coco_path);
       coco.LoadTrainData();

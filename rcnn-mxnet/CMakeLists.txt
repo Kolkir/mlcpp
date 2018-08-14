@@ -5,12 +5,13 @@ set(LIBRARIES_DIR "" CACHE PATH "path to mxnet install dir")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -msse3 -fopenmp -Wall -Wextra -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "-std=c++17 -msse3 -fopenmp -Wall -Wextra -Wno-unused-parameter -Wno-int-in-bool-context")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 message(STATUS "mxnet install path: ${LIBRARIES_DIR}")
 
+include_directories(${CMAKE_SOURCE_DIR}/../third_party/eigen)
 include_directories(${CMAKE_SOURCE_DIR}/../third_party/json/include)
 
 include_directories(${LIBRARIES_DIR}/include)
@@ -34,6 +35,8 @@ set(SOURCES
     resnet.cpp
     coco.h
     coco.cpp
+    anchorgenerator.h
+    anchorgenerator.cpp
     README.md
     get_model.sh
     )
