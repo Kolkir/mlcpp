@@ -1,5 +1,5 @@
-#include "anchorgenerator.h"
 #include "coco.h"
+#include "trainiter.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -8,6 +8,10 @@
 #include <string>
 
 namespace fs = std::experimental::filesystem;
+
+/*The global context, change them if necessary*/
+static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
+// static Context global_ctx(mxnet::cpp::kCPU,0);
 
 const cv::String keys =
     "{help h usage ? |      | print this message   }"
@@ -33,15 +37,11 @@ int main(int argc, char** argv) {
   try {
     coco_path = fs::canonical(fs::absolute(coco_path));
     if (fs::exists(coco_path)) {
-      AnchorGenerator ag;
-      ag.Generate(63, 36);
-      exit(0);
       std::cout << "Path to the data set : " << coco_path << std::endl;
       Coco coco(coco_path);
       coco.LoadTrainData();
-      auto& cimg = coco.GetImage(10);
-      auto img = coco.DrawAnnotedImage(cimg.id);
-      cv::imwrite("test.png", img);
+      TrainIter data_iter(global_ctx, &coco, 8);
+
     } else {
       std::cout << "Ivalid path to the data set : " << coco_path << std::endl;
       return 1;

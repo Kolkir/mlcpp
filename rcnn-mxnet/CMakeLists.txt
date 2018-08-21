@@ -37,6 +37,14 @@ set(SOURCES
     coco.cpp
     anchorgenerator.h
     anchorgenerator.cpp
+    anchorsampler.h
+    anchorsampler.cpp
+    trainiter.h
+    trainiter.cpp
+    bbox.h
+    bbox.cpp
+    imagedb.h
+    imagedb.cpp
     README.md
     get_model.sh
     )

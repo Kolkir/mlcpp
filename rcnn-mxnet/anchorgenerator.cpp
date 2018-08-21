@@ -84,6 +84,5 @@ Eigen::MatrixXf AnchorGenerator::Generate(uint32_t width,
   auto ncells = shifts.rows();
   Eigen::MatrixXf all_anchors = base_anchors_.colwise().replicate(ncells) +
                                 shifts.colwise().replicate(num_anchors_);
-  std::cout << all_anchors << std::endl;
   return all_anchors;
 }

@@ -185,15 +185,50 @@ void Coco::AddCategory(CocoCategory category) {
   categories_.emplace(std::make_pair(category.id, category));
 }
 
-uint64_t Coco::GetImagesCount() const {
-  return images_.size();
+uint32_t Coco::GetImagesCount() const {
+  return static_cast<uint32_t>(images_.size());
 }
 
-const CocoImage& Coco::GetImage(uint32_t index) const {
+ImageDesc Coco::GetImage(uint32_t index,
+                         uint32_t short_side,
+                         uint32_t long_side) const {
   if (index < images_.size()) {
     auto i = images_.begin();
     std::advance(i, index);
-    return i->second;
+    fs::path file_path(train_images_folder_);
+    file_path /= i->second.name;
+    auto img = cv::imread(file_path.string());
+    if (!img.empty()) {
+      img.convertTo(img, CV_32FC3);
+      // resize
+      auto im_min_max = std::minmax(img.rows, img.cols);
+      auto scale =
+          static_cast<float>(short_side) / static_cast<float>(im_min_max.first);
+      // prevent bigger axis from being more than max_size:
+      if (std::round(scale * im_min_max.second) > long_side)
+        scale = static_cast<float>(long_side) /
+                static_cast<float>(im_min_max.second);
+      cv::resize(img, img, cv::Size(), static_cast<double>(scale),
+                 static_cast<double>(scale), cv::INTER_LINEAR);
+      ImageDesc result;
+      result.image = img;
+      result.scale = scale;
+      auto& ants = image_to_ant_index_.at(i->second.id);
+      result.boxes.reserve(ants.size());
+      result.classes.reserve(ants.size());
+      for (const auto ant_id : ants) {
+        const auto& ant = annotations_.at(ant_id);
+        result.boxes.push_back(LabelBBox{static_cast<float>(ant.bbox.x),
+                                         static_cast<float>(ant.bbox.y),
+                                         static_cast<float>(ant.bbox.width),
+                                         static_cast<float>(ant.bbox.height)});
+        const auto& cat = categories_.at(ant.category_id);
+        result.classes.push_back(static_cast<float>(cat.id));
+      }
+      return result;
+    } else {
+      throw std::runtime_error(file_path.string() + " file can't be opened");
+    }
   } else {
     throw std::out_of_range("Image index is out of bounds");
   }

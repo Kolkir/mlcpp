@@ -1,6 +1,8 @@
 #ifndef COCO_H
 #define COCO_H
 
+#include "imagedb.h"
+
 #include <opencv2/opencv.hpp>
 
 #include <string>
@@ -55,17 +57,20 @@ struct CocoImage {
   std::string name;
 };
 
-class Coco {
+class Coco : public ImageDb {
  public:
   explicit Coco(const std::string& path);
   void LoadTrainData();
   void AddImage(CocoImage image);
   void AddAnnotation(CocoAnnotation annotation);
   void AddCategory(CocoCategory category);
-
-  uint64_t GetImagesCount() const;
-  const CocoImage& GetImage(uint32_t index) const;
   cv::Mat DrawAnnotedImage(uint32_t id) const;
+
+  // ImageDb interface
+  uint32_t GetImagesCount() const override;
+  ImageDesc GetImage(uint32_t index,
+                     uint32_t short_side,
+                     uint32_t long_side) const override;
 
  private:
   std::string train_images_folder_;
