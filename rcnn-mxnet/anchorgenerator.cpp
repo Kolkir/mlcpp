@@ -42,7 +42,10 @@ auto meshgrid(const Eigen::ArrayXf& x, const Eigen::ArrayXf& y) {
 
 }  // namespace
 
-AnchorGenerator::AnchorGenerator() {
+AnchorGenerator::AnchorGenerator(const Params& params)
+    : stride_(params.rpn_feat_stride),
+      scales_(params.rpn_anchor_scales.data()),
+      ratios_(params.rpn_anchor_ratios.data()) {
   num_anchors_ = scales_.size() * ratios_.size();
   base_anchors_.resize(num_anchors_, 4);
 

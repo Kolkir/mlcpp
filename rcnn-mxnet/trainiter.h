@@ -4,6 +4,7 @@
 #include "anchorgenerator.h"
 #include "anchorsampler.h"
 #include "imagedb.h"
+#include "params.h"
 
 #include <mxnet-cpp/MxNetCpp.h>
 
@@ -13,7 +14,8 @@ class TrainIter {
  public:
   TrainIter(const mxnet::cpp::Context& ctx,
             ImageDb* image_db,
-            uint32_t batch_size);
+            uint32_t batch_size,
+            const Params& params);
   TrainIter(const TrainIter&) = delete;
   TrainIter& operator=(const TrainIter&) = delete;
 
@@ -38,9 +40,9 @@ class TrainIter {
   uint32_t size_{0};
   uint32_t cur_{0};
 
-  uint32_t short_side_len_{600};
-  uint32_t long_side_len_{1000};
-  uint32_t one_image_size_{3 * short_side_len_ * long_side_len_};
+  uint32_t short_side_len_{0};
+  uint32_t long_side_len_{0};
+  uint32_t one_image_size_{0};
 
   size_t seed_ = 5675317;
   std::mt19937 random_engine_{seed_};

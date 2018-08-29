@@ -6,9 +6,15 @@
 
 TrainIter::TrainIter(const mxnet::cpp::Context& ctx,
                      ImageDb* image_db,
-                     uint32_t batch_size)
+                     uint32_t batch_size,
+                     const Params& params)
     : image_db_(image_db),
+      short_side_len_(params.img_short_side),
+      long_side_len_(params.img_long_side),
+      one_image_size_(3 * short_side_len_ * long_side_len_),
       batch_indices_(batch_size),
+      anchor_generator_(params),
+      anchor_sampler_(params),
       im_data_(
           mxnet::cpp::Shape(batch_size, 3, short_side_len_, long_side_len_),
           ctx,

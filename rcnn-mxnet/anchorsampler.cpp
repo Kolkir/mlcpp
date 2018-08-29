@@ -54,7 +54,12 @@ std::pair<Indices, Indices> argmax(const Eigen::MatrixXf& m) {
 }
 }  // namespace
 
-AnchorSampler::AnchorSampler() {
+AnchorSampler::AnchorSampler(const Params& params)
+    : allowed_border_(params.rpn_allowed_border),
+      num_batch_(params.rpn_batch_rois),
+      fg_fraction_(params.rpn_fg_fraction),
+      fg_overlap_(params.rpn_fg_overlap),
+      bg_overlap_(params.rpn_bg_overlap) {
   num_fg_ = static_cast<Eigen::Index>(num_batch_ * fg_fraction_);
 }
 

@@ -1,19 +1,21 @@
 #ifndef ANCHORGENERATOR_H
 #define ANCHORGENERATOR_H
 
+#include "params.h"
+
 #include <Eigen/Dense>
 #include <vector>
 
 class AnchorGenerator {
  public:
-  AnchorGenerator();
+  AnchorGenerator(const Params& params);
   Eigen::MatrixXf Generate(uint32_t width, uint32_t height) const;
 
  private:
-  float stride_{16};
-  Eigen::Array3f scales_{8, 16, 32};
-  Eigen::Array3f ratios_{0.5f, 1.f, 2.f};
-  Eigen::Index num_anchors_{0};
+  float stride_;
+  Eigen::Array3f scales_;
+  Eigen::Array3f ratios_;
+  Eigen::Index num_anchors_;
   Eigen::MatrixXf base_anchors_;
 };
 
