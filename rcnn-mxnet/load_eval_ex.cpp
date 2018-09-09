@@ -1,6 +1,8 @@
 #include <mxnet-cpp/MxNetCpp.h>
 #include <opencv2/opencv.hpp>
 
+#include "imageutils.h"
+
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -49,21 +51,11 @@ int main(int argc, char** argv) {
     NDArray::WaitAll();
 
     //----------- Load data
-    NDArray data(Shape(1, 3, 224, 224), global_ctx, false);
-    std::vector<float> array(data.Size());
-    cv::Mat mat = cv::imread(argv[1]);
-    /*resize pictures to (224, 224) according to the pretrained model*/
-    cv::resize(mat, mat, cv::Size(224, 224));
-    size_t k = 0;
-    for (size_t c = 0; c < 3; ++c) {
-      for (size_t i = 0; i < 224; ++i) {
-        for (size_t j = 0; j < 224; ++j) {
-          auto t = (i * 224 + j) * 3 + c;
-          array[k] = static_cast<float>(mat.data[t]);
-          ++k;
-        }
-      }
-    }
+    auto img = LoadImage(argv[1], 224, 224, true);
+    auto array = CVToMxnetFormat(img.first);
+    NDArray data(Shape(1, 3, static_cast<index_t>(img.first.rows),
+                       static_cast<index_t>(img.first.cols)),
+                 global_ctx, false);
     data.SyncCopyFromCPU(array.data(), array.size());
     NDArray::WaitAll();
 

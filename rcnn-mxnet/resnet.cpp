@@ -1,31 +1,49 @@
 #include "resnet.h"
 
-auto LoadPretrainedResnet(const mxnet::cpp::Context& ctx,
-                          const std::string& param_file) {
-  using namespace mxnet::cpp;
-  //---------- Load parameters
-  std::map<std::string, NDArray> paramters;
-  NDArray::Load(param_file, nullptr, &paramters);
-  std::map<std::string, NDArray> args_map;
-  std::map<std::string, NDArray> aux_map;
-  for (const auto& k : paramters) {
-    if (k.first.substr(0, 4) == "aux:") {
-      auto name = k.first.substr(4, k.first.size() - 4);
-      aux_map[name] = k.second.Copy(ctx);
-    }
-    if (k.first.substr(0, 4) == "arg:") {
-      auto name = k.first.substr(4, k.first.size() - 4);
-      args_map[name] = k.second.Copy(ctx);
-    }
-  }
-  /*WaitAll is need when we copy data between GPU and the main memory*/
-  NDArray::WaitAll();
-  return std::make_pair(args_map, aux_map);
-}
-
 static const double eps = 2e-5;
 static const bool use_global_stats = true;
-static const uint32_t workspace = 1024;
+static const uint64_t workspace = 1024;
+
+mxnet::cpp::Symbol BatchNormUnit(mxnet::cpp::Symbol data,
+                                 const std::string& name,
+                                 bool fix_gamma) {
+  using namespace mxnet::cpp;
+  Symbol gamma(name + "_gamma");
+  Symbol beta(name + "_beta");
+  Symbol mmean(name + "_moving_mean");
+  Symbol mvar(name + "_moving_var");
+
+  return BatchNorm(name, data, gamma, beta, mmean, mvar, eps, 0.9f, fix_gamma,
+                   use_global_stats);
+}
+
+mxnet::cpp::Symbol ConvolutionUnit(mxnet::cpp::Symbol data,
+                                   const std::string& name,
+                                   uint32_t num_filter,
+                                   mxnet::cpp::Shape kernel,
+                                   mxnet::cpp::Shape stride,
+                                   mxnet::cpp::Shape pad) {
+  using namespace mxnet::cpp;
+  Symbol weight(name + "_weight");
+  // Symbol bias(name + "_bias");
+
+  // Why doesn't work ? - Convolution no-bias assume 2 inputs
+  //  return Convolution(name, data, weight, bias, kernel, num_filter, stride,
+  //                     Shape(1, 1), pad, 1, workspace, true);
+
+  return Operator("Convolution")
+      .SetParam("kernel", kernel)
+      .SetParam("num_filter", num_filter)
+      .SetParam("stride", stride)
+      .SetParam("dilate", Shape(1, 1))
+      .SetParam("pad", pad)
+      .SetParam("num_group", 1)
+      .SetParam("workspace", workspace)
+      .SetParam("no_bias", true)
+      .SetInput("data", data)
+      .SetInput("weight", weight)
+      .CreateSymbol(name);
+}
 
 mxnet::cpp::Symbol ResidualUnit(mxnet::cpp::Symbol data,
                                 uint32_t num_filter,
@@ -34,83 +52,44 @@ mxnet::cpp::Symbol ResidualUnit(mxnet::cpp::Symbol data,
                                 const std::string& name) {
   using namespace mxnet::cpp;
 
-  auto bn1 = Operator("BatchNorm")
-                 .SetParam("fix_gamma", false)
-                 .SetParam("eps", eps)
-                 .SetParam("use_global_stats", use_global_stats)
-                 .SetInput("data", data)
-                 .CreateSymbol(name + "_bn1");
+  auto bn1 = BatchNormUnit(data, name + "_bn1", false);
 
   auto act1 = Activation(name + "_relu1", bn1, "relu");
 
-  auto conv1 = Operator("Convolution")
-                   .SetParam("num_filter", static_cast<int>(num_filter * 0.25))
-                   .SetParam("kernel", Shape(1, 1))
-                   .SetParam("stride", Shape(1, 1))
-                   .SetParam("pad", Shape(0, 0))
-                   .SetParam("no_bias", true)
-                   .SetParam("workspace", workspace)
-                   .SetInput("data", act1)
-                   .CreateSymbol(name + "_conv1");
+  auto conv1 = ConvolutionUnit(act1, name + "_conv1",
+                               static_cast<uint32_t>(num_filter * 0.25),
+                               Shape(1, 1), Shape(1, 1), Shape(0, 0));
 
-  auto bn2 = Operator("BatchNorm")
-                 .SetParam("fix_gamma", false)
-                 .SetParam("eps", eps)
-                 .SetParam("use_global_stats", use_global_stats)
-                 .SetInput("data", conv1)
-                 .CreateSymbol(name + "_bn2");
+  auto bn2 = BatchNormUnit(conv1, name + "_bn2", false);
 
-  auto act2 = Activation(name + "_relu2", bn1, "relu");
+  auto act2 = Activation(name + "_relu2", bn2, "relu");
 
-  auto conv2 = Operator("Convolution")
-                   .SetParam("num_filter", static_cast<int>(num_filter * 0.25))
-                   .SetParam("kernel", Shape(3, 3))
-                   .SetParam("stride", Shape(stride, stride))
-                   .SetParam("pad", Shape(1, 1))
-                   .SetParam("no_bias", true)
-                   .SetParam("workspace", workspace)
-                   .SetInput("data", act2)
-                   .CreateSymbol(name + "_conv2");
+  auto conv2 = ConvolutionUnit(act2, name + "_conv2",
+                               static_cast<uint32_t>(num_filter * 0.25),
+                               Shape(3, 3), Shape(stride, stride), Shape(1, 1));
 
-  auto bn3 = Operator("BatchNorm")
-                 .SetParam("fix_gamma", false)
-                 .SetParam("eps", eps)
-                 .SetParam("use_global_stats", use_global_stats)
-                 .SetInput("data", conv2)
-                 .CreateSymbol(name + "_bn3");
+  auto bn3 = BatchNormUnit(conv2, name + "_bn3", false);
 
   auto act3 = Activation(name + "_relu3", bn3, "relu");
 
-  auto conv3 = Operator("Convolution")
-                   .SetParam("num_filter", num_filter)
-                   .SetParam("kernel", Shape(1, 1))
-                   .SetParam("stride", Shape(1, 1))
-                   .SetParam("pad", Shape(0, 0))
-                   .SetParam("no_bias", true)
-                   .SetParam("workspace", workspace)
-                   .SetInput("data", act3)
-                   .CreateSymbol(name + "_conv3");
+  auto conv3 = ConvolutionUnit(act3, name + "_conv3", num_filter, Shape(1, 1),
+                               Shape(1, 1), Shape(0, 0));
 
   Symbol shortcut;
 
   if (dim_match) {
     shortcut = data;
   } else {
-    Operator("Convolution")
-        .SetParam("num_filter", num_filter)
-        .SetParam("kernel", Shape(1, 1))
-        .SetParam("stride", Shape(stride, stride))
-        .SetParam("no_bias", true)
-        .SetParam("workspace", workspace)
-        .SetInput("data", act1)
-        .CreateSymbol(name + "_sc");
+    shortcut = ConvolutionUnit(act1, name + "_sc", num_filter, Shape(1, 1),
+                               Shape(stride, stride), Shape(0, 0));
   }
 
-  auto sum = Operator("ElementWiseSum")
-                 .SetParam("num_args", 2)
-                 .SetInput("a", conv3)
-                 .SetInput("b", shortcut)
-                 .CreateSymbol(name + "_plus");
+  //  auto sum = Operator("ElementWiseSum")
+  //                 .SetParam("num_args", 2)
+  //                 .SetInput("a", conv3)
+  //                 .SetInput("b", shortcut)
+  //                 .CreateSymbol(name + "_plus");
+  Symbol sum = shortcut + conv3;
   return sum;
 }
 
@@ -120,41 +99,23 @@ mxnet::cpp::Symbol GetResnetHeadSymbol(
     const std::vector<uint32_t>& filter_list) {
   using namespace mxnet::cpp;
   // res1
-  auto data_bn = Operator("BatchNorm")
-                     .SetParam("fix_gamma", true)
-                     .SetParam("eps", eps)
-                     .SetParam("use_global_stats", use_global_stats)
-                     .SetInput("data", data)
-                     .CreateSymbol("bn_data");
+  auto data_bn = BatchNormUnit(data, "bn_data", true);
 
-  auto conv0 = Operator("Convolution")
-                   .SetParam("num_filter", 64)
-                   .SetParam("kernel", Shape(7, 7))
-                   .SetParam("stride", Shape(2, 2))
-                   .SetParam("pad", Shape(3, 3))
-                   .SetParam("no_bias", true)
-                   .SetParam("workspace", workspace)
-                   .SetInput("data", data_bn)
-                   .CreateSymbol("conv0");
+  auto conv0 = ConvolutionUnit(data_bn, "conv0", 64, Shape(7, 7), Shape(2, 2),
+                               Shape(3, 3));
 
-  auto bn0 = Operator("BatchNorm")
-                 .SetParam("fix_gamma", false)
-                 .SetParam("eps", eps)
-                 .SetParam("use_global_stats", use_global_stats)
-                 .SetInput("data", conv0)
-                 .CreateSymbol("bn0");
+  auto bn0 = BatchNormUnit(conv0, "bn0", false);
 
   auto relu0 = Activation("relu0", bn0, "relu");
 
   auto pool0 =
       Pooling("pool0", relu0, Shape(3, 3), PoolingPoolType::kMax, false, false,
               PoolingPoolingConvention::kValid, Shape(2, 2), Shape(1, 1));
-
   // res2
   auto unit = ResidualUnit(pool0, filter_list[0], 1, false, "stage1_unit1");
   for (uint32_t i = 2; i < units[0] + 1; ++i) {
     std::stringstream name;
-    name << "stage1_unit" << i << "s";
+    name << "stage1_unit" << i;
     unit = ResidualUnit(unit, filter_list[0], 1, true, name.str());
   }
 
@@ -162,7 +123,7 @@ mxnet::cpp::Symbol GetResnetHeadSymbol(
   unit = ResidualUnit(unit, filter_list[1], 2, false, "stage2_unit1");
   for (uint32_t i = 2; i < units[1] + 1; ++i) {
     std::stringstream name;
-    name << "stage2_unit" << i << "s";
+    name << "stage2_unit" << i;
     unit = ResidualUnit(unit, filter_list[1], 1, true, name.str());
   }
 
@@ -170,7 +131,7 @@ mxnet::cpp::Symbol GetResnetHeadSymbol(
   unit = ResidualUnit(unit, filter_list[2], 2, false, "stage3_unit1");
   for (uint32_t i = 2; i < units[2] + 1; ++i) {
     std::stringstream name;
-    name << "stage3_unit" << i << "s";
+    name << "stage3_unit" << i;
     unit = ResidualUnit(unit, filter_list[2], 1, true, name.str());
   }
 
@@ -185,15 +146,11 @@ mxnet::cpp::Symbol GetResnetTopSymbol(
   auto unit = ResidualUnit(data, filter_list[3], 2, false, "stage4_unit1");
   for (uint32_t i = 2; i < units[3] + 1; ++i) {
     std::stringstream name;
-    name << "stage4_unit" << i << "s";
+    name << "stage4_unit" << i;
     unit = ResidualUnit(unit, filter_list[3], 1, true, name.str());
   }
-  auto bn1 = Operator("BatchNorm")
-                 .SetParam("fix_gamma", false)
-                 .SetParam("eps", eps)
-                 .SetParam("use_global_stats", use_global_stats)
-                 .SetInput("data", unit)
-                 .CreateSymbol("bn1");
+  auto bn1 = BatchNormUnit(unit, "bn1", false);
+
   auto relu1 = Activation("relu1", bn1, "relu");
 
   auto pool1 =

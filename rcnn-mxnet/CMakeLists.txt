@@ -34,11 +34,11 @@ include_directories(${CUDA_INCLUDE_DIRS})
 
 set(requiredlibs "stdc++fs")
 list(APPEND requiredlibs "stdc++")
-list(APPEND requiredlibs "mxnet")
-list(APPEND requiredlibs "mkldnn")
+list(APPEND requiredlibs "mxnetd")
+list(APPEND requiredlibs "mkldnnd")
 
-set(SOURCES
-    train.cpp
+set(SOURCES_TRAIN
+    rcnn_train.cpp
     rcnn.h
     rcnn.cpp
     resnet.h
@@ -59,11 +59,41 @@ set(SOURCES
     params.cpp
     proposaltarget.h
     proposaltarget.cpp
+    imageutils.h
+    imageutils.cpp
     README.md
     get_model.sh
     )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} ${requiredlibs})
-target_link_libraries(${PROJECT_NAME} ${BLAS_LIBRARIES} ${OpenCV_LIBS})
+set(SOURCES_DEMO
+    rcnn_demo.cpp
+    params.h
+    params.cpp
+    imageutils.h
+    imageutils.cpp
+    resnet.h
+    resnet.cpp
+    rcnn.h
+    rcnn.cpp
+    bbox.h
+    bbox.cpp
+    coco.h
+    coco.cpp
+    imagedb.h
+    imagedb.cpp
+    )
+
+#add_executable(rcnn_train ${SOURCES_TRAIN})
+#target_link_libraries(rcnn_train ${requiredlibs})
+#target_link_libraries(rcnn_train ${BLAS_LIBRARIES} ${OpenCV_LIBS})
+
+add_executable(rcnn_demo ${SOURCES_DEMO})
+target_link_libraries(rcnn_demo ${requiredlibs})
+target_link_libraries(rcnn_demo ${BLAS_LIBRARIES} ${OpenCV_LIBS})
+
+#add_executable(load_eval load_eval_ex.cpp imageutils.cpp)
+#target_link_libraries(load_eval ${requiredlibs})
+#target_link_libraries(load_eval ${BLAS_LIBRARIES} ${OpenCV_LIBS})
+
+
 

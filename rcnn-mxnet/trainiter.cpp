@@ -1,4 +1,5 @@
 #include "trainiter.h"
+#include "imageutils.h"
 
 #include <Eigen/Dense>
 
@@ -53,6 +54,9 @@ bool TrainIter::Next() {
 
 void TrainIter::FillData() {
   raw_gt_boxes_data_.clear();
+  raw_im_data_.clear();
+  raw_im_info_data_.clear();
+
   auto ii = raw_im_data_.begin();
   auto if_i = raw_im_info_data_.begin();
   auto b_i = std::back_insert_iterator(raw_gt_boxes_data_);
@@ -60,12 +64,8 @@ void TrainIter::FillData() {
     auto image_desc =
         image_db_->GetImage(index, short_side_len_, long_side_len_);
     // Fill image
-    if (image_desc.image.isContinuous()) {
-      std::copy(reinterpret_cast<const float*>(image_desc.image.datastart),
-                reinterpret_cast<const float*>(image_desc.image.dataend), ii);
-    } else {
-      throw std::logic_error("OpenCV matrix is not continuous for single copy");
-    }
+    auto array = CVToMxnetFormat(image_desc.image);
+    raw_im_data_.insert(ii, array.begin(), array.end());
     std::advance(ii, one_image_size_);
     // Fill info
     *if_i++ = image_desc.width;

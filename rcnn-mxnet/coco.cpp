@@ -1,5 +1,7 @@
 #include "coco.h"
 
+#include "imageutils.h"
+
 #include <rapidjson/error/en.h>
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/reader.h>
@@ -10,6 +12,88 @@
 #include <string>
 
 namespace fs = std::experimental::filesystem;
+
+static std::vector<std::string> coco_classes{"__background__",
+                                             "person",
+                                             "bicycle",
+                                             "car",
+                                             "motorcycle",
+                                             "airplane",
+                                             "bus",
+                                             "train",
+                                             "truck",
+                                             "boat",
+                                             "traffic light",
+                                             "fire hydrant",
+                                             "stop sign",
+                                             "parking meter",
+                                             "bench",
+                                             "bird",
+                                             "cat",
+                                             "dog",
+                                             "horse",
+                                             "sheep",
+                                             "cow",
+                                             "elephant",
+                                             "bear",
+                                             "zebra",
+                                             "giraffe",
+                                             "backpack",
+                                             "umbrella",
+                                             "handbag",
+                                             "tie",
+                                             "suitcase",
+                                             "frisbee",
+                                             "skis",
+                                             "snowboard",
+                                             "sports ball",
+                                             "kite",
+                                             "baseball bat",
+                                             "baseball glove",
+                                             "skateboard",
+                                             "surfboard",
+                                             "tennis racket",
+                                             "bottle",
+                                             "wine glass",
+                                             "cup",
+                                             "fork",
+                                             "knife",
+                                             "spoon",
+                                             "bowl",
+                                             "banana",
+                                             "apple",
+                                             "sandwich",
+                                             "orange",
+                                             "broccoli",
+                                             "carrot",
+                                             "hot dog",
+                                             "pizza",
+                                             "donut",
+                                             "cake",
+                                             "chair",
+                                             "couch",
+                                             "potted plant",
+                                             "bed",
+                                             "dining table",
+                                             "toilet",
+                                             "tv",
+                                             "laptop",
+                                             "mouse",
+                                             "remote",
+                                             "keyboard",
+                                             "cell phone",
+                                             "microwave",
+                                             "oven",
+                                             "toaster",
+                                             "sink",
+                                             "refrigerator",
+                                             "book",
+                                             "clock",
+                                             "vase",
+                                             "scissors",
+                                             "teddy bear",
+                                             "hair drier",
+                                             "toothbrush"};
 
 Coco::Coco(const std::string& path) {
   train_images_folder_ = fs::path(path) / "train2017";
@@ -197,19 +281,8 @@ ImageDesc Coco::GetImage(uint32_t index,
     std::advance(i, index);
     fs::path file_path(train_images_folder_);
     file_path /= i->second.name;
-    auto img = cv::imread(file_path.string());
+    auto [img, scale] = LoadImage(file_path.string(), short_side, long_side);
     if (!img.empty()) {
-      img.convertTo(img, CV_32FC3);
-      // resize
-      auto im_min_max = std::minmax(img.rows, img.cols);
-      auto scale =
-          static_cast<float>(short_side) / static_cast<float>(im_min_max.first);
-      // prevent bigger axis from being more than max_size:
-      if (std::round(scale * im_min_max.second) > long_side)
-        scale = static_cast<float>(long_side) /
-                static_cast<float>(im_min_max.second);
-      cv::resize(img, img, cv::Size(), static_cast<double>(scale),
-                 static_cast<double>(scale), cv::INTER_LINEAR);
       ImageDesc result;
       result.image = img;
       result.scale = scale;
@@ -255,4 +328,8 @@ cv::Mat Coco::DrawAnnotedImage(uint32_t id) const {
   } else {
     throw std::runtime_error(file_path.string() + " file can't be opened");
   }
+}
+
+const std::vector<std::string> Coco::GetClasses() {
+  return coco_classes;
 }
