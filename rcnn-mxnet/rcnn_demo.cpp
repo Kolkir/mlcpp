@@ -17,7 +17,6 @@ static mxnet::cpp::Context global_ctx(mxnet::cpp::kCPU, 0);
 
 const cv::String keys =
     "{help h usage ? |      | print this message   }"
-    "{@coco_path     |<none>| path to coco dataset }"
     "{@params        |<none>| path to trained parameters }"
     "{@image         |<none>| path to image }";
 
@@ -31,9 +30,8 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  std::string coco_path = parser.get<cv::String>(0);
-  std::string params_path = parser.get<cv::String>(1);
-  std::string image_path = parser.get<cv::String>(2);
+  std::string params_path = parser.get<cv::String>(0);
+  std::string image_path = parser.get<cv::String>(1);
 
   // Chech parsing errors
   if (!parser.check()) {
@@ -43,11 +41,9 @@ int main(int argc, char** argv) {
   }
 
   try {
-    coco_path = fs::canonical(fs::absolute(coco_path));
     params_path = fs::canonical(fs::absolute(params_path));
     image_path = fs::canonical(fs::absolute(image_path));
     if (fs::exists(image_path)) {
-      std::cout << "Path to the data set : " << coco_path << std::endl;
       std::cout << "Path to the net parameters : " << params_path << std::endl;
       std::cout << "Path to the image : " << image_path << std::endl;
 
