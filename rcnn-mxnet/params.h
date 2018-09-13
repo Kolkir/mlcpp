@@ -26,7 +26,7 @@ class Params {
   int rcnn_num_classes = 81;  // coco classes
   int rcnn_feat_stride = 16;
   std::vector<float> rcnn_pooled_size{14, 14};
-  int rcnn_batch_size = 1;
+  uint32_t rcnn_batch_size = 1;
   int rcnn_batch_rois = 128;
   float rcnn_fg_fraction = 0.25f;
   float rcnn_fg_overlap = 0.5f;

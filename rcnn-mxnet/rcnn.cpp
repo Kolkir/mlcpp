@@ -132,7 +132,7 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
   Symbol bbox_weight;
   if (train) {
     // rcnn roi proposal target
-    auto group = Operator("proposal_target")
+    auto group = Operator("_contrib_proposal_target")
                      .SetParam("num_classes", params.rcnn_num_classes)
                      .SetParam("batch_images", params.rcnn_batch_size)
                      .SetParam("batch_rois", params.rcnn_batch_rois)
@@ -144,7 +144,6 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
                      .SetInput("rois", rois)
                      .SetInput("gt_boxes", gt_boxes)
                      .CreateSymbol();
-    // TODO: Fix shape infer
     rois = group[0];
     label = group[1];
     bbox_target = group[2];

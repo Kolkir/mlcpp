@@ -5,7 +5,7 @@ set(LIBRARIES_DIR "" CACHE PATH "path to mxnet install dir")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(CMAKE_CXX_FLAGS "-std=c++17 -msse3 -fopenmp -Wall -Wextra -Wno-unused-parameter -Wno-int-in-bool-context -Wno-unknown-pragmas")
+set(CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -pthread -Wall -Wextra -Wno-int-in-bool-context -Wno-unused-parameter -Wno-unknown-pragmas -Wno-sign-compare -msse2 -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
@@ -37,59 +37,48 @@ list(APPEND requiredlibs "stdc++")
 list(APPEND requiredlibs "mxnetd")
 list(APPEND requiredlibs "mkldnnd")
 
-set(SOURCES_TRAIN
-    rcnn_train.cpp
-    rcnn.h
-    rcnn.cpp
+set(SOURCES_COMMON
+    params.h
+    params.cpp
+    imageutils.h
+    imageutils.cpp
     resnet.h
     resnet.cpp
+    rcnn.h
+    rcnn.cpp
+    bbox.h
+    bbox.cpp
     coco.h
     coco.cpp
+    imagedb.h
+    imagedb.cpp)
+
+
+set(SOURCES_TRAIN
+    rcnn_train.cpp   
     anchorgenerator.h
     anchorgenerator.cpp
     anchorsampler.h
     anchorsampler.cpp
     trainiter.h
     trainiter.cpp
-    bbox.h
-    bbox.cpp
-    imagedb.h
-    imagedb.cpp
-    params.h
-    params.cpp
-    proposaltarget.h
-    proposaltarget.cpp
-    imageutils.h
-    imageutils.cpp
     README.md
     get_model.sh
+    proposaltarget_op.h
+    proposaltarget_op.cpp
     )
 
 set(SOURCES_DEMO
-    rcnn_demo.cpp
-    params.h
-    params.cpp
-    imageutils.h
-    imageutils.cpp
-    resnet.h
-    resnet.cpp
-    rcnn.h
-    rcnn.cpp
-    bbox.h
-    bbox.cpp
-    coco.h
-    coco.cpp
-    imagedb.h
-    imagedb.cpp
+    rcnn_demo.cpp    
     )
 
-#add_executable(rcnn_train ${SOURCES_TRAIN})
-#target_link_libraries(rcnn_train ${requiredlibs})
-#target_link_libraries(rcnn_train ${BLAS_LIBRARIES} ${OpenCV_LIBS})
+add_executable(rcnn_train ${SOURCES_TRAIN} ${SOURCES_COMMON})
+target_link_libraries(rcnn_train ${requiredlibs})
+target_link_libraries(rcnn_train ${BLAS_LIBRARIES} ${OpenCV_LIBS})
 
-add_executable(rcnn_demo ${SOURCES_DEMO})
-target_link_libraries(rcnn_demo ${requiredlibs})
-target_link_libraries(rcnn_demo ${BLAS_LIBRARIES} ${OpenCV_LIBS})
+#add_executable(rcnn_demo ${SOURCES_DEMO} ${SOURCES_COMMON})
+#target_link_libraries(rcnn_demo ${requiredlibs})
+#target_link_libraries(rcnn_demo ${BLAS_LIBRARIES} ${OpenCV_LIBS})
 
 #add_executable(load_eval load_eval_ex.cpp imageutils.cpp)
 #target_link_libraries(load_eval ${requiredlibs})

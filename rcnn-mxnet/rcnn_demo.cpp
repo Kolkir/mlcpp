@@ -117,12 +117,6 @@ int main(int argc, char** argv) {
       delete executor;
 
       //--------- Decode result
-      //      for (size_t i = 0; i < rois.GetShape()[0]; ++i) {
-      //        for (size_t j = 0; j < rois.GetShape()[1]; ++j)
-      //          std::cout << " " << rois.At(i, j);
-      //        std::cout << std::endl;
-      //      }
-
       auto det =
           DecodePredictions(NDArray2ToEigen(rois), NDArray3ToEigen(scores),
                             NDArray3ToEigen(bbox_deltas),

@@ -59,7 +59,7 @@ void TrainIter::FillData() {
 
   auto ii = raw_im_data_.begin();
   auto if_i = raw_im_info_data_.begin();
-  auto b_i = std::back_insert_iterator(raw_gt_boxes_data_);
+  auto b_i = std::back_insert_iterator<std::vector<float>>(raw_gt_boxes_data_);
   for (auto index : batch_indices_) {
     auto image_desc =
         image_db_->GetImage(index, short_side_len_, long_side_len_);
@@ -83,6 +83,7 @@ void TrainIter::FillData() {
   im_data_.SyncCopyFromCPU(raw_im_data_.data(), raw_im_data_.size());
   im_info_data_.SyncCopyFromCPU(raw_im_info_data_.data(),
                                 raw_im_info_data_.size());
+  // TODO - dim should be 5
   gt_boxes_data_ = mxnet::cpp::NDArray(
       mxnet::cpp::Shape(static_cast<mx_uint>(raw_gt_boxes_data_.size() / 4), 4),
       im_data_.GetContext(), false);
@@ -131,7 +132,8 @@ void TrainIter::FillLabels() {
     auto boxes = all_boxes.block(box_index, 0, boxes_count, 4);
     box_index += boxes_count;
 
-    auto [b_label, b_bbox_target, b_bbox_weight] =
+    Eigen::MatrixXf b_label, b_bbox_target, b_bbox_weight;
+    std::tie(b_label, b_bbox_target, b_bbox_weight) =
         anchor_sampler_.Assign(anchors, boxes, im_width, im_height);
 
     label_map.block(i * anchors.rows(), 0, anchors.rows(), 1) = b_label;

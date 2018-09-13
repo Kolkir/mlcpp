@@ -1,6 +1,70 @@
-#include "bbox.h"
+﻿#include "bbox.h"
 
+#include <random>
 #include <type_traits>
+#include <unordered_set>
+
+namespace {
+struct ArgmaxVisitor {
+  ArgmaxVisitor(Eigen::Index rows, Eigen::Index cols)
+      : max_rows(cols, 1), max_cols(rows, 1) {}
+  void init(const bool& value, Eigen::Index i, Eigen::Index j) {
+    operator()(value, i, j);
+  }
+  void operator()(const bool& value, Eigen::Index i, Eigen::Index j) {
+    if (value) {
+      max_cols(i, 0) = j;
+      max_rows(j, 0) = i;
+    }
+  }
+  Indices max_rows;
+  Indices max_cols;
+};
+
+struct WhereVisitor {
+  WhereVisitor(bool row = true) : is_row_(row) {}
+
+  void init(const bool& value, Eigen::Index i, Eigen::Index j) {
+    operator()(value, i, j);
+  }
+  void operator()(const bool& value, Eigen::Index i, Eigen::Index j) {
+    if (value && data) {
+      data->push_back(is_row_ ? i : j);
+    }
+  }
+  bool is_row_{true};
+  std::vector<Eigen::Index>* data{nullptr};
+};
+}  // namespace
+
+std::pair<Indices, Indices> argmax(const Eigen::MatrixXf& m) {
+  auto max_pos =
+      (m.array() == m.rowwise().maxCoeff().array().replicate(1, m.cols()))
+          .matrix();
+  ArgmaxVisitor visitor(m.rows(), m.cols());
+  max_pos.visit(visitor);
+  return {visitor.max_rows, visitor.max_cols};
+}
+
+Eigen::ArrayXf random_choice(Eigen::Index start,
+                             Eigen::Index finish,
+                             Eigen::Index num) {
+  assert(finish > start);
+  std::default_random_engine re;
+  std::mt19937 rg(re());
+  std::uniform_int_distribution<Eigen::Index> dist(start, finish);
+  Eigen::ArrayXf result(finish - start + 1);
+  std::unordered_set<Eigen::Index> set;
+  Eigen::Index i = 0;
+  while (set.size() < static_cast<size_t>(num)) {
+    auto index = dist(re);
+    if (set.find(index) == set.end()) {
+      result(i++) = index;
+      set.insert(index);
+    }
+  }
+  return result;
+}
 
 Eigen::MatrixXf bbox_overlaps(const Eigen::MatrixXf& boxes,
                               const Eigen::MatrixXf& query_boxes) {
@@ -39,7 +103,8 @@ Eigen::MatrixXf bbox_overlaps(const Eigen::MatrixXf& boxes,
 }
 
 Eigen::MatrixXf bbox_transform(const Eigen::MatrixXf& ex_rois,
-                               const Eigen::MatrixXf& gt_rois) {
+                               const Eigen::MatrixXf& gt_rois,
+                               const std::vector<float>& box_stds) {
   assert(ex_rois.rows() == gt_rois.rows());
 
   auto ex_widths = (ex_rois.col(2) - ex_rois.col(0)).array() + 1.0;
@@ -52,12 +117,14 @@ Eigen::MatrixXf bbox_transform(const Eigen::MatrixXf& ex_rois,
   auto gt_ctr_x = gt_rois.col(0).array() + 0.5f * (gt_widths - 1);
   auto gt_ctr_y = gt_rois.col(1).array() + 0.5f * (gt_heights - 1);
 
-  auto targets_dx = (gt_ctr_x - ex_ctr_x) / (ex_widths + 1e-14);
-  auto targets_dy = (gt_ctr_y - ex_ctr_y) / (ex_heights + 1e-14);
-  auto targets_dw = Eigen::log(gt_widths / ex_widths);
-  auto targets_dh = Eigen::log(gt_heights / ex_heights);
+  auto targets_dx =
+      ((gt_ctr_x - ex_ctr_x) / (ex_widths + 1e-14)).array() / box_stds[0];
+  auto targets_dy =
+      ((gt_ctr_y - ex_ctr_y) / (ex_heights + 1e-14)).array() / box_stds[1];
+  auto targets_dw = Eigen::log(gt_widths / ex_widths).array() / box_stds[2];
+  auto targets_dh = Eigen::log(gt_heights / ex_heights).array() / box_stds[3];
 
-  Eigen::MatrixXf targets;
+  Eigen::MatrixXf targets(ex_rois.rows(), ex_rois.cols());
   targets << targets_dx, targets_dy, targets_dw, targets_dh;
 
   return targets;
@@ -156,11 +223,12 @@ void nms(std::vector<Detection>& predictions, float nms_thresh) {
 }
 
 template <typename T>
-auto SliceColumns(T& val, Eigen::Index start, Eigen::Index stride) {
+Eigen::MatrixXf SliceColumns(T& val, Eigen::Index start, Eigen::Index stride) {
   auto cols = static_cast<Eigen::Index>(
       std::ceil(val.cols() / static_cast<double>(stride)));
-  using Maptype = std::conditional_t<std::is_const_v<T>, const Eigen::MatrixXf,
-                                     Eigen::MatrixXf>;
+  using Maptype =
+      typename std::conditional<std::is_const<T>::value, const Eigen::MatrixXf,
+                                Eigen::MatrixXf>::type;
 
   return Eigen::Map<Maptype, 0, Eigen::OuterStride<>>(
       val.rightCols(val.cols() - start).data(), val.rows(), cols,
@@ -248,4 +316,129 @@ Eigen::MatrixXf NDArray3ToEigen(const mxnet::cpp::NDArray& value) {
                                      Eigen::RowMajor>>(
           value.GetData(), value.GetShape()[1], value.GetShape()[2]);
   return result;
+}
+
+template <class T, class Rnd>
+T random_choice(const T& m, size_t num, Rnd& rnd) {
+  std::uniform_int_distribution<size_t> dist(0, m.size() - 1);
+  T result;
+  result.reserve(num);
+  std::unordered_set<size_t> set;
+
+  while (set.size() < num) {
+    auto index = dist(rnd);
+    if (set.find(index) == set.end()) {
+      result.push_back(m[index]);
+      set.insert(index);
+    }
+  }
+  return result;
+}
+
+std::tuple<Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf>
+SampleRois(const Eigen::MatrixXf& rois,
+           const Eigen::MatrixXf& gt_boxes,
+           int num_classes,
+           int rois_per_image,
+           int fg_rois_per_image,
+           float fg_overlap,
+           const std::vector<float>& box_stds) {
+  auto overlaps = bbox_overlaps(rois, gt_boxes);
+  auto gt_assignment = argmax(overlaps).second;
+
+  Eigen::MatrixXf labels(gt_assignment.rows(), 1);
+  for (Eigen::Index i = 0; i < gt_assignment.size(); ++i) {
+    Eigen::Index j = gt_assignment(i);
+    labels(j, 0) = gt_boxes(j, 4);
+  }
+  Eigen::MatrixXf max_overlaps = overlaps.rowwise().maxCoeff();
+
+  std::vector<Eigen::Index> fg_indexes;
+  std::vector<Eigen::Index> bg_indexes;
+  WhereVisitor indexes_visitor;
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+
+  // select foreground RoI with FG_THRESH overlap
+  auto fg_indexes_expr = (max_overlaps.array() >= fg_overlap);
+  indexes_visitor.data = &fg_indexes;
+  fg_indexes_expr.visit(indexes_visitor);
+  // guard against the case when an image has fewer than fg_rois_per_image
+  // foreground RoIs
+  auto fg_indexes_count = fg_indexes_expr.count();
+  auto fg_rois_this_image =
+      std::min(static_cast<Eigen::Index>(fg_rois_per_image), fg_indexes_count);
+  // sample foreground regions without replacement
+  if (fg_indexes_count > fg_rois_this_image) {
+    fg_indexes =
+        random_choice(fg_indexes, static_cast<size_t>(fg_rois_this_image), mt);
+  }
+
+  // select background RoIs as those within [0, FG_THRESH)
+  auto bg_indexes_expr = (max_overlaps.array() < fg_overlap);
+  indexes_visitor.data = &bg_indexes;
+  bg_indexes_expr.visit(indexes_visitor);
+  // compute number of background RoIs to take from this image (guarding
+  // against there being fewer than desired)
+  auto bg_rois_this_image = rois_per_image - fg_rois_this_image;
+  auto bg_indexes_count = bg_indexes_expr.count();
+  bg_rois_this_image = std::min(bg_rois_this_image, bg_indexes_count);
+  // sample bg rois without replacement
+  if (bg_indexes_count > bg_rois_this_image) {
+    bg_indexes =
+        random_choice(bg_indexes, static_cast<size_t>(bg_rois_this_image), mt);
+  }
+
+  // indexes selected
+  std::vector<Eigen::Index> keep_indexes;
+  keep_indexes.insert(keep_indexes.end(), fg_indexes.begin(), fg_indexes.end());
+  keep_indexes.insert(keep_indexes.end(), bg_indexes.begin(), bg_indexes.end());
+
+  // pad more bg rois to ensure a fixed minibatch size
+  while (keep_indexes.size() < static_cast<size_t>(rois_per_image)) {
+    auto gap = std::min(bg_indexes.size(), static_cast<size_t>(rois_per_image) -
+                                               keep_indexes.size());
+    auto gap_indexes = random_choice(bg_indexes, gap, mt);
+    keep_indexes.insert(keep_indexes.end(), gap_indexes.begin(),
+                        gap_indexes.end());
+  }
+
+  // sample rois and labels
+  assert(static_cast<size_t>(rois_per_image) == keep_indexes.size());
+  Eigen::MatrixXf b_rois(rois_per_image, rois.cols());
+  Eigen::MatrixXf b_labels(rois_per_image, 1);
+  int j = 0;
+  for (auto i : keep_indexes) {
+    b_rois.row(j) = rois.row(i);
+    // set labels of bg rois to be 0
+    if (j >= fg_rois_this_image)
+      b_labels(j, 0) = 0;
+    else
+      b_labels(j, 0) = labels(i, 0);
+    ++j;
+  }
+
+  // load or compute bbox_target
+  Eigen::MatrixXf boxes(rois_per_image, 4);
+  int b = 0;
+  for (auto i : keep_indexes) {
+    Eigen::Index j = gt_assignment(i);
+    boxes.row(b) = gt_boxes.row(j).leftCols(4);
+    ++b;
+  }
+
+  auto targets = bbox_transform(b_rois, boxes, box_stds);
+
+  Eigen::MatrixXf bbox_targets =
+      Eigen::MatrixXf::Zero(rois_per_image, 4 * num_classes);
+  Eigen::MatrixXf bbox_weights =
+      Eigen::MatrixXf::Zero(rois_per_image, 4 * num_classes);
+  for (Eigen::Index i = 0; i < fg_rois_this_image; ++i) {
+    auto cls_ind = static_cast<int>(b_labels(i));
+    bbox_targets.row(i).block(0, cls_ind * 4, 1, 4).array() = targets.row(i);
+    bbox_weights.row(i).block(0, cls_ind * 4, 1, 4).array() = 1;
+  }
+
+  return std::make_tuple(b_rois, b_labels, bbox_targets, bbox_weights);
 }

@@ -6,6 +6,14 @@
 #include <mxnet-cpp/MxNetCpp.h>
 #include <Eigen/Dense>
 
+using Indices = Eigen::Array<Eigen::Index, Eigen::Dynamic, 1>;
+
+std::pair<Indices, Indices> argmax(const Eigen::MatrixXf& m);
+
+Eigen::ArrayXf random_choice(Eigen::Index start,
+                             Eigen::Index finish,
+                             Eigen::Index num);
+
 /*
  * boxes: n * 4 bounding boxes
  * query_boxes: k * 4 bounding boxes
@@ -21,7 +29,9 @@ Eigen::MatrixXf bbox_overlaps(const Eigen::MatrixXf& boxes,
  * return: [N, 4]
  */
 Eigen::MatrixXf bbox_transform(const Eigen::MatrixXf& ex_rois,
-                               const Eigen::MatrixXf& gt_rois);
+                               const Eigen::MatrixXf& gt_rois,
+                               const std::vector<float>& box_stds = {1, 1, 2,
+                                                                     2});
 
 /*
  * Transform the set of class-agnostic boxes into class-specific boxes
@@ -69,5 +79,25 @@ std::vector<Detection> DecodePredictions(const Eigen::MatrixXf& rois,
  * <= thresh rule out overlap >= thresh
  */
 void nms(std::vector<Detection>& predictions, float nms_thresh);
+
+/*
+ * Generate random sample of ROIs comprising foreground and background examples
+ * rois: [n, 4] (x1, y1, x2, y2)
+ * gt_boxes: [n, 5] (x1, y1, x2, y2, cls)
+ * num_classes: number of classes
+ * rois_per_image: total roi number
+ * fg_rois_per_image: foreground roi number
+ * fg_overlap: overlap threshold for fg rois
+ * box_stds: std var of bbox reg
+ * return: (labels, rois, bbox_targets, bbox_weights)
+ */
+std::tuple<Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf>
+SampleRois(const Eigen::MatrixXf& rois,
+           const Eigen::MatrixXf& gt_boxes,
+           int num_classes,
+           int rois_per_image,
+           int fg_rois_per_image,
+           float fg_overlap,
+           const std::vector<float>& box_stds);
 
 #endif  // BBOX_H

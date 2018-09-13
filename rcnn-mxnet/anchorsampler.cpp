@@ -2,57 +2,6 @@
 #include "bbox.h"
 
 #include <iostream>
-#include <random>
-#include <unordered_set>
-
-namespace {
-Eigen::ArrayXf random_choice(Eigen::Index start,
-                             Eigen::Index finish,
-                             Eigen::Index num) {
-  assert(finish > start);
-  std::default_random_engine re;
-  std::mt19937 rg(re());
-  std::uniform_int_distribution<Eigen::Index> dist(start, finish);
-  Eigen::ArrayXf result(finish - start + 1);
-  std::unordered_set<Eigen::Index> set;
-  Eigen::Index i = 0;
-  while (set.size() < static_cast<size_t>(num)) {
-    auto index = dist(re);
-    if (set.find(index) == set.end()) {
-      result(i++) = index;
-      set.insert(index);
-    }
-  }
-  return result;
-}
-
-using Indices = Eigen::Array<Eigen::Index, Eigen::Dynamic, 1>;
-
-struct ArgmaxVisitor {
-  ArgmaxVisitor(Eigen::Index rows, Eigen::Index cols)
-      : max_rows(cols, 1), max_cols(rows, 1) {}
-  void init(const bool& value, Eigen::Index i, Eigen::Index j) {
-    operator()(value, i, j);
-  }
-  void operator()(const bool& value, Eigen::Index i, Eigen::Index j) {
-    if (value) {
-      max_cols(i, 0) = j;
-      max_rows(j, 0) = i;
-    }
-  }
-  Indices max_rows;
-  Indices max_cols;
-};
-
-std::pair<Indices, Indices> argmax(const Eigen::MatrixXf& m) {
-  auto max_pos =
-      (m.array() == m.rowwise().maxCoeff().array().replicate(1, m.cols()))
-          .matrix();
-  ArgmaxVisitor visitor(m.rows(), m.cols());
-  max_pos.visit(visitor);
-  return {visitor.max_rows, visitor.max_cols};
-}
-}  // namespace
 
 AnchorSampler::AnchorSampler(const Params& params)
     : allowed_border_(params.rpn_allowed_border),

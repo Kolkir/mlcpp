@@ -5,7 +5,8 @@
 
 namespace {
 
-auto ltwh_to_whcxcy(const Eigen::Array4f& anchor) {
+std::tuple<float, float, float, float> ltwh_to_whcxcy(
+    const Eigen::Array4f& anchor) {
   auto w = anchor[2] - anchor[0] + 1;
   auto h = anchor[3] - anchor[1] + 1;
   auto cx = anchor[0] + 0.5f * (w - 1);
@@ -13,10 +14,10 @@ auto ltwh_to_whcxcy(const Eigen::Array4f& anchor) {
   return std::make_tuple(w, h, cx, cy);
 }
 
-auto whcxcy_to_anchors(const Eigen::ArrayXf& w,
-                       const Eigen::ArrayXf& h,
-                       float cx,
-                       float cy) {
+Eigen::MatrixX4f whcxcy_to_anchors(const Eigen::ArrayXf& w,
+                                   const Eigen::ArrayXf& h,
+                                   float cx,
+                                   float cy) {
   auto nrows = w.size();
   Eigen::MatrixX4f result(nrows, 4);
   result.col(0) = (cx - 0.5f * (w - 1));  // lt - x
@@ -26,7 +27,8 @@ auto whcxcy_to_anchors(const Eigen::ArrayXf& w,
   return result;
 }
 
-auto meshgrid(const Eigen::ArrayXf& x, const Eigen::ArrayXf& y) {
+std::tuple<Eigen::MatrixXf, Eigen::MatrixXf> meshgrid(const Eigen::ArrayXf& x,
+                                                      const Eigen::ArrayXf& y) {
   auto nx = x.size();
   auto ny = y.size();
   Eigen::MatrixXf X(ny, nx);
@@ -52,7 +54,8 @@ AnchorGenerator::AnchorGenerator(const Params& params)
   Eigen::Array4f base_anchor{1, 1, stride_, stride_};
   base_anchor -= Eigen::Array4f::Ones();
   // enumerate ratios
-  auto [w, h, cx, cy] = ltwh_to_whcxcy(base_anchor);
+  float w{0}, h{0}, cx{0}, cy{0};
+  std::tie(w, h, cx, cy) = ltwh_to_whcxcy(base_anchor);
   auto size = w * h;
 
   auto size_ratios = Eigen::ArrayXf::Constant(ratios_.size(), size) / ratios_;
@@ -63,7 +66,8 @@ AnchorGenerator::AnchorGenerator(const Params& params)
   // enumerate scales
   Eigen::Index k = 0;
   for (Eigen::Index i = 0; i < anchors.rows(); ++i) {
-    auto [rw, rh, rcx, rcy] = ltwh_to_whcxcy(anchors.row(i).array());
+    float rw{0}, rh{0}, rcx{0}, rcy{0};
+    std::tie(rw, rh, rcx, rcy) = ltwh_to_whcxcy(anchors.row(i).array());
     Eigen::ArrayXf rws = rw * scales_;
     Eigen::ArrayXf rhs = rh * scales_;
     auto anchors = whcxcy_to_anchors(rws, rhs, rcx, rcy);
@@ -78,7 +82,8 @@ Eigen::MatrixXf AnchorGenerator::Generate(uint32_t width,
   Eigen::ArrayXf shift_x = Eigen::ArrayXf::LinSpaced(width, 0, width) * stride_;
   Eigen::ArrayXf shift_y =
       Eigen::ArrayXf::LinSpaced(height, 0, height) * stride_;
-  auto [shift_X, shift_Y] = meshgrid(shift_x, shift_y);
+  Eigen::MatrixXf shift_X, shift_Y;
+  std::tie(shift_X, shift_Y) = meshgrid(shift_x, shift_y);
   Eigen::Map<Eigen::RowVectorXf> flat_x(shift_X.data(), shift_X.size());
   Eigen::Map<Eigen::RowVectorXf> flat_y(shift_Y.data(), shift_Y.size());
   Eigen::MatrixXf shifts(4, flat_x.size());

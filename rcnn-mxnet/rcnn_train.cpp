@@ -12,9 +12,8 @@
 
 namespace fs = std::experimental::filesystem;
 
-/*The global context, change them if necessary*/
-static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
-// static Context global_ctx(mxnet::cpp::kCPU,0);
+// static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
+static mxnet::cpp::Context global_ctx(mxnet::cpp::kCPU, 0);
 
 const cv::String keys =
     "{help h usage ? |      | print this message   }"
@@ -53,53 +52,44 @@ int main(int argc, char** argv) {
       // Coco coco(coco_path);
       // coco.LoadTrainData();
       Params params;
-      auto net = GetRCNNSymbol(params, false);
+      auto net = GetRCNNSymbol(params, true);
 
-      // std::map<std::string, mxnet::cpp::NDArray> args_map;
-      // std::map<std::string, mxnet::cpp::NDArray> aux_map;
+      std::map<std::string, mxnet::cpp::NDArray> args_map;
+      std::map<std::string, mxnet::cpp::NDArray> aux_map;
       // std::tie(args_map, aux_map) = LoadNetParams(global_ctx, params_path);
 
-      //----------- Load data
-      auto [img, scale] =
-          LoadImage(image_path, params.img_short_side, params.img_long_side);
-      if (img.empty()) {
-        std::cout << "Failed to load image" << std::endl;
-        return 1;
-      }
-      mxnet::cpp::NDArray data(
-          mxnet::cpp::Shape(1, 3, static_cast<mxnet::cpp::index_t>(img.rows),
-                            static_cast<mxnet::cpp::index_t>(img.cols)),
-          global_ctx, false);
-      auto array = CVToMxnetFormat(img);
-      data.SyncCopyFromCPU(array.data(), array.size());
+      // ---------- Test parametes & Check Shapes - shouldn't fail
+      std::map<std::string, std::vector<mx_uint>> arg_shapes;
+      arg_shapes["data"] = {params.rcnn_batch_size, 3, params.img_long_side,
+                            params.img_long_side};
 
-      //      mxnet::cpp::NDArray im_info(mxnet::cpp::Shape(1, 3), global_ctx,
-      //      false); std::vector<float> raw_im_info =
-      //      {static_cast<float>(img.rows),
-      //                                        static_cast<float>(img.cols),
-      //                                        scale};
-      //      im_info.SyncCopyFromCPU(raw_im_info.data(), raw_im_info.size());
-      //      mxnet::cpp::NDArray::WaitAll();
+      auto feat_sym = net.GetInternals()["rpn_cls_score_output"];
 
-      // args_map["data"] = data;
-      // args_map["im_info"] = im_info;
+      std::vector<std::vector<mx_uint>> in_shape;
+      std::vector<std::vector<mx_uint>> aux_shape;
+      std::vector<std::vector<mx_uint>> out_shape;
+      feat_sym.InferShape(arg_shapes, &in_shape, &aux_shape, &out_shape);
+      mx_uint feat_height = out_shape.at(0).at(2);
+      mx_uint feat_width = out_shape.at(0).at(3);
+      mx_uint rpn_num_anchors = static_cast<mx_uint>(
+          params.rpn_anchor_scales.size() * params.rpn_anchor_ratios.size());
 
-      // ---------- Sync parametes
-      std::map<std::string, mxnet::cpp::NDArray> actual_args_map;
-      actual_args_map["data"] = data;
-      net.InferArgsMap(global_ctx, &actual_args_map, actual_args_map);
-
-      //      std::map<std::string, mxnet::cpp::NDArray> actual_aux_map;
+      arg_shapes["im_info"] = {params.rcnn_batch_size, 3};
+      arg_shapes["gt_boxes"] = {params.rcnn_batch_size, 100, 5};
+      arg_shapes["label"] = {params.rcnn_batch_size, 1,
+                             rpn_num_anchors * feat_height, feat_width};
+      arg_shapes["bbox_target"] = {params.rcnn_batch_size, 4 * rpn_num_anchors,
+                                   feat_height, feat_width};
+      arg_shapes["bbox_weight"] = {params.rcnn_batch_size, 4 * rpn_num_anchors,
+                                   feat_height, feat_width};
 
       //      std::vector<std::string> args = net.ListArguments();
       //      std::vector<std::string> outs = net.ListOutputs();
       //      std::vector<std::string> auxs = net.ListAuxiliaryStates();
-      //      std::map<std::string, std::vector<mx_uint>> arg_shapes;
       //      for (const auto& arg_name : args) {
       //        auto iter = args_map.find(arg_name);
       //        if (iter != args_map.end()) {
       //          arg_shapes[arg_name] = iter->second.GetShape();
-      //          actual_args_map[arg_name] = iter->second;
       //        } else {
       //          std::cout << "Missed argument : " << arg_name << std::endl;
       //        }
@@ -108,31 +98,40 @@ int main(int argc, char** argv) {
       //      for (const auto& arg_name : auxs) {
       //        auto iter = aux_map.find(arg_name);
       //        if (iter != aux_map.end()) {
-      //          actual_aux_map[arg_name] = iter->second;
       //        } else {
       //          std::cout << "Missed auxiliary state : " << arg_name <<
       //          std::endl;
       //        }
       //      }
+      in_shape.clear();
+      aux_shape.clear();
+      out_shape.clear();
+      net.InferShape(arg_shapes, &in_shape, &aux_shape, &out_shape);
 
-      //      // ---------- Check Shapes - shouldn't fail
-      //      std::vector<std::vector<mx_uint>> in_shape;
-      //      std::vector<std::vector<mx_uint>> aux_shape;
-      //      std::vector<std::vector<mx_uint>> out_shape;
-      //      net.InferShape(arg_shapes, &in_shape, &aux_shape, &out_shape);
+      //----------- Initialize binding arrays
+
+      // train inputs
+      args_map["data"] = mxnet::cpp::NDArray(
+          mxnet::cpp::Shape(arg_shapes["data"]), global_ctx, false);
+      args_map["im_info"] = mxnet::cpp::NDArray(
+          mxnet::cpp::Shape(arg_shapes["im_info"]), global_ctx, false);
+      args_map["gt_boxes"] = mxnet::cpp::NDArray(
+          mxnet::cpp::Shape(arg_shapes["gt_boxes"]), global_ctx, false);
+
+      // train outputs
+      args_map["label"] = mxnet::cpp::NDArray(
+          mxnet::cpp::Shape(arg_shapes["label"]), global_ctx, false);
+      args_map["bbox_target"] = mxnet::cpp::NDArray(
+          mxnet::cpp::Shape(arg_shapes["bbox_target"]), global_ctx, false);
+      args_map["bbox_weight"] = mxnet::cpp::NDArray(
+          mxnet::cpp::Shape(arg_shapes["bbox_weight"]), global_ctx, false);
+
+      net.InferArgsMap(global_ctx, &args_map, args_map);
 
       //----------- Predict
-      mxnet::cpp::Executor* executor =
-          net.SimpleBind(global_ctx, actual_args_map);
-      //      mxnet::cpp::Executor* executor = net.SimpleBind(
-      //          global_ctx, actual_args_map,
-      //          std::map<std::string, mxnet::cpp::NDArray>(),
-      //          std::map<std::string, mxnet::cpp::OpReqType>(),
-      //          actual_aux_map);
+      mxnet::cpp::Executor* executor = net.SimpleBind(global_ctx, args_map);
 
-      executor->Forward(false);
-      auto prediction =
-          executor->outputs[0].Copy(mxnet::cpp::Context(mxnet::cpp::kCPU, 0));
+      executor->Forward(true);
       mxnet::cpp::NDArray::WaitAll();
       delete executor;
 
