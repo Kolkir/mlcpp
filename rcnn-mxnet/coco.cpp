@@ -248,6 +248,20 @@ void Coco::LoadTrainData() {
     categories_.reserve(n_reserve);
     auto res = reader.Parse(is, handler);
     std::fclose(file);
+
+    // remove images without annotations
+    std::vector<uint32_t> images_to_remove;
+    for (auto& img : images_) {
+      auto image_id = img.first;
+      auto i = image_to_ant_index_.find(image_id);
+      if (i == image_to_ant_index_.end()) {
+        images_to_remove.push_back(image_id);
+      }
+    }
+    for (auto image_id : images_to_remove) {
+      images_.erase(image_id);
+    }
+
     if (!res) {
       throw std::runtime_error(rapidjson::GetParseError_En(res.Code()));
     }
@@ -286,6 +300,8 @@ ImageDesc Coco::GetImage(uint32_t index,
       ImageDesc result;
       result.image = img;
       result.scale = scale;
+      result.height = img.rows;
+      result.width = img.cols;
       auto& ants = image_to_ant_index_.at(i->second.id);
       result.boxes.reserve(ants.size());
       result.classes.reserve(ants.size());

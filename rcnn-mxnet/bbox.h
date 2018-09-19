@@ -6,13 +6,52 @@
 #include <mxnet-cpp/MxNetCpp.h>
 #include <Eigen/Dense>
 
+#include <unordered_set>
+
 using Indices = Eigen::Array<Eigen::Index, Eigen::Dynamic, 1>;
 
 std::pair<Indices, Indices> argmax(const Eigen::MatrixXf& m);
 
-Eigen::ArrayXf random_choice(Eigen::Index start,
-                             Eigen::Index finish,
-                             Eigen::Index num);
+struct WhereVisitor {
+  WhereVisitor(bool row = true) : is_row_(row) {}
+
+  void init(const bool& value, Eigen::Index i, Eigen::Index j) {
+    operator()(value, i, j);
+  }
+  void operator()(const bool& value, Eigen::Index i, Eigen::Index j) {
+    if (value && data) {
+      data->push_back(is_row_ ? i : j);
+    }
+  }
+  bool is_row_{true};
+  std::vector<Eigen::Index>* data{nullptr};
+};
+
+template <typename T>
+std::vector<Eigen::Index> expr_row_indices(const T& expr) {
+  WhereVisitor indexes_visitor;
+  std::vector<Eigen::Index> result;
+  indexes_visitor.data = &result;
+  expr.visit(indexes_visitor);
+  return result;
+}
+
+template <class T, class Rnd>
+T random_choice(const T& m, size_t num, Rnd& rnd) {
+  std::uniform_int_distribution<size_t> dist(0, m.size() - 1);
+  T result;
+  result.reserve(num);
+  std::unordered_set<size_t> set;
+
+  while (set.size() < num) {
+    auto index = dist(rnd);
+    if (set.find(index) == set.end()) {
+      result.push_back(m[index]);
+      set.insert(index);
+    }
+  }
+  return result;
+}
 
 /*
  * boxes: n * 4 bounding boxes

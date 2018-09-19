@@ -241,3 +241,20 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
   auto res_group = Symbol::Group(out_group);
   return res_group;
 }
+
+void InitiaizeRCNN(std::map<std::string, mxnet::cpp::NDArray>& args_map) {
+  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f,
+                                      &args_map["rpn_conv_3x3_weight"]);
+  args_map["rpn_conv_3x3_bias"] = 0.f;
+  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f,
+                                      &args_map["rpn_cls_score_weight"]);
+  args_map["rpn_cls_score_bias"] = 0.f;
+  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f,
+                                      &args_map["rpn_bbox_pred_weight"]);
+  args_map["rpn_bbox_pred_bias"] = 0.f;
+  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f, &args_map["cls_score_weight"]);
+  args_map["cls_score_bias"] = 0.f;
+  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f, &args_map["bbox_pred_weight"]);
+  args_map["bbox_pred_bias"] = 0.f;
+  mxnet::cpp::NDArray::WaitAll();
+}

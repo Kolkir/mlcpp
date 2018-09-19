@@ -14,25 +14,24 @@ class TrainIter {
  public:
   TrainIter(const mxnet::cpp::Context& ctx,
             ImageDb* image_db,
-            uint32_t batch_size,
             const Params& params);
   TrainIter(const TrainIter&) = delete;
   TrainIter& operator=(const TrainIter&) = delete;
 
   // DataIter interface
   void Reset();
-  bool Next();
+  bool Next(uint32_t feat_height, uint32_t feat_width);
   mxnet::cpp::NDArray GetImData();
   mxnet::cpp::NDArray GetImInfoData();
   mxnet::cpp::NDArray GetGtBoxesData();
 
   mxnet::cpp::NDArray GetLabel();
-  mxnet::cpp::NDArray GetBBoxTragetLabel();
-  mxnet::cpp::NDArray GetBBoxWeightLabel();
+  mxnet::cpp::NDArray GetBBoxTraget();
+  mxnet::cpp::NDArray GetBBoxWeight();
 
  private:
   void FillData();
-  void FillLabels();
+  void FillLabels(uint32_t feat_height, uint32_t feat_width);
 
  private:
   ImageDb* image_db_{nullptr};
@@ -43,13 +42,14 @@ class TrainIter {
   uint32_t short_side_len_{0};
   uint32_t long_side_len_{0};
   uint32_t one_image_size_{0};
+  uint32_t num_anchors_{0};
+  uint32_t batch_gt_boxes_count_{0};
 
   size_t seed_ = 5675317;
   std::mt19937 random_engine_{seed_};
   std::vector<uint32_t> data_indices_;
   std::vector<uint32_t> batch_indices_{batch_size_};
 
-  mxnet::cpp::Symbol feat_sym_;
   AnchorGenerator anchor_generator_;
   AnchorSampler anchor_sampler_;
 

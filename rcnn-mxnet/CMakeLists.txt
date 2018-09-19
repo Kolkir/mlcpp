@@ -66,6 +66,8 @@ set(SOURCES_TRAIN
     get_model.sh
     proposaltarget_op.h
     proposaltarget_op.cpp
+    metrics.h
+    metrics.cpp
     )
 
 set(SOURCES_DEMO
@@ -76,9 +78,9 @@ add_executable(rcnn_train ${SOURCES_TRAIN} ${SOURCES_COMMON})
 target_link_libraries(rcnn_train ${requiredlibs})
 target_link_libraries(rcnn_train ${BLAS_LIBRARIES} ${OpenCV_LIBS})
 
-#add_executable(rcnn_demo ${SOURCES_DEMO} ${SOURCES_COMMON})
-#target_link_libraries(rcnn_demo ${requiredlibs})
-#target_link_libraries(rcnn_demo ${BLAS_LIBRARIES} ${OpenCV_LIBS})
+add_executable(rcnn_demo ${SOURCES_DEMO} ${SOURCES_COMMON})
+target_link_libraries(rcnn_demo ${requiredlibs})
+target_link_libraries(rcnn_demo ${BLAS_LIBRARIES} ${OpenCV_LIBS})
 
 #add_executable(load_eval load_eval_ex.cpp imageutils.cpp)
 #target_link_libraries(load_eval ${requiredlibs})

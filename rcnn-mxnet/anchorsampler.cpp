@@ -2,6 +2,7 @@
 #include "bbox.h"
 
 #include <iostream>
+#include <random>
 
 AnchorSampler::AnchorSampler(const Params& params)
     : allowed_border_(params.rpn_allowed_border),
@@ -18,7 +19,7 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
                       float im_width,
                       float im_height) {
   auto n_anchors = anchors.rows();
-  std::cout << "Image width " << im_width << "Image height " << im_height
+  std::cout << "Image width " << im_width << " Image height " << im_height
             << std::endl;
   std::cout << "All anchors count " << n_anchors << std::endl;
 
@@ -52,6 +53,9 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
   Eigen::MatrixXf bbox_targets = Eigen::MatrixXf::Zero(num_valid, 4);
   Eigen::MatrixXf bbox_weights = Eigen::MatrixXf::Zero(num_valid, 4);
 
+  std::random_device rd;
+  std::mt19937 mt(rd());
+
   // sample for positive labels
   if (gt_boxes.rows() > 0) {
     // overlap between the anchors and the gt boxes
@@ -69,26 +73,32 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
 
     // fg anchors: anchor with overlap > iou thresh
     auto max_overlaps = overlaps.rowwise().maxCoeff();
-    labels = (max_overlaps.array() >= fg_overlap_).select(1.f, labels);
+    auto fg_indices_expr = max_overlaps.array() >= fg_overlap_;
+    auto fg_indices = expr_row_indices(fg_indices_expr);
 
     // bg anchors: anchor with overlap < iou thresh
-    labels = (max_overlaps.array() < bg_overlap_).select(0.f, labels);
+    auto bg_indices_expr = max_overlaps.array() < bg_overlap_;
+    auto bg_indices = expr_row_indices(bg_indices_expr);
 
     // subsample positive anchors
-    Eigen::Index fg_labels_count = (labels.array() >= 1.f).count();
+    Eigen::Index fg_labels_count = fg_indices_expr.count();
     if (fg_labels_count > num_fg_) {
-      auto disable_inds =
-          random_choice(0, fg_labels_count - 1, fg_labels_count - num_fg_);
-      labels = (disable_inds.array() > 0).select(-1.f, labels);
+      auto disable_inds = random_choice(
+          fg_indices, static_cast<size_t>(fg_labels_count - num_fg_), mt);
+      for (auto index : disable_inds) {
+        labels(index) = -1;
+      }
     }
 
     // subsample negative anchors
-    Eigen::Index bg_labels_count = (labels.array() == 0.f).count();
+    Eigen::Index bg_labels_count = bg_indices_expr.count();
     auto max_neg = num_batch_ - std::min(num_fg_, fg_labels_count);
     if (bg_labels_count > max_neg) {
-      auto disable_inds =
-          random_choice(0, bg_labels_count - 1, bg_labels_count - max_neg);
-      labels = (disable_inds.array() > 0).select(-1.f, labels);
+      auto disable_inds = random_choice(
+          bg_indices, static_cast<size_t>(bg_labels_count - max_neg), mt);
+      for (auto index : disable_inds) {
+        labels(index) = -1;
+      }
     }
 
     // make gt_box correspondence for each positive anchor
@@ -109,8 +119,12 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
                        .select(1.f, bbox_weights);
   } else {
     // randomly draw bg anchors
-    auto bg_inds = random_choice(0, labels.rows() - 1, num_batch_);
-    labels = (bg_inds.array() > 0).select(0, labels);
+    std::vector<Eigen::Index> bg_inds(static_cast<size_t>(labels.rows()));
+    std::iota(bg_inds.begin(), bg_inds.end(), 0);
+    bg_inds = random_choice(bg_inds, static_cast<size_t>(num_batch_), mt);
+    for (auto index : bg_inds) {
+      labels(index) = 0;
+    }
   }
 
   // make final result

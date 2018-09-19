@@ -15,7 +15,7 @@ class Params {
   std::vector<float> rpn_anchor_scales{8.f, 16.f, 32.f};
   std::vector<float> rpn_anchor_ratios{0.5f, 1.f, 2.f};
   int rpn_pre_nms_topk = 6000;
-  int rpn_post_nms_topk = 300;
+  int rpn_post_nms_topk = 128;  // 300
   float rpn_nms_thresh = 0.3f;
   int rpn_min_size = 16;
   int rpn_batch_rois = 256;
@@ -27,6 +27,7 @@ class Params {
   int rcnn_feat_stride = 16;
   std::vector<float> rcnn_pooled_size{14, 14};
   uint32_t rcnn_batch_size = 1;
+  uint32_t rcnn_batch_gt_boxes = 100;
   int rcnn_batch_rois = 128;
   float rcnn_fg_fraction = 0.25f;
   float rcnn_fg_overlap = 0.5f;

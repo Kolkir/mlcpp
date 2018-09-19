@@ -2,7 +2,6 @@
 
 #include <random>
 #include <type_traits>
-#include <unordered_set>
 
 namespace {
 struct ArgmaxVisitor {
@@ -20,21 +19,6 @@ struct ArgmaxVisitor {
   Indices max_rows;
   Indices max_cols;
 };
-
-struct WhereVisitor {
-  WhereVisitor(bool row = true) : is_row_(row) {}
-
-  void init(const bool& value, Eigen::Index i, Eigen::Index j) {
-    operator()(value, i, j);
-  }
-  void operator()(const bool& value, Eigen::Index i, Eigen::Index j) {
-    if (value && data) {
-      data->push_back(is_row_ ? i : j);
-    }
-  }
-  bool is_row_{true};
-  std::vector<Eigen::Index>* data{nullptr};
-};
 }  // namespace
 
 std::pair<Indices, Indices> argmax(const Eigen::MatrixXf& m) {
@@ -44,26 +28,6 @@ std::pair<Indices, Indices> argmax(const Eigen::MatrixXf& m) {
   ArgmaxVisitor visitor(m.rows(), m.cols());
   max_pos.visit(visitor);
   return {visitor.max_rows, visitor.max_cols};
-}
-
-Eigen::ArrayXf random_choice(Eigen::Index start,
-                             Eigen::Index finish,
-                             Eigen::Index num) {
-  assert(finish > start);
-  std::default_random_engine re;
-  std::mt19937 rg(re());
-  std::uniform_int_distribution<Eigen::Index> dist(start, finish);
-  Eigen::ArrayXf result(finish - start + 1);
-  std::unordered_set<Eigen::Index> set;
-  Eigen::Index i = 0;
-  while (set.size() < static_cast<size_t>(num)) {
-    auto index = dist(re);
-    if (set.find(index) == set.end()) {
-      result(i++) = index;
-      set.insert(index);
-    }
-  }
-  return result;
 }
 
 Eigen::MatrixXf bbox_overlaps(const Eigen::MatrixXf& boxes,
@@ -223,7 +187,7 @@ void nms(std::vector<Detection>& predictions, float nms_thresh) {
 }
 
 template <typename T>
-Eigen::MatrixXf SliceColumns(T& val, Eigen::Index start, Eigen::Index stride) {
+auto SliceColumns(T& val, Eigen::Index start, Eigen::Index stride) {
   auto cols = static_cast<Eigen::Index>(
       std::ceil(val.cols() / static_cast<double>(stride)));
   using Maptype =
@@ -318,23 +282,6 @@ Eigen::MatrixXf NDArray3ToEigen(const mxnet::cpp::NDArray& value) {
   return result;
 }
 
-template <class T, class Rnd>
-T random_choice(const T& m, size_t num, Rnd& rnd) {
-  std::uniform_int_distribution<size_t> dist(0, m.size() - 1);
-  T result;
-  result.reserve(num);
-  std::unordered_set<size_t> set;
-
-  while (set.size() < num) {
-    auto index = dist(rnd);
-    if (set.find(index) == set.end()) {
-      result.push_back(m[index]);
-      set.insert(index);
-    }
-  }
-  return result;
-}
-
 std::tuple<Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf>
 SampleRois(const Eigen::MatrixXf& rois,
            const Eigen::MatrixXf& gt_boxes,
@@ -349,7 +296,7 @@ SampleRois(const Eigen::MatrixXf& rois,
   Eigen::MatrixXf labels(gt_assignment.rows(), 1);
   for (Eigen::Index i = 0; i < gt_assignment.size(); ++i) {
     Eigen::Index j = gt_assignment(i);
-    labels(j, 0) = gt_boxes(j, 4);
+    labels(i, 0) = gt_boxes(j, 4);
   }
   Eigen::MatrixXf max_overlaps = overlaps.rowwise().maxCoeff();
 

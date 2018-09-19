@@ -162,8 +162,8 @@ class ProposalTargetOp : public Operator {
     CHECK_EQ(in_grad.size(), 2);
 
     Stream<xpu>* s = ctx.get_stream<xpu>();
-    auto grad0 = in_grad[0].get<xpu, 4, real_t>(s);
-    auto grad1 = in_grad[1].get<xpu, 4, real_t>(s);
+    auto grad0 = in_grad[0].get<xpu, 2, real_t>(s);
+    auto grad1 = in_grad[1].get<xpu, 3, real_t>(s);
 
     // can not assume the grad would be zero
     Assign(grad0, req[0], 0);
