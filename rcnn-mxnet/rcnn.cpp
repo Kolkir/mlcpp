@@ -156,7 +156,7 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
           .SetParam("pooled_size",
                     Shape(static_cast<index_t>(params.rcnn_pooled_size[0]),
                           static_cast<index_t>(params.rcnn_pooled_size[1])))
-          .SetParam("spatial_scale", 1.0f / params.rpn_feat_stride)
+          .SetParam("spatial_scale", 1.0f / params.rcnn_feat_stride)
           .SetInput("rois", rois)
           .SetInput("data", conv_feat)
           .CreateSymbol("roi_pool");
@@ -177,8 +177,14 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
 
   Symbol cls_prob;
   if (train) {
-    cls_prob = SoftmaxOutput("cls_prob", cls_score, label, 1, -1, false, false,
-                             false, SoftmaxOutputNormalization::kBatch);
+    //    cls_prob = SoftmaxOutput("cls_prob", cls_score, label, 1, -1, false,
+    //    false,
+    //                             false, SoftmaxOutputNormalization::kBatch);
+    cls_prob = Operator("SoftmaxOutput")
+                   .SetParam("normalization", "batch")
+                   .SetInput("label", label)
+                   .SetInput("data", cls_score)
+                   .CreateSymbol("cls_prob");
   } else {
     cls_prob = softmax("cls_prob", cls_score);
   }

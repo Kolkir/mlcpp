@@ -249,6 +249,10 @@ void Coco::LoadTrainData() {
     auto res = reader.Parse(is, handler);
     std::fclose(file);
 
+    if (!res) {
+      throw std::runtime_error(rapidjson::GetParseError_En(res.Code()));
+    }
+
     // remove images without annotations
     std::vector<uint32_t> images_to_remove;
     for (auto& img : images_) {
@@ -262,8 +266,12 @@ void Coco::LoadTrainData() {
       images_.erase(image_id);
     }
 
-    if (!res) {
-      throw std::runtime_error(rapidjson::GetParseError_En(res.Code()));
+    // map categories to classes
+    for (auto& cat : categories_) {
+      auto i =
+          std::find(coco_classes.begin(), coco_classes.end(), cat.second.name);
+      auto pos = std::distance(coco_classes.begin(), i);
+      cat_ind_to_class_ind_.insert({cat.second.id, static_cast<uint32_t>(pos)});
     }
   } else {
     throw std::runtime_error(train_annotations_file_ + " file can't be opened");
@@ -288,14 +296,14 @@ uint32_t Coco::GetImagesCount() const {
 }
 
 ImageDesc Coco::GetImage(uint32_t index,
-                         uint32_t short_side,
-                         uint32_t long_side) const {
+                         uint32_t height,
+                         uint32_t width) const {
   if (index < images_.size()) {
     auto i = images_.begin();
     std::advance(i, index);
     fs::path file_path(train_images_folder_);
     file_path /= i->second.name;
-    auto [img, scale] = LoadImage(file_path.string(), short_side, long_side);
+    auto [img, scale] = LoadImageFitSize(file_path.string(), height, width);
     if (!img.empty()) {
       ImageDesc result;
       result.image = img;
@@ -312,7 +320,8 @@ ImageDesc Coco::GetImage(uint32_t index,
                                          static_cast<float>(ant.bbox.width),
                                          static_cast<float>(ant.bbox.height)});
         const auto& cat = categories_.at(ant.category_id);
-        result.classes.push_back(static_cast<float>(cat.id));
+        uint32_t class_ind = cat_ind_to_class_ind_.at(cat.id);
+        result.classes.push_back(static_cast<float>(class_ind));
       }
       return result;
     } else {

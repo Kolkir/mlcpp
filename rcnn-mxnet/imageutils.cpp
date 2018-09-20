@@ -2,30 +2,64 @@
 
 std::pair<cv::Mat, float> LoadImage(const std::string& file_name,
                                     uint32_t short_side,
-                                    uint32_t long_side,
-                                    bool force_size) {
+                                    uint32_t long_side) {
   auto img = cv::imread(file_name);
+  std::cout << "Load file " << file_name << std::endl;
   if (!img.empty()) {
     img.convertTo(img, CV_32FC3);
     float scale = 0;
     // resize
-    if (force_size) {
-      cv::resize(
-          img, img,
-          cv::Size(static_cast<int>(short_side), static_cast<int>(long_side)),
-          0, 0, cv::INTER_LINEAR);
-    } else {
-      auto im_min_max = std::minmax(img.rows, img.cols);
+
+    auto im_min_max = std::minmax(img.rows, img.cols);
+    scale =
+        static_cast<float>(short_side) / static_cast<float>(im_min_max.first);
+    // prevent bigger axis from being more than max_size:
+    if (std::round(scale * im_min_max.second) > long_side) {
       scale =
-          static_cast<float>(short_side) / static_cast<float>(im_min_max.first);
-      // prevent bigger axis from being more than max_size:
-      if (std::round(scale * im_min_max.second) > long_side) {
-        scale = static_cast<float>(long_side) /
-                static_cast<float>(im_min_max.second);
-      }
-      cv::resize(img, img, cv::Size(), static_cast<double>(scale),
-                 static_cast<double>(scale), cv::INTER_LINEAR);
+          static_cast<float>(long_side) / static_cast<float>(im_min_max.second);
     }
+    cv::resize(img, img, cv::Size(), static_cast<double>(scale),
+               static_cast<double>(scale), cv::INTER_LINEAR);
+
+    return {img, scale};
+  }
+  return {cv::Mat(), 0};
+}
+
+std::tuple<cv::Mat, float> LoadImageFitSize(const std::string& file_name,
+                                            uint32_t height,
+                                            uint32_t width) {
+  auto img = cv::imread(file_name);
+  std::cout << "Load file " << file_name << std::endl;
+  if (!img.empty()) {
+    img.convertTo(img, CV_32FC3);
+    float scale = 1.f;
+    // assume that an image width in most cases is bigger than height
+    float ratio = static_cast<float>(img.cols) / static_cast<float>(img.rows);
+    auto new_height = static_cast<int>(width / ratio);
+    if (new_height <= static_cast<int>(height)) {
+      scale = static_cast<float>(new_height) / static_cast<float>(img.rows);
+    } else {
+      ratio = static_cast<float>(img.rows) / static_cast<float>(img.cols);
+      auto new_width = static_cast<int>(height / ratio);
+      assert(new_width <= static_cast<int>(width));
+      scale = static_cast<float>(new_width) / static_cast<float>(img.cols);
+    }
+
+    // resize
+    cv::resize(img, img, cv::Size(), static_cast<double>(scale),
+               static_cast<double>(scale),
+               scale >= 1.f ? cv::INTER_LINEAR : cv::INTER_AREA);
+
+    // pad
+    int bottom = static_cast<int>(height) - img.rows;
+    int right = static_cast<int>(width) - img.cols;
+    if (right < 0 || bottom < 0) {
+      std::cout << "error\n";
+    }
+    cv::copyMakeBorder(img, img, 0, bottom, 0, right, cv::BORDER_CONSTANT,
+                       cv::Scalar(0, 0, 0, 0));
+
     return {img, scale};
   }
   return {cv::Mat(), 0};

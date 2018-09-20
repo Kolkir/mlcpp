@@ -71,8 +71,8 @@ class Coco : public ImageDb {
   // ImageDb interface
   uint32_t GetImagesCount() const override;
   ImageDesc GetImage(uint32_t index,
-                     uint32_t short_side,
-                     uint32_t long_side) const override;
+                     uint32_t height,
+                     uint32_t width) const override;
 
  private:
   std::string train_images_folder_;
@@ -86,6 +86,7 @@ class Coco : public ImageDb {
 
   std::unordered_map<uint32_t, std::unordered_set<uint32_t>>
       image_to_ant_index_;
+  std::unordered_map<uint32_t, uint32_t> cat_ind_to_class_ind_;
 };
 
 #endif  // COCO_H

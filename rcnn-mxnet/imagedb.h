@@ -24,8 +24,8 @@ class ImageDb {
   virtual ~ImageDb();
   virtual uint32_t GetImagesCount() const = 0;
   virtual ImageDesc GetImage(uint32_t index,
-                             uint32_t short_side,
-                             uint32_t long_side) const = 0;
+                             uint32_t height,
+                             uint32_t width) const = 0;
 };
 
 #endif  // IMAGEDB_H

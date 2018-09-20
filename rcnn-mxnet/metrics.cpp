@@ -10,9 +10,9 @@ void RCNNAccMetric::Update(mxnet::cpp::NDArray labels,
   std::vector<mx_float> label_data(len);
   preds.Reshape(mxnet::cpp::Shape(static_cast<mx_uint>(-1), classes_num))
       .ArgmaxChannel()
-      .SyncCopyToCPU(&pred_data, len);
+      .SyncCopyToCPU(&pred_data, pred_data.size());
   labels.Reshape(mxnet::cpp::Shape(static_cast<mx_uint>(-1)))
-      .SyncCopyToCPU(&label_data, len);
+      .SyncCopyToCPU(&label_data, label_data.size());
   for (mx_uint i = 0; i < len; ++i) {
     sum_metric += (pred_data[i] == label_data[i]) ? 1 : 0;
     num_inst += 1;

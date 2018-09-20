@@ -54,6 +54,8 @@ int main(int argc, char** argv) {
       //----------- Load data
       auto [img, scale] =
           LoadImage(image_path, params.img_short_side, params.img_long_side);
+      //          LoadImageFitSize(image_path, params.img_short_side,
+      //                           params.img_long_side);
       if (img.empty()) {
         std::cout << "Failed to load image" << std::endl;
         return 1;

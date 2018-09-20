@@ -6,12 +6,17 @@
 #include <opencv2/opencv.hpp>
 
 #include <string>
+#include <tuple>
 #include <vector>
 
 std::pair<cv::Mat, float> LoadImage(const std::string& file_name,
                                     uint32_t short_side,
-                                    uint32_t long_side,
-                                    bool force_size = false);
+                                    uint32_t long_side);
+
+// resize image with constraint proportions and pad with zero
+std::tuple<cv::Mat, float> LoadImageFitSize(const std::string& file_name,
+                                            uint32_t height,
+                                            uint32_t width);
 
 std::vector<float> CVToMxnetFormat(const cv::Mat& img);
 

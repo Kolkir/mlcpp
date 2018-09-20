@@ -90,17 +90,13 @@ void TrainIter::FillData() {
   std::vector<std::pair<size_t, size_t>> gt_boxes_pad_markers;
 
   for (auto index : batch_indices_) {
+    // image is loaded with padding
     auto image_desc =
         image_db_->GetImage(index, short_side_len_, long_side_len_);
     // Fill image
     auto array = CVToMxnetFormat(image_desc.image);
     assert(array.size() <= one_image_size_);
     raw_im_data_.insert(ii, array.begin(), array.end());
-    // Add pad
-    if (array.size() < one_image_size_) {
-      raw_im_data_.insert(raw_im_data_.end(), one_image_size_ - array.size(),
-                          0.f);
-    }
     std::advance(ii, one_image_size_);
 
     // Fill info
@@ -124,7 +120,7 @@ void TrainIter::FillData() {
       *b_i++ = y1 * image_desc.scale;
       *b_i++ = x2 * image_desc.scale;
       *b_i++ = y2 * image_desc.scale;
-      *b_i++ = *(ic++);  // class
+      *b_i++ = *(ic++);  // class index
       gt_boxes_pad_markers.push_back(
           {raw_gt_boxes_data_.size(), image_desc.boxes.size()});
     }

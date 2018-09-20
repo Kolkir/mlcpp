@@ -182,6 +182,7 @@ int main(int argc, char** argv) {
         std::cout << "Epoch: " << epoch << std::endl;
         train_iter.Reset();
         while (train_iter.Next(feat_height, feat_width)) {
+          // TODO consider use -executor->Reshape();
           train_iter.GetImData().CopyTo(&args_map["data"]);
           train_iter.GetImInfoData().CopyTo(&args_map["im_info"]);
           train_iter.GetGtBoxesData().CopyTo(&args_map["gt_boxes"]);
@@ -205,6 +206,9 @@ int main(int argc, char** argv) {
           mxnet::cpp::NDArray::WaitAll();
           std::cout << "Parameters updated" << std::endl;
 
+          // evaluate metrics
+          executor->Forward(false);
+          mxnet::cpp::NDArray::WaitAll();
           acc_metric.Update(executor->outputs[4], executor->outputs[2]);
           std::cout << "Batch RCNN accurary " << acc_metric.Get() << std::endl;
         }
