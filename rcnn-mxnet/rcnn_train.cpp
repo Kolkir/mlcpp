@@ -137,7 +137,6 @@ int main(int argc, char** argv) {
 
       if (start_train) {
         net.InferArgsMap(global_ctx, &args_map, args_map);
-        InitiaizeRCNN(args_map);
       }
 
       //----------- Train
@@ -146,12 +145,13 @@ int main(int argc, char** argv) {
       float weight_decay = 1e-4f;
 
       mxnet::cpp::Executor* executor{nullptr};
+      // without aux_map - training fails with nans
+      executor = net.SimpleBind(
+          global_ctx, args_map, std::map<std::string, mxnet::cpp::NDArray>(),
+          std::map<std::string, mxnet::cpp::OpReqType>(), aux_map);
+
       if (start_train) {
-        executor = net.SimpleBind(global_ctx, args_map);
-      } else {
-        executor = net.SimpleBind(
-            global_ctx, args_map, std::map<std::string, mxnet::cpp::NDArray>(),
-            std::map<std::string, mxnet::cpp::OpReqType>(), aux_map);
+        InitiaizeRCNN(args_map);
       }
 
       std::cout << "Loading trainig data ..." << std::endl;
@@ -178,17 +178,17 @@ int main(int argc, char** argv) {
       }
 
       RCNNAccMetric acc_metric;
+      RCNNLogLossMetric log_loss_metric;
       for (uint32_t epoch = 0; epoch < max_epoch; ++epoch) {
         std::cout << "Epoch: " << epoch << std::endl;
         train_iter.Reset();
         while (train_iter.Next(feat_height, feat_width)) {
-          // TODO consider use -executor->Reshape();
-          train_iter.GetImData().CopyTo(&args_map["data"]);
-          train_iter.GetImInfoData().CopyTo(&args_map["im_info"]);
-          train_iter.GetGtBoxesData().CopyTo(&args_map["gt_boxes"]);
-          train_iter.GetLabel().CopyTo(&args_map["label"]);
-          train_iter.GetBBoxTraget().CopyTo(&args_map["bbox_target"]);
-          train_iter.GetBBoxWeight().CopyTo(&args_map["bbox_weight"]);
+          train_iter.GetImData(args_map["data"]);
+          train_iter.GetImInfoData(args_map["im_info"]);
+          train_iter.GetGtBoxesData(args_map["gt_boxes"]);
+          train_iter.GetLabel(args_map["label"]);
+          train_iter.GetBBoxTraget(args_map["bbox_target"]);
+          train_iter.GetBBoxWeight(args_map["bbox_weight"]);
           mxnet::cpp::NDArray::WaitAll();
           std::cout << "Batch data filled" << std::endl;
 
@@ -211,6 +211,9 @@ int main(int argc, char** argv) {
           mxnet::cpp::NDArray::WaitAll();
           acc_metric.Update(executor->outputs[4], executor->outputs[2]);
           std::cout << "Batch RCNN accurary " << acc_metric.Get() << std::endl;
+          log_loss_metric.Update(executor->outputs[4], executor->outputs[2]);
+          std::cout << "Batch RCNN log loss " << log_loss_metric.Get()
+                    << std::endl;
         }
       }
 

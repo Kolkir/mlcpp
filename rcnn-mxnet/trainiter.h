@@ -21,13 +21,13 @@ class TrainIter {
   // DataIter interface
   void Reset();
   bool Next(uint32_t feat_height, uint32_t feat_width);
-  mxnet::cpp::NDArray GetImData();
-  mxnet::cpp::NDArray GetImInfoData();
-  mxnet::cpp::NDArray GetGtBoxesData();
+  void GetImData(mxnet::cpp::NDArray& arr);
+  void GetImInfoData(mxnet::cpp::NDArray& arr);
+  void GetGtBoxesData(mxnet::cpp::NDArray& arr);
 
-  mxnet::cpp::NDArray GetLabel();
-  mxnet::cpp::NDArray GetBBoxTraget();
-  mxnet::cpp::NDArray GetBBoxWeight();
+  void GetLabel(mxnet::cpp::NDArray& arr);
+  void GetBBoxTraget(mxnet::cpp::NDArray& arr);
+  void GetBBoxWeight(mxnet::cpp::NDArray& arr);
 
  private:
   void FillData();
@@ -54,23 +54,13 @@ class TrainIter {
   AnchorSampler anchor_sampler_;
 
   // train input
-  mxnet::cpp::NDArray im_data_;
   std::vector<float> raw_im_data_;
-
-  mxnet::cpp::NDArray im_info_data_;
   std::vector<float> raw_im_info_data_;
-
-  mxnet::cpp::NDArray gt_boxes_data_;
   std::vector<float> raw_gt_boxes_data_;
 
   // train labels
-  mxnet::cpp::NDArray label_;
   std::vector<float> raw_label_;
-
-  mxnet::cpp::NDArray bbox_target_;
   std::vector<float> raw_bbox_target_;
-
-  mxnet::cpp::NDArray bbox_weight_;
   std::vector<float> raw_bbox_weight_;
 };
 

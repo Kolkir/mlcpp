@@ -177,9 +177,6 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
 
   Symbol cls_prob;
   if (train) {
-    //    cls_prob = SoftmaxOutput("cls_prob", cls_score, label, 1, -1, false,
-    //    false,
-    //                             false, SoftmaxOutputNormalization::kBatch);
     cls_prob = Operator("SoftmaxOutput")
                    .SetParam("normalization", "batch")
                    .SetInput("label", label)
@@ -206,7 +203,6 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
                           .SetParam("scalar", 1.0f)
                           .SetInput("data", (bbox_pred - bbox_target))
                           .CreateSymbol("bbox_loss_");
-
     bbox_loss =
         MakeLoss("bbox_loss", bbox_loss_, 1.0f / params.rcnn_batch_rois);
 
@@ -249,18 +245,22 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
 }
 
 void InitiaizeRCNN(std::map<std::string, mxnet::cpp::NDArray>& args_map) {
-  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f,
-                                      &args_map["rpn_conv_3x3_weight"]);
-  args_map["rpn_conv_3x3_bias"] = 0.f;
-  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f,
-                                      &args_map["rpn_cls_score_weight"]);
-  args_map["rpn_cls_score_bias"] = 0.f;
-  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f,
-                                      &args_map["rpn_bbox_pred_weight"]);
-  args_map["rpn_bbox_pred_bias"] = 0.f;
-  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f, &args_map["cls_score_weight"]);
-  args_map["cls_score_bias"] = 0.f;
-  mxnet::cpp::NDArray::SampleGaussian(0, 0.01f, &args_map["bbox_pred_weight"]);
-  args_map["bbox_pred_bias"] = 0.f;
+  mxnet::cpp::Normal normal(0, 0.01f);
+  mxnet::cpp::Zero zero;
+  normal("rpn_conv_3x3_weight", &args_map["rpn_conv_3x3_weight"]);
+  zero("rpn_conv_3x3_bias", &args_map["rpn_conv_3x3_bias"]);
+
+  normal("rpn_cls_score_weight", &args_map["rpn_cls_score_weight"]);
+  zero("rpn_cls_score_bias", &args_map["rpn_cls_score_bias"]);
+
+  normal("rpn_bbox_pred_weight", &args_map["rpn_bbox_pred_weight"]);
+  zero("rpn_bbox_pred_bias", &args_map["rpn_bbox_pred_bias"]);
+
+  normal("cls_score_weight", &args_map["cls_score_weight"]);
+  zero("cls_score_bias", &args_map["cls_score_bias"]);
+
+  normal("bbox_pred_weight", &args_map["bbox_pred_weight"]);
+  zero("bbox_pred_bias", &args_map["rpn_conv_3x3_bias"]);
+
   mxnet::cpp::NDArray::WaitAll();
 }

@@ -18,12 +18,7 @@ TrainIter::TrainIter(const mxnet::cpp::Context& ctx,
       batch_gt_boxes_count_(params.rcnn_batch_gt_boxes),
       batch_indices_(batch_size_),
       anchor_generator_(params),
-      anchor_sampler_(params),
-      im_data_(
-          mxnet::cpp::Shape(batch_size_, 3, short_side_len_, long_side_len_),
-          ctx,
-          false),
-      im_info_data_(mxnet::cpp::Shape(batch_size_, 3), ctx, false) {
+      anchor_sampler_(params) {
   assert(image_db_ != nullptr);
   size_ = image_db->GetImagesCount();
   Reset();
@@ -44,7 +39,6 @@ bool TrainIter::Next(uint32_t feat_height, uint32_t feat_width) {
 
     FillData();
     FillLabels(feat_height, feat_width);
-    mxnet::cpp::NDArray::WaitAll();
 
     cur_ += batch_size_;
     return true;
@@ -53,28 +47,28 @@ bool TrainIter::Next(uint32_t feat_height, uint32_t feat_width) {
   }
 }
 
-mxnet::cpp::NDArray TrainIter::GetImData() {
-  return im_data_;
+void TrainIter::GetImData(mxnet::cpp::NDArray& arr) {
+  arr.SyncCopyFromCPU(raw_im_data_.data(), raw_im_data_.size());
 }
 
-mxnet::cpp::NDArray TrainIter::GetImInfoData() {
-  return im_info_data_;
+void TrainIter::GetImInfoData(mxnet::cpp::NDArray& arr) {
+  arr.SyncCopyFromCPU(raw_im_info_data_.data(), raw_im_info_data_.size());
 }
 
-mxnet::cpp::NDArray TrainIter::GetGtBoxesData() {
-  return gt_boxes_data_;
+void TrainIter::GetGtBoxesData(mxnet::cpp::NDArray& arr) {
+  arr.SyncCopyFromCPU(raw_gt_boxes_data_.data(), raw_gt_boxes_data_.size());
 }
 
-mxnet::cpp::NDArray TrainIter::GetLabel() {
-  return label_;
+void TrainIter::GetLabel(mxnet::cpp::NDArray& arr) {
+  arr.SyncCopyFromCPU(raw_label_.data(), raw_label_.size());
 }
 
-mxnet::cpp::NDArray TrainIter::GetBBoxTraget() {
-  return bbox_target_;
+void TrainIter::GetBBoxTraget(mxnet::cpp::NDArray& arr) {
+  arr.SyncCopyFromCPU(raw_bbox_target_.data(), raw_bbox_target_.size());
 }
 
-mxnet::cpp::NDArray TrainIter::GetBBoxWeight() {
-  return bbox_weight_;
+void TrainIter::GetBBoxWeight(mxnet::cpp::NDArray& arr) {
+  arr.SyncCopyFromCPU(raw_bbox_weight_.data(), raw_bbox_weight_.size());
 }
 
 void TrainIter::FillData() {
@@ -82,7 +76,6 @@ void TrainIter::FillData() {
   raw_im_data_.clear();
   raw_im_info_data_.clear();
 
-  auto ii = raw_im_data_.begin();
   auto if_i = std::back_insert_iterator<std::vector<float>>(raw_im_info_data_);
   auto b_i = std::back_insert_iterator<std::vector<float>>(raw_gt_boxes_data_);
 
@@ -96,8 +89,7 @@ void TrainIter::FillData() {
     // Fill image
     auto array = CVToMxnetFormat(image_desc.image);
     assert(array.size() <= one_image_size_);
-    raw_im_data_.insert(ii, array.begin(), array.end());
-    std::advance(ii, one_image_size_);
+    raw_im_data_.insert(raw_im_data_.end(), array.begin(), array.end());
 
     // Fill info
     *if_i++ = image_desc.height;
@@ -121,14 +113,10 @@ void TrainIter::FillData() {
       *b_i++ = x2 * image_desc.scale;
       *b_i++ = y2 * image_desc.scale;
       *b_i++ = *(ic++);  // class index
-      gt_boxes_pad_markers.push_back(
-          {raw_gt_boxes_data_.size(), image_desc.boxes.size()});
     }
+    gt_boxes_pad_markers.push_back(
+        {raw_gt_boxes_data_.size(), image_desc.boxes.size()});
   }
-  im_data_.SyncCopyFromCPU(raw_im_data_.data(), raw_im_data_.size());
-
-  im_info_data_.SyncCopyFromCPU(raw_im_info_data_.data(),
-                                raw_im_info_data_.size());
 
   // Add padding to gt_boxes
   size_t pad_pos = 0;
@@ -141,14 +129,6 @@ void TrainIter::FillData() {
       pad_pos += pad_size * 5;
     }
   }
-
-  gt_boxes_data_ = mxnet::cpp::NDArray(
-      mxnet::cpp::Shape(static_cast<mx_uint>(raw_gt_boxes_data_.size() / 5), 5),
-      im_data_.GetContext(), false);
-  gt_boxes_data_.SyncCopyFromCPU(raw_gt_boxes_data_.data(),
-                                 raw_gt_boxes_data_.size());
-  gt_boxes_data_ = gt_boxes_data_.Reshape(
-      mxnet::cpp::Shape(batch_size_, batch_gt_boxes_count_, 5));
 }
 
 void TrainIter::FillLabels(uint32_t feat_height, uint32_t feat_width) {
@@ -178,8 +158,8 @@ void TrainIter::FillLabels(uint32_t feat_height, uint32_t feat_width) {
       raw_gt_boxes_data_.data(),
       static_cast<mx_uint>(raw_gt_boxes_data_.size() / 5), 5);
   for (uint32_t i = 0, box_index = 0; i < batch_size_; ++i) {
-    auto im_width = raw_im_info_data_[i * 4 + 1];
-    auto im_height = raw_im_info_data_[i * 4];
+    auto im_width = raw_im_info_data_[i * 3 + 1];
+    auto im_height = raw_im_info_data_[i * 3];
     auto boxes = all_boxes.block(box_index, 0, batch_gt_boxes_count_, 4);
     box_index += batch_gt_boxes_count_;
 
@@ -194,32 +174,4 @@ void TrainIter::FillLabels(uint32_t feat_height, uint32_t feat_width) {
     bbox_weight_map.block(i * anchors.rows(), 0, anchors.rows(), 4) =
         b_bbox_weight;
   }
-
-  // copy batch to GPU
-  label_ = mxnet::cpp::NDArray(
-      mxnet::cpp::Shape(static_cast<mx_uint>(label_map.rows()),
-                        static_cast<mx_uint>(label_map.cols())),
-      im_data_.GetContext(), false);
-  label_.SyncCopyFromCPU(raw_label_.data(), raw_label_.size());
-
-  bbox_target_ = mxnet::cpp::NDArray(
-      mxnet::cpp::Shape(static_cast<mx_uint>(bbox_target_map.rows()),
-                        static_cast<mx_uint>(bbox_target_map.cols())),
-      im_data_.GetContext(), false);
-  bbox_target_.SyncCopyFromCPU(raw_bbox_target_.data(),
-                               raw_bbox_target_.size());
-
-  bbox_weight_ = mxnet::cpp::NDArray(
-      mxnet::cpp::Shape(static_cast<mx_uint>(bbox_weight_map.rows()),
-                        static_cast<mx_uint>(bbox_weight_map.cols())),
-      im_data_.GetContext(), false);
-  bbox_weight_.SyncCopyFromCPU(raw_bbox_weight_.data(),
-                               raw_bbox_weight_.size());
-  //  reshape
-  label_ = label_.Reshape(mxnet::cpp::Shape(
-      batch_size_, 1, num_anchors_ * feat_height, feat_width));
-  bbox_target_ = bbox_target_.Reshape(mxnet::cpp::Shape(
-      batch_size_, 4 * num_anchors_, feat_height, feat_width));
-  bbox_weight_ = bbox_weight_.Reshape(mxnet::cpp::Shape(
-      batch_size_, 4 * num_anchors_, feat_height, feat_width));
 }
