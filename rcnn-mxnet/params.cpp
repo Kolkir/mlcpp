@@ -23,3 +23,20 @@ LoadNetParams(const mxnet::cpp::Context& ctx, const std::string& param_file) {
   NDArray::WaitAll();
   return std::make_pair(args_map, aux_map);
 }
+
+void SaveNetParams(const std::string& param_file, mxnet::cpp::Executor* exe) {
+  std::map<std::string, mxnet::cpp::NDArray> params;
+  for (auto& iter : exe->arg_dict()) {
+    if (iter.first.find("data") == std::string::npos ||
+        iter.first.find("im_info") == std::string::npos ||
+        iter.first.find("gt_boxes") == std::string::npos ||
+        iter.first.find("label") == std::string::npos ||
+        iter.first.find("bbox_target") == std::string::npos ||
+        iter.first.find("bbox_weight") == std::string::npos)
+      params.insert({"arg:" + iter.first, iter.second});
+  }
+  for (auto iter : exe->aux_dict()) {
+    params.insert({"aux:" + iter.first, iter.second});
+  }
+  mxnet::cpp::NDArray::Save(param_file, params);
+}

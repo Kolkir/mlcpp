@@ -5,7 +5,12 @@
 #include "rcnn.h"
 #include "trainiter.h"
 
-//#include <ncurses.h>
+#define NCURSES_OUT
+
+#ifdef NCURSES_OUT
+#include <ncurses.h>
+#endif
+
 #include <opencv2/opencv.hpp>
 
 #include <experimental/filesystem>
@@ -18,10 +23,11 @@ static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
 // static mxnet::cpp::Context global_ctx(mxnet::cpp::kCPU, 0);
 
 const cv::String keys =
-    "{help h usage ? |      | print this message   }"
-    "{@coco_path     |<none>| path to coco dataset }"
-    "{p params       |      | path to trained parameters }"
-    "{s start-train  |      | path to trained parameters }";
+    "{help h usage ? |                  | print this message   }"
+    "{@coco_path     |<none>            | path to coco dataset }"
+    "{p params       |                  | path to trained parameters }"
+    "{s start-train  |                  | path to trained parameters }"
+    "{c check-point  |check-point.params| check point file name }";
 
 int main(int argc, char** argv) {
   cv::CommandLineParser parser(argc, argv, keys);
@@ -38,6 +44,8 @@ int main(int argc, char** argv) {
   if (parser.has("params"))
     params_path = parser.get<cv::String>("params");
 
+  std::string check_point_file = parser.get<cv::String>("check-point");
+
   bool start_train{false};
   if (parser.has("start-train"))
     start_train = true;
@@ -51,12 +59,15 @@ int main(int argc, char** argv) {
   }
 
   try {
+    check_point_file = fs::canonical(fs::absolute(check_point_file));
     coco_path = fs::canonical(fs::absolute(coco_path));
     if (!params_path.empty())
       params_path = fs::canonical(fs::absolute(params_path));
     if (fs::exists(coco_path)) {
       std::cout << "Path to the data set : " << coco_path << std::endl;
       std::cout << "Path to the net parameters : " << params_path << std::endl;
+      std::cout << "Path to the check-point file : " << check_point_file
+                << std::endl;
 
       Params params;
       auto net = GetRCNNSymbol(params, true);
@@ -160,8 +171,9 @@ int main(int argc, char** argv) {
       Coco coco(coco_path);
       coco.LoadTrainData();
       TrainIter train_iter(global_ctx, &coco, params);
+      auto batch_count = train_iter.GetBatchCount();
       std::cout << "Total images count: " << train_iter.GetSize() << std::endl;
-      std::cout << "Batch count: " << train_iter.GetBatchCount() << std::endl;
+      std::cout << "Batch count: " << batch_count << std::endl;
 
       mxnet::cpp::Optimizer* opt = mxnet::cpp::OptimizerRegistry::Find("ccsgd");
       opt->SetParam("lr", learning_rate)
@@ -181,18 +193,26 @@ int main(int argc, char** argv) {
         }
       }
 
-      // initscr();
+#ifdef NCURSES_OUT
+      initscr();
+#endif
       RCNNAccMetric acc_metric;
       RCNNLogLossMetric log_loss_metric;
       uint32_t batch_num = 0;
       for (uint32_t epoch = 0; epoch < max_epoch; ++epoch) {
-        // erase();
+#ifdef NCURSES_OUT
+        erase();
+        mvprintw(0, 0, "Epoch: %d\n", epoch);
+#else
         std::cout << "Epoch: " << epoch << std::endl;
-        // mvprintw(0, 0, "Epoch: %d\n", epoch);
+#endif
         train_iter.Reset();
         while (train_iter.Next(feat_height, feat_width)) {
+#ifdef NCURSES_OUT
+          mvprintw(1, 0, "Batch: %d \\ %d\n", batch_count, batch_num);
+#else
           std::cout << "Batch: " << batch_num << std::endl;
-          // mvprintw(1, 0, "Batch: %d\n", batch_num);
+#endif
           train_iter.GetImData(args_map["data"]);
           train_iter.GetImInfoData(args_map["im_info"]);
           train_iter.GetGtBoxesData(args_map["gt_boxes"]);
@@ -200,37 +220,53 @@ int main(int argc, char** argv) {
           train_iter.GetBBoxTraget(args_map["bbox_target"]);
           train_iter.GetBBoxWeight(args_map["bbox_weight"]);
           mxnet::cpp::NDArray::WaitAll();
+#ifdef NCURSES_OUT
+          mvprintw(2, 0, "Batch data filled\n");
+#else
           std::cout << "Batch data filled" << std::endl;
+#endif
 
           executor->Forward(true);
           executor->Backward();
-          mxnet::cpp::NDArray::WaitAll();
-          std::cout << "Forward+Backward passes done" << std::endl;
 
           for (size_t i = 0; i < args.size(); ++i) {
             if (not_update_args.find(args[i]) != not_update_args.end())
               continue;
+            executor->grad_arrays[i].WaitToRead();
+            executor->arg_arrays[i].WaitToWrite();
             opt->Update(static_cast<int>(i), executor->arg_arrays[i],
                         executor->grad_arrays[i]);
+            executor->arg_arrays[i].WaitToRead();
           }
-          mxnet::cpp::NDArray::WaitAll();
-          // std::cout << "Parameters updated" << std::endl;
-
+#ifdef NCURSES_OUT
+          mvprintw(3, 0, "Parameters updated\n");
+#else
+          std::cout << "Parameters updated\n" << std::endl;
+#endif
           // evaluate metrics
           executor->Forward(false);
-          mxnet::cpp::NDArray::WaitAll();
+          executor->outputs[4].WaitToRead();
+          executor->outputs[2].WaitToRead();
           acc_metric.Update(executor->outputs[4], executor->outputs[2]);
-          std::cout << "Batch RCNN accurary " << acc_metric.Get() << std::endl;
-          // mvprintw(2, 0, "Batch RCNN accurary: %f\n", acc_metric.Get());
           log_loss_metric.Update(executor->outputs[4], executor->outputs[2]);
+#ifdef NCURSES_OUT
+          mvprintw(4, 0, "Batch RCNN accurary: %f\n",
+                   static_cast<double>(acc_metric.Get()));
+          mvprintw(5, 0, "Batch RCNN log loss %f\n",
+                   static_cast<double>(log_loss_metric.Get()));
+          refresh();
+#else
+          std::cout << "Batch RCNN accurary " << acc_metric.Get() << std::endl;
           std::cout << "Batch RCNN log loss " << log_loss_metric.Get()
                     << std::endl;
-          // mvprintw(3, 0, "Batch RCNN log loss %f\n", log_loss_metric.Get());
+#endif
           ++batch_num;
-          // refresh();
         }
+        SaveNetParams(check_point_file, executor);
       }
-      // endwin();
+#ifdef NCURSES_OUT
+      endwin();
+#endif
 
       mxnet::cpp::NDArray::WaitAll();
       delete executor;
