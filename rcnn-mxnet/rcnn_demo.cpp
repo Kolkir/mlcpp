@@ -13,7 +13,7 @@
 
 namespace fs = std::experimental::filesystem;
 
-static mxnet::cpp::Context global_ctx(mxnet::cpp::kCPU, 0);
+static mxnet::cpp::Context global_ctx = mxnet::cpp::Context::gpu();
 
 const cv::String keys =
     "{help h usage ? |      | print this message   }"
@@ -52,10 +52,10 @@ int main(int argc, char** argv) {
       auto net = GetRCNNSymbol(params, false);
 
       //----------- Load data
-      auto [img, scale] =
-          LoadImage(image_path, params.img_short_side, params.img_long_side);
-      //          LoadImageFitSize(image_path, params.img_short_side,
-      //                           params.img_long_side);
+      cv::Mat img;
+      float scale{1};
+      std::tie(img, scale) = LoadImageFitSize(image_path, params.img_short_side,
+                                              params.img_long_side);
       if (img.empty()) {
         std::cout << "Failed to load image" << std::endl;
         return 1;
@@ -66,12 +66,13 @@ int main(int argc, char** argv) {
           global_ctx, false);
       auto array = CVToMxnetFormat(img);
       data.SyncCopyFromCPU(array.data(), array.size());
+      data.WaitToRead();
 
       mxnet::cpp::NDArray im_info(mxnet::cpp::Shape(1, 3), global_ctx, false);
       std::vector<float> raw_im_info = {static_cast<float>(img.rows),
                                         static_cast<float>(img.cols), scale};
       im_info.SyncCopyFromCPU(raw_im_info.data(), raw_im_info.size());
-      mxnet::cpp::NDArray::WaitAll();
+      im_info.WaitToRead();
 
       //----------- Load params
       std::map<std::string, mxnet::cpp::NDArray> args_map;
@@ -90,7 +91,8 @@ int main(int argc, char** argv) {
         if (iter != args_map.end()) {
           arg_shapes[arg_name] = iter->second.GetShape();
         } else {
-          std::cout << "Missed argument : " << arg_name << std::endl;
+          std::cout << "Configurable or missed argument : " << arg_name
+                    << std::endl;
         }
       }
 
@@ -112,11 +114,16 @@ int main(int argc, char** argv) {
           std::map<std::string, mxnet::cpp::OpReqType>(), aux_map);
 
       executor->Forward(false);
-      auto rois = executor->outputs[0].Copy(Context(kCPU, 0));
-      auto scores = executor->outputs[1].Copy(Context(kCPU, 0));
-      auto bbox_deltas = executor->outputs[2].Copy(Context(kCPU, 0));
+      // NDArray::WaitAll(); - hides exceptions
+      executor->outputs[0].WaitToRead();
+      executor->outputs[1].WaitToRead();
+      executor->outputs[2].WaitToRead();
+
+      auto rois = executor->outputs[0].Copy(Context::cpu());
+      auto scores = executor->outputs[1].Copy(Context::cpu());
+      auto bbox_deltas = executor->outputs[2].Copy(Context::cpu());
       NDArray::WaitAll();
-      delete executor;
+      // delete executor;
 
       //--------- Decode result
       auto det =

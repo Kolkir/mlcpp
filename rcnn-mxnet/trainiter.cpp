@@ -24,6 +24,14 @@ TrainIter::TrainIter(const mxnet::cpp::Context& ctx,
   Reset();
 }
 
+uint32_t TrainIter::GetSize() const {
+  return size_;
+}
+
+uint32_t TrainIter::GetBatchCount() const {
+  return size_ / batch_size_;
+}
+
 void TrainIter::Reset() {
   cur_ = 0;
   data_indices_.resize(size_);

@@ -303,7 +303,9 @@ ImageDesc Coco::GetImage(uint32_t index,
     std::advance(i, index);
     fs::path file_path(train_images_folder_);
     file_path /= i->second.name;
-    auto [img, scale] = LoadImageFitSize(file_path.string(), height, width);
+    cv::Mat img;
+    float scale{0};
+    std::tie(img, scale) = LoadImageFitSize(file_path.string(), height, width);
     if (!img.empty()) {
       ImageDesc result;
       result.image = img;

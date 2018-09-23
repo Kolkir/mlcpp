@@ -9,14 +9,14 @@
 
 class Params {
  public:
-  uint32_t img_short_side = 600;
-  uint32_t img_long_side = 1000;
+  uint32_t img_short_side = 224;
+  uint32_t img_long_side = 224;
   float rpn_feat_stride = 16;
   std::vector<float> rpn_anchor_scales{8.f, 16.f, 32.f};
   std::vector<float> rpn_anchor_ratios{0.5f, 1.f, 2.f};
-  int rpn_pre_nms_topk = 12000;  // 6000;
-  int rpn_post_nms_topk = 2000;  // 300;
-  float rpn_nms_thresh = 0.7f;   // 0.3f;
+  int rpn_pre_nms_topk = 6000;  // 12000;  // 6000;
+  int rpn_post_nms_topk = 300;  // 2000;  // 300;
+  float rpn_nms_thresh = 0.3f;  // 0.7f;  // 0.3f;
   int rpn_min_size = 16;
   int rpn_batch_rois = 256;
   int rpn_allowed_border = 0;
@@ -26,7 +26,7 @@ class Params {
   int rcnn_num_classes = 81;  // coco classes
   int rcnn_feat_stride = 16;
   std::vector<float> rcnn_pooled_size{14, 14};
-  uint32_t rcnn_batch_size = 2;
+  uint32_t rcnn_batch_size = 1;
   uint32_t rcnn_batch_gt_boxes = 100;
   int rcnn_batch_rois = 128;
   float rcnn_fg_fraction = 0.25f;

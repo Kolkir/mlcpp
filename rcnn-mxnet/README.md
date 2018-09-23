@@ -17,3 +17,6 @@ nnvm - include path missed in install folder
 
 Alot of -Wunused-parameter warnings
 
+Solve the cuda "too many resources requested for launch" problem by adding MSHADOW_CFLAGS += -DMSHADOW_OLD_CUDA=1 in mxnet/mshadow/make/mshadow.mk.
+This macro limits the threads of kernel launch, refer https://github.com/dmlc/mshadow/blob/3a400b4662bf42e885592fd07bd51335532a8bc8/mshadow/cuda/tensor_gpu-inl.cuh#L25 for more details.
+And re-compile mxnet.

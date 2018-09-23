@@ -51,10 +51,10 @@ int main(int argc, char** argv) {
     NDArray::WaitAll();
 
     //----------- Load data
-    auto img = LoadImage(argv[1], 224, 224, true);
-    auto array = CVToMxnetFormat(img.first);
-    NDArray data(Shape(1, 3, static_cast<index_t>(img.first.rows),
-                       static_cast<index_t>(img.first.cols)),
+    auto img = LoadImageFitSize(argv[1], 224, 224);
+    auto array = CVToMxnetFormat(std::get<0>(img));
+    NDArray data(Shape(1, 3, static_cast<index_t>(std::get<0>(img).rows),
+                       static_cast<index_t>(std::get<0>(img).cols)),
                  global_ctx, false);
     data.SyncCopyFromCPU(array.data(), array.size());
     NDArray::WaitAll();

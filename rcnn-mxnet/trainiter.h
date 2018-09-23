@@ -18,6 +18,9 @@ class TrainIter {
   TrainIter(const TrainIter&) = delete;
   TrainIter& operator=(const TrainIter&) = delete;
 
+  uint32_t GetSize() const;
+  uint32_t GetBatchCount() const;
+
   // DataIter interface
   void Reset();
   bool Next(uint32_t feat_height, uint32_t feat_width);

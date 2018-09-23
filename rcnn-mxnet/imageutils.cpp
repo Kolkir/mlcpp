@@ -4,7 +4,6 @@ std::pair<cv::Mat, float> LoadImage(const std::string& file_name,
                                     uint32_t short_side,
                                     uint32_t long_side) {
   auto img = cv::imread(file_name);
-  std::cout << "Load file " << file_name << std::endl;
   if (!img.empty()) {
     img.convertTo(img, CV_32FC3);
     float scale = 0;
@@ -30,7 +29,6 @@ std::tuple<cv::Mat, float> LoadImageFitSize(const std::string& file_name,
                                             uint32_t height,
                                             uint32_t width) {
   auto img = cv::imread(file_name);
-  std::cout << "Load file " << file_name << std::endl;
   if (!img.empty()) {
     img.convertTo(img, CV_32FC3);
     float scale = 1.f;
@@ -54,9 +52,7 @@ std::tuple<cv::Mat, float> LoadImageFitSize(const std::string& file_name,
     // pad
     int bottom = static_cast<int>(height) - img.rows;
     int right = static_cast<int>(width) - img.cols;
-    if (right < 0 || bottom < 0) {
-      std::cout << "error\n";
-    }
+    assert(right >= 0 && bottom >= 0);
     cv::copyMakeBorder(img, img, 0, bottom, 0, right, cv::BORDER_CONSTANT,
                        cv::Scalar(0, 0, 0, 0));
 

@@ -5,6 +5,7 @@
 #include "rcnn.h"
 #include "trainiter.h"
 
+//#include <ncurses.h>
 #include <opencv2/opencv.hpp>
 
 #include <experimental/filesystem>
@@ -13,8 +14,8 @@
 
 namespace fs = std::experimental::filesystem;
 
-// static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
-static mxnet::cpp::Context global_ctx(mxnet::cpp::kCPU, 0);
+static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
+// static mxnet::cpp::Context global_ctx(mxnet::cpp::kCPU, 0);
 
 const cv::String keys =
     "{help h usage ? |      | print this message   }"
@@ -100,7 +101,8 @@ int main(int argc, char** argv) {
           if (iter != args_map.end()) {
             arg_shapes[arg_name] = iter->second.GetShape();
           } else {
-            std::cout << "Missed argument : " << arg_name << std::endl;
+            std::cout << "Configurable or Missed argument : " << arg_name
+                      << std::endl;
           }
         }
 
@@ -154,10 +156,12 @@ int main(int argc, char** argv) {
         InitiaizeRCNN(args_map);
       }
 
-      std::cout << "Loading trainig data ..." << std::endl;
+      std::cout << "Loading trainig data set ..." << std::endl;
       Coco coco(coco_path);
       coco.LoadTrainData();
       TrainIter train_iter(global_ctx, &coco, params);
+      std::cout << "Total images count: " << train_iter.GetSize() << std::endl;
+      std::cout << "Batch count: " << train_iter.GetBatchCount() << std::endl;
 
       mxnet::cpp::Optimizer* opt = mxnet::cpp::OptimizerRegistry::Find("ccsgd");
       opt->SetParam("lr", learning_rate)
@@ -177,12 +181,18 @@ int main(int argc, char** argv) {
         }
       }
 
+      // initscr();
       RCNNAccMetric acc_metric;
       RCNNLogLossMetric log_loss_metric;
+      uint32_t batch_num = 0;
       for (uint32_t epoch = 0; epoch < max_epoch; ++epoch) {
+        // erase();
         std::cout << "Epoch: " << epoch << std::endl;
+        // mvprintw(0, 0, "Epoch: %d\n", epoch);
         train_iter.Reset();
         while (train_iter.Next(feat_height, feat_width)) {
+          std::cout << "Batch: " << batch_num << std::endl;
+          // mvprintw(1, 0, "Batch: %d\n", batch_num);
           train_iter.GetImData(args_map["data"]);
           train_iter.GetImInfoData(args_map["im_info"]);
           train_iter.GetGtBoxesData(args_map["gt_boxes"]);
@@ -204,18 +214,23 @@ int main(int argc, char** argv) {
                         executor->grad_arrays[i]);
           }
           mxnet::cpp::NDArray::WaitAll();
-          std::cout << "Parameters updated" << std::endl;
+          // std::cout << "Parameters updated" << std::endl;
 
           // evaluate metrics
           executor->Forward(false);
           mxnet::cpp::NDArray::WaitAll();
           acc_metric.Update(executor->outputs[4], executor->outputs[2]);
           std::cout << "Batch RCNN accurary " << acc_metric.Get() << std::endl;
+          // mvprintw(2, 0, "Batch RCNN accurary: %f\n", acc_metric.Get());
           log_loss_metric.Update(executor->outputs[4], executor->outputs[2]);
           std::cout << "Batch RCNN log loss " << log_loss_metric.Get()
                     << std::endl;
+          // mvprintw(3, 0, "Batch RCNN log loss %f\n", log_loss_metric.Get());
+          ++batch_num;
+          // refresh();
         }
       }
+      // endwin();
 
       mxnet::cpp::NDArray::WaitAll();
       delete executor;

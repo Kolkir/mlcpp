@@ -19,10 +19,6 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
                       float im_width,
                       float im_height) {
   auto n_anchors = anchors.rows();
-  std::cout << "Image width " << im_width << " Image height " << im_height
-            << std::endl;
-  std::cout << "All anchors count " << n_anchors << std::endl;
-
   // filter out anchors outside the image region
   Eigen::ArrayXf indices_base = Eigen::ArrayXf::Constant(n_anchors, 1.f);
 
@@ -46,7 +42,6 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
       valid_anchors.row(j++) = anchors.row(i);
     }
   }
-  std::cout << "Valid anchors count " << num_valid << std::endl;
 
   // label: 1 is positive, 0 is negative, -1 is dont care
   Eigen::MatrixXf labels = Eigen::MatrixXf::Constant(num_valid, 1, -1.f);

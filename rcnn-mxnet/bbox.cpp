@@ -266,10 +266,17 @@ Eigen::MatrixXf clip_boxes(const Eigen::MatrixXf& boxes,
 
 Eigen::MatrixXf NDArray2ToEigen(const mxnet::cpp::NDArray& value) {
   assert(value.GetShape().size() == 2);
-  auto result =
-      Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
-                                     Eigen::RowMajor>>(
-          value.GetData(), value.GetShape()[0], value.GetShape()[1]);
+  //  auto result =
+  //      Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+  //                                     Eigen::RowMajor>>(
+  //          value.GetData(), value.GetShape()[0], value.GetShape()[1]);
+
+  Eigen::MatrixXf result(value.GetShape()[0], value.GetShape()[1]);
+  for (Eigen::Index x = 0; x < result.cols(); ++x) {
+    for (Eigen::Index y = 0; y < result.rows(); ++y) {
+      result(y, x) = value.At(y, x);
+    }
+  }
   return result;
 }
 
