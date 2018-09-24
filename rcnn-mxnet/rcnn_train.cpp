@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
       std::cout << "Loading trainig data set ..." << std::endl;
       Coco coco(coco_path);
       coco.LoadTrainData();
-      TrainIter train_iter(global_ctx, &coco, params);
+      TrainIter train_iter(&coco, params, feat_height, feat_width);
       auto batch_count = train_iter.GetBatchCount();
       std::cout << "Total images count: " << train_iter.GetSize() << std::endl;
       std::cout << "Batch count: " << batch_count << std::endl;
@@ -207,19 +207,15 @@ int main(int argc, char** argv) {
         std::cout << "Epoch: " << epoch << std::endl;
 #endif
         train_iter.Reset();
-        while (train_iter.Next(feat_height, feat_width)) {
+        while (train_iter.Next()) {
 #ifdef NCURSES_OUT
           mvprintw(1, 0, "Batch: %d \\ %d\n", batch_count, batch_num);
 #else
           std::cout << "Batch: " << batch_num << std::endl;
 #endif
-          train_iter.GetImData(args_map["data"]);
-          train_iter.GetImInfoData(args_map["im_info"]);
-          train_iter.GetGtBoxesData(args_map["gt_boxes"]);
-          train_iter.GetLabel(args_map["label"]);
-          train_iter.GetBBoxTraget(args_map["bbox_target"]);
-          train_iter.GetBBoxWeight(args_map["bbox_weight"]);
-          mxnet::cpp::NDArray::WaitAll();
+          train_iter.GetData(args_map["data"], args_map["im_info"],
+                             args_map["gt_boxes"], args_map["label"],
+                             args_map["bbox_target"], args_map["bbox_weight"]);
 #ifdef NCURSES_OUT
           mvprintw(2, 0, "Batch data filled\n");
 #else
