@@ -66,10 +66,11 @@ bool TrainIter::Next() {
                             [&]() -> bool { return !available_data_.empty(); });
   current_data_ = available_data_.front();
   available_data_.pop();
-  if (current_data_)
+  if (current_data_) {
     return true;
-  else
+  } else {
     return false;
+  }
 }
 
 void TrainIter::GetData(mxnet::cpp::NDArray& im_arr,

@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
       std::cout << "Path to the image : " << image_path << std::endl;
 
       //----------- Make net
-      Params params;
+      Params params(true);
       auto net = GetRCNNSymbol(params, false);
 
       //----------- Load data
@@ -135,7 +135,14 @@ int main(int argc, char** argv) {
                             params);
 
       //-------- Show result
-      ShowResult(det, image_path, "det.png", Coco::GetClasses());
+      std::cout << "Predictions num: " << det.size() << std::endl;
+      auto& classes = Coco::GetClasses();
+      for (auto& d : det) {
+        std::cout << classes[static_cast<size_t>(d.class_id)] + " - " +
+                         std::to_string(d.score)
+                  << std::endl;
+      }
+      ShowResult(det, image_path, "det.png", classes);
     }
     MXNotifyShutdown();
   } catch (const dmlc::Error& err) {

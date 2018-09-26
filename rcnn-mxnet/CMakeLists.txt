@@ -84,6 +84,8 @@ set(SOURCES_TRAIN
     proposaltarget_op.cpp
     metrics.h
     metrics.cpp
+    reporter.h
+    reporter.cpp
     )
 
 set(SOURCES_DEMO

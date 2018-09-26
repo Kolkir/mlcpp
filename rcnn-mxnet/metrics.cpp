@@ -17,7 +17,9 @@ void RCNNAccMetric::Update(mxnet::cpp::NDArray labels,
   labels.Reshape(mxnet::cpp::Shape(static_cast<mx_uint>(-1)))
       .SyncCopyToCPU(&label_data, label_data.size());
   for (mx_uint i = 0; i < len; ++i) {
-    sum_metric += (pred_data[i] == label_data[i]) ? 1 : 0;
+    sum_metric +=
+        (static_cast<int>(pred_data[i]) == static_cast<int>(label_data[i])) ? 1
+                                                                            : 0;
     num_inst += 1;
   }
 }

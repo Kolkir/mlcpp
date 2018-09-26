@@ -66,7 +66,7 @@ class Coco : public ImageDb {
   void AddCategory(CocoCategory category);
   cv::Mat DrawAnnotedImage(uint32_t id) const;
 
-  static const std::vector<std::string> GetClasses();
+  static const std::vector<std::string>& GetClasses();
 
   // ImageDb interface
   uint32_t GetImagesCount() const override;

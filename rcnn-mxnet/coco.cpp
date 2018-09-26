@@ -357,6 +357,6 @@ cv::Mat Coco::DrawAnnotedImage(uint32_t id) const {
   }
 }
 
-const std::vector<std::string> Coco::GetClasses() {
+const std::vector<std::string>& Coco::GetClasses() {
   return coco_classes;
 }

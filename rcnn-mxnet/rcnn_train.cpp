@@ -3,13 +3,8 @@
 #include "metrics.h"
 #include "params.h"
 #include "rcnn.h"
+#include "reporter.h"
 #include "trainiter.h"
-
-#define NCURSES_OUT
-
-#ifdef NCURSES_OUT
-#include <ncurses.h>
-#endif
 
 #include <opencv2/opencv.hpp>
 
@@ -193,34 +188,27 @@ int main(int argc, char** argv) {
         }
       }
 
-#ifdef NCURSES_OUT
-      initscr();
-#endif
+      Reporter reporter(4, std::chrono::milliseconds(5000));
+      reporter.SetLineDescription(0,
+                                  "Epoch(" + std::to_string(max_epoch) + ")");
+      reporter.SetLineDescription(1,
+                                  "Batch(" + std::to_string(batch_count) + ")");
+      reporter.SetLineDescription(2, "RCNN accurary");
+      reporter.SetLineDescription(3, "RCNN log loss");
+      reporter.Start();
+
       RCNNAccMetric acc_metric;
       RCNNLogLossMetric log_loss_metric;
       uint32_t batch_num = 0;
       for (uint32_t epoch = 0; epoch < max_epoch; ++epoch) {
-#ifdef NCURSES_OUT
-        erase();
-        mvprintw(0, 0, "Epoch: %d\n", epoch);
-#else
-        std::cout << "Epoch: " << epoch << std::endl;
-#endif
+        batch_num = 0;
+        reporter.SetLineValue(0, epoch);
         train_iter.Reset();
         while (train_iter.Next()) {
-#ifdef NCURSES_OUT
-          mvprintw(1, 0, "Batch: %d \\ %d\n", batch_count, batch_num);
-#else
-          std::cout << "Batch: " << batch_num << std::endl;
-#endif
+          reporter.SetLineValue(1, batch_num);
           train_iter.GetData(args_map["data"], args_map["im_info"],
                              args_map["gt_boxes"], args_map["label"],
                              args_map["bbox_target"], args_map["bbox_weight"]);
-#ifdef NCURSES_OUT
-          mvprintw(2, 0, "Batch data filled\n");
-#else
-          std::cout << "Batch data filled" << std::endl;
-#endif
 
           executor->Forward(true);
           executor->Backward();
@@ -234,35 +222,23 @@ int main(int argc, char** argv) {
                         executor->grad_arrays[i]);
             executor->arg_arrays[i].WaitToRead();
           }
-#ifdef NCURSES_OUT
-          mvprintw(3, 0, "Parameters updated\n");
-#else
-          std::cout << "Parameters updated\n" << std::endl;
-#endif
-          // evaluate metrics
-          executor->Forward(false);
-          executor->outputs[4].WaitToRead();
-          executor->outputs[2].WaitToRead();
-          acc_metric.Update(executor->outputs[4], executor->outputs[2]);
-          log_loss_metric.Update(executor->outputs[4], executor->outputs[2]);
-#ifdef NCURSES_OUT
-          mvprintw(4, 0, "Batch RCNN accurary: %f\n",
-                   static_cast<double>(acc_metric.Get()));
-          mvprintw(5, 0, "Batch RCNN log loss %f\n",
-                   static_cast<double>(log_loss_metric.Get()));
-          refresh();
-#else
-          std::cout << "Batch RCNN accurary " << acc_metric.Get() << std::endl;
-          std::cout << "Batch RCNN log loss " << log_loss_metric.Get()
-                    << std::endl;
-#endif
+
+          // evaluate metrics - every 100 batches
+          if (batch_num % 100 == 0) {
+            executor->Forward(false);
+            executor->outputs[4].WaitToRead();
+            executor->outputs[2].WaitToRead();
+            acc_metric.Update(executor->outputs[4], executor->outputs[2]);
+            log_loss_metric.Update(executor->outputs[4], executor->outputs[2]);
+
+            reporter.SetLineValue(2, acc_metric.Get());
+            reporter.SetLineValue(3, log_loss_metric.Get());
+          }
           ++batch_num;
         }
         SaveNetParams(check_point_file, executor);
       }
-#ifdef NCURSES_OUT
-      endwin();
-#endif
+      reporter.Stop();
 
       mxnet::cpp::NDArray::WaitAll();
       delete executor;

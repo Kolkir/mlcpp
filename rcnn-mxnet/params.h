@@ -14,9 +14,9 @@ class Params {
   float rpn_feat_stride = 16;
   std::vector<float> rpn_anchor_scales{8.f, 16.f, 32.f};
   std::vector<float> rpn_anchor_ratios{0.5f, 1.f, 2.f};
-  int rpn_pre_nms_topk = 12000;  // 12000;  // 6000;
-  int rpn_post_nms_topk = 2000;  // 2000;  // 300;
-  float rpn_nms_thresh = 0.7f;   // 0.7f;  // 0.3f;
+  int rpn_pre_nms_topk = 12000;
+  int rpn_post_nms_topk = 2000;
+  float rpn_nms_thresh = 0.7f;
   int rpn_min_size = 16;
   int rpn_batch_rois = 256;
   int rpn_allowed_border = 0;
@@ -33,6 +33,15 @@ class Params {
   float rcnn_fg_overlap = 0.5f;
   std::vector<float> rcnn_bbox_stds{0.1f, 0.1f, 0.2f, 0.2f};
   float rcnn_conf_thresh = 1e-3f;
+
+  Params(bool is_eval = false) {
+    if (is_eval) {
+      rpn_pre_nms_topk = 6000;
+      rpn_post_nms_topk = 300;
+      rpn_nms_thresh = 0.3f;
+      rcnn_batch_size = 1;
+    }
+  }
 };
 
 std::pair<std::map<std::string, mxnet::cpp::NDArray>,

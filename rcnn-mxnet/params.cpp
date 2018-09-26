@@ -27,12 +27,12 @@ LoadNetParams(const mxnet::cpp::Context& ctx, const std::string& param_file) {
 void SaveNetParams(const std::string& param_file, mxnet::cpp::Executor* exe) {
   std::map<std::string, mxnet::cpp::NDArray> params;
   for (auto& iter : exe->arg_dict()) {
-    if (iter.first.find("data") == std::string::npos ||
-        iter.first.find("im_info") == std::string::npos ||
-        iter.first.find("gt_boxes") == std::string::npos ||
-        iter.first.find("label") == std::string::npos ||
-        iter.first.find("bbox_target") == std::string::npos ||
-        iter.first.find("bbox_weight") == std::string::npos)
+    if (iter.first.rfind("data", 0) != 0 &&
+        iter.first.rfind("im_info", 0) != 0 &&
+        iter.first.rfind("gt_boxes", 0) != 0 &&
+        iter.first.rfind("label", 0) != 0 &&
+        iter.first.rfind("bbox_target", 0) != 0 &&
+        iter.first.rfind("bbox_weight", 0) != 0)
       params.insert({"arg:" + iter.first, iter.second});
   }
   for (auto iter : exe->aux_dict()) {
