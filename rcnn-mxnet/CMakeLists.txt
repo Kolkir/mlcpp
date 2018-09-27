@@ -76,6 +76,8 @@ set(SOURCES_TRAIN
     anchorsampler.cpp
     trainiter.h
     trainiter.cpp
+    gputrainiter.h
+    gputrainiter.cpp
     README.md
     get_model.sh
     proposaltarget_op.h

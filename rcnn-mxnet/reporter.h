@@ -9,7 +9,7 @@
 
 class Reporter {
  public:
-  Reporter(size_t lines_num, std::chrono::milliseconds interval);
+  Reporter(bool stdout, size_t lines_num, std::chrono::milliseconds interval);
   ~Reporter();
   Reporter(const Reporter&) = delete;
   Reporter& operator=(const Reporter&) = delete;
@@ -30,6 +30,7 @@ class Reporter {
   std::atomic_bool stop_flag_{false};
   std::thread print_thread_;
   std::chrono::milliseconds interval_;
+  bool stdout_{false};
 };
 
 #endif  // REPORTER_H

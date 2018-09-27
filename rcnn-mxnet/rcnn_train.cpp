@@ -1,10 +1,10 @@
 #include "coco.h"
+#include "gputrainiter.h"
 #include "imageutils.h"
 #include "metrics.h"
 #include "params.h"
 #include "rcnn.h"
 #include "reporter.h"
-#include "trainiter.h"
 
 #include <opencv2/opencv.hpp>
 
@@ -149,8 +149,6 @@ int main(int argc, char** argv) {
 
       //----------- Train
       uint32_t max_epoch = 10;
-      float learning_rate = 1e-4f;
-      float weight_decay = 1e-4f;
 
       mxnet::cpp::Executor* executor{nullptr};
       // without aux_map - training fails with nans
@@ -162,19 +160,32 @@ int main(int argc, char** argv) {
         InitiaizeRCNN(args_map);
       }
 
-      std::cout << "Loading trainig data set ..." << std::endl;
+      std::cout << "Indexing trainig data set ..." << std::endl;
       Coco coco(coco_path);
-      coco.LoadTrainData();
-      TrainIter train_iter(&coco, params, feat_height, feat_width);
+      coco.LoadTrainData({3});
+      GpuTrainIter train_iter(&coco, params, feat_height, feat_width);
+      train_iter.AllocateGpuCache(
+          global_ctx, arg_shapes["data"], arg_shapes["im_info"],
+          arg_shapes["gt_boxes"], arg_shapes["label"],
+          arg_shapes["bbox_target"], arg_shapes["bbox_weight"]);
+
       auto batch_count = train_iter.GetBatchCount();
       std::cout << "Total images count: " << train_iter.GetSize() << std::endl;
       std::cout << "Batch count: " << batch_count << std::endl;
 
-      mxnet::cpp::Optimizer* opt = mxnet::cpp::OptimizerRegistry::Find("ccsgd");
-      opt->SetParam("lr", learning_rate)
-          ->SetParam("wd", weight_decay)
-          ->SetParam("momentum", 0.9)
-          ->SetParam("rescale_grad", 1.0 / params.rcnn_batch_size)
+      float lr = 0.001f;
+      float lr_factor = 0.1f;
+      int lr_epoch = 7;  // epoch to decay lr
+      int lr_step = (lr_epoch * static_cast<int>(train_iter.GetSize())) /
+                    static_cast<int>(params.rcnn_batch_size);
+
+      mxnet::cpp::Optimizer* opt = mxnet::cpp::OptimizerRegistry::Find("sgd");
+      opt->SetLRScheduler(
+             std::make_unique<mxnet::cpp::FactorScheduler>(lr_step, lr_factor))
+          ->SetParam("lr", lr)
+          ->SetParam("wd", 0.0005)
+          ->SetParam("momentum", 0.9f)
+          ->SetParam("rescale_grad", 1.0f / params.rcnn_batch_size)
           ->SetParam("clip_gradient", 5);
 
       std::unordered_set<std::string> not_update_args{
@@ -188,7 +199,7 @@ int main(int argc, char** argv) {
         }
       }
 
-      Reporter reporter(4, std::chrono::milliseconds(5000));
+      Reporter reporter(false, 4, std::chrono::milliseconds(5000));
       reporter.SetLineDescription(0,
                                   "Epoch(" + std::to_string(max_epoch) + ")");
       reporter.SetLineDescription(1,
@@ -214,13 +225,13 @@ int main(int argc, char** argv) {
           executor->Backward();
 
           for (size_t i = 0; i < args.size(); ++i) {
-            if (not_update_args.find(args[i]) != not_update_args.end())
-              continue;
-            executor->grad_arrays[i].WaitToRead();
-            executor->arg_arrays[i].WaitToWrite();
-            opt->Update(static_cast<int>(i), executor->arg_arrays[i],
-                        executor->grad_arrays[i]);
-            executor->arg_arrays[i].WaitToRead();
+            if (not_update_args.find(args[i]) == not_update_args.end()) {
+              executor->grad_arrays[i].WaitToRead();
+              executor->arg_arrays[i].WaitToWrite();
+              opt->Update(static_cast<int>(i), executor->arg_arrays[i],
+                          executor->grad_arrays[i]);
+              executor->arg_arrays[i].WaitToRead();
+            }
           }
 
           // evaluate metrics - every 100 batches

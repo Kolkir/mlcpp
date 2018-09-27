@@ -60,7 +60,7 @@ struct CocoImage {
 class Coco : public ImageDb {
  public:
   explicit Coco(const std::string& path);
-  void LoadTrainData();
+  void LoadTrainData(const std::vector<uint32_t>& keep_classes = {});
   void AddImage(CocoImage image);
   void AddAnnotation(CocoAnnotation annotation);
   void AddCategory(CocoCategory category);

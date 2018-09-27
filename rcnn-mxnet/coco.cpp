@@ -235,7 +235,7 @@ struct CocoHandler
   Coco* coco_ = nullptr;
 };
 
-void Coco::LoadTrainData() {
+void Coco::LoadTrainData(const std::vector<uint32_t>& keep_classes) {
   auto* file = std::fopen(train_annotations_file_.c_str(), "r");
   if (file) {
     char readBuffer[65536];
@@ -272,6 +272,27 @@ void Coco::LoadTrainData() {
           std::find(coco_classes.begin(), coco_classes.end(), cat.second.name);
       auto pos = std::distance(coco_classes.begin(), i);
       cat_ind_to_class_ind_.insert({cat.second.id, static_cast<uint32_t>(pos)});
+    }
+    // filter - leave only required classes
+    if (!keep_classes.empty()) {
+      std::unordered_set<uint32_t> keep_classes_set;
+      keep_classes_set.insert(keep_classes.begin(), keep_classes.end());
+      images_to_remove.clear();
+      for (auto& img : images_) {
+        auto image_id = img.first;
+        bool skip = true;
+        for (auto ant_id : image_to_ant_index_[image_id]) {
+          auto class_ind =
+              cat_ind_to_class_ind_[annotations_[ant_id].category_id];
+          if (keep_classes_set.find(class_ind) != keep_classes_set.end())
+            skip = false;
+        }
+        if (skip)
+          images_to_remove.push_back(image_id);
+      }
+      for (auto image_id : images_to_remove) {
+        images_.erase(image_id);
+      }
     }
   } else {
     throw std::runtime_error(train_annotations_file_ + " file can't be opened");

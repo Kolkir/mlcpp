@@ -138,9 +138,9 @@ int main(int argc, char** argv) {
       std::cout << "Predictions num: " << det.size() << std::endl;
       auto& classes = Coco::GetClasses();
       for (auto& d : det) {
-        std::cout << classes[static_cast<size_t>(d.class_id)] + " - " +
-                         std::to_string(d.score)
-                  << std::endl;
+        std::cout << classes[static_cast<size_t>(d.class_id)] << " - "
+                  << std::to_string(d.score) << " " << d.x1 << " " << d.y1
+                  << " " << d.x2 << " " << d.y2 << std::endl;
       }
       ShowResult(det, image_path, "det.png", classes);
     }

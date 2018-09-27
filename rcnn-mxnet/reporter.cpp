@@ -1,9 +1,15 @@
 #include "reporter.h"
 
 #include <ncurses.h>
+#include <iostream>
 
-Reporter::Reporter(size_t lines_num, std::chrono::milliseconds interval)
-    : values_(lines_num), descriptions_(lines_num), interval_(interval) {}
+Reporter::Reporter(bool stdout,
+                   size_t lines_num,
+                   std::chrono::milliseconds interval)
+    : values_(lines_num),
+      descriptions_(lines_num),
+      interval_(interval),
+      stdout_(stdout) {}
 
 Reporter::~Reporter() {
   Stop();
@@ -15,21 +21,30 @@ void Reporter::SetLineDescription(size_t index, const std::string& desc) {
 
 void Reporter::Start() {
   std::thread th([&]() {
-    auto win = initscr();
-    erase();
-    notimeout(win, true);
-    nodelay(win, true);
-
+    WINDOW* win = nullptr;
+    if (!stdout_) {
+      win = initscr();
+      erase();
+      notimeout(win, true);
+      nodelay(win, true);
+    }
     auto len = values_.size();
     while (!stop_flag_) {
       for (size_t i = 0; i < len; ++i) {
-        mvprintw(static_cast<int>(i), 0, "%s: %f\n", descriptions_[i].c_str(),
-                 static_cast<double>(values_[i]));
+        if (!stdout_) {
+          mvprintw(static_cast<int>(i), 0, "%s: %f\n", descriptions_[i].c_str(),
+                   static_cast<double>(values_[i]));
+        } else {
+          std::cout << descriptions_[i].c_str() << ": " << values_[i]
+                    << std::endl;
+        }
       }
-      refresh();
+      if (!stdout_)
+        refresh();
       std::this_thread::sleep_for(interval_);
     }
-    endwin();
+    if (!stdout_)
+      endwin();
   });
   print_thread_ = std::move(th);
 }
