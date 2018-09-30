@@ -31,12 +31,10 @@ void RCNNLogLossMetric::Update(mxnet::cpp::NDArray labels,
   mx_uint batches = labels_shape.front();
   mx_uint len = labels_shape.back() * batches;
   mx_uint classes_num = preds_shape.back();
-  std::vector<mx_float> pred_data(len * classes_num);
-  std::vector<mx_float> label_data(len);
-  preds.Reshape(mxnet::cpp::Shape(static_cast<mx_uint>(-1), classes_num))
-      .SyncCopyToCPU(&pred_data, pred_data.size());
-  labels.Reshape(mxnet::cpp::Shape(static_cast<mx_uint>(-1)))
-      .SyncCopyToCPU(&label_data, label_data.size());
+  std::vector<mx_float> pred_data(preds.Size());
+  std::vector<mx_float> label_data(labels.Size());
+  preds.SyncCopyToCPU(&pred_data, pred_data.size());
+  labels.SyncCopyToCPU(&label_data, label_data.size());
 
   auto pred = Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic,
                                              Eigen::Dynamic, Eigen::RowMajor>>(
@@ -55,4 +53,30 @@ void RCNNLogLossMetric::Update(mxnet::cpp::NDArray labels,
   auto cls_loss = -1 * cls.array().log();
   sum_metric += cls_loss.sum();
   num_inst += label.rows();
+}
+
+void RPNL1LossMetric::Update(mxnet::cpp::NDArray labels,
+                             mxnet::cpp::NDArray preds) {
+  auto preds_shape = preds.GetShape();
+  auto labels_shape = labels.GetShape();
+  std::vector<mx_float> pred_data(preds.Size());
+  std::vector<mx_float> label_data(labels.Size());
+  preds.SyncCopyToCPU(&pred_data, pred_data.size());
+  labels.SyncCopyToCPU(&label_data, label_data.size());
+
+  auto bbox_loss =
+      Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+                                     Eigen::RowMajor>>(
+          pred_data.data(), static_cast<Eigen::Index>(pred_data.size()), 1);
+
+  auto bbox_weight =
+      Eigen::Map<const Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic,
+                                     Eigen::RowMajor>>(
+          label_data.data(), static_cast<Eigen::Index>(label_data.size()), 1);
+
+  // calculate num_inst(average on those fg anchors)
+  auto num = (bbox_weight.array() > 0).count() / 4;
+
+  sum_metric += bbox_loss.array().sum();
+  num_inst += num;
 }

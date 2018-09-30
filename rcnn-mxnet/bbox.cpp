@@ -311,8 +311,9 @@ SampleRois(const Eigen::MatrixXf& rois,
   std::vector<Eigen::Index> bg_indexes;
   WhereVisitor indexes_visitor;
 
-  std::random_device rd;
-  std::mt19937 mt(rd());
+  // std::random_device rd;
+  size_t seed_ = 5675317;
+  std::mt19937 mt(seed_);  // rd());
 
   // select foreground RoI with FG_THRESH overlap
   auto fg_indexes_expr = (max_overlaps.array() >= fg_overlap);

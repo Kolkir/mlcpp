@@ -13,18 +13,19 @@ LoadNetParams(const mxnet::cpp::Context& ctx, const std::string& param_file) {
     if (k.first.substr(0, 4) == "aux:") {
       auto name = k.first.substr(4, k.first.size() - 4);
       aux_map[name] = k.second.Copy(ctx);
+      aux_map[name].WaitAll();
     }
     if (k.first.substr(0, 4) == "arg:") {
       auto name = k.first.substr(4, k.first.size() - 4);
       args_map[name] = k.second.Copy(ctx);
+      args_map[name].WaitAll();
     }
   }
-  /*WaitAll is need when we copy data between GPU and the main memory*/
-  NDArray::WaitAll();
   return std::make_pair(args_map, aux_map);
 }
 
 void SaveNetParams(const std::string& param_file, mxnet::cpp::Executor* exe) {
+  mxnet::cpp::NDArray::WaitAll();
   std::map<std::string, mxnet::cpp::NDArray> params;
   for (auto& iter : exe->arg_dict()) {
     if (iter.first.rfind("data", 0) != 0 &&

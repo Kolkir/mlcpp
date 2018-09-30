@@ -82,16 +82,23 @@ void TrainIter::GetData(mxnet::cpp::NDArray& im_arr,
   assert(current_data_);
   im_arr.SyncCopyFromCPU(current_data_->raw_im_data_.data(),
                          current_data_->raw_im_data_.size());
+  im_arr.WaitAll();
   im_info_arr.SyncCopyFromCPU(current_data_->raw_im_info_data_.data(),
                               current_data_->raw_im_info_data_.size());
+  im_info_arr.WaitAll();
   gt_boxes_arr.SyncCopyFromCPU(current_data_->raw_gt_boxes_data_.data(),
                                current_data_->raw_gt_boxes_data_.size());
+  gt_boxes_arr.WaitAll();
   label_arr.SyncCopyFromCPU(current_data_->raw_label_.data(),
                             current_data_->raw_label_.size());
+  label_arr.WaitAll();
   bbox_target_arr.SyncCopyFromCPU(current_data_->raw_bbox_target_.data(),
                                   current_data_->raw_bbox_target_.size());
+  bbox_target_arr.WaitAll();
   bbox_weight_arr.SyncCopyFromCPU(current_data_->raw_bbox_weight_.data(),
                                   current_data_->raw_bbox_weight_.size());
+  bbox_weight_arr.WaitAll();
+
   // return pointer to refill
   std::unique_lock<std::mutex> lock(free_data_guard_);
   free_data_.push(current_data_);
@@ -134,16 +141,32 @@ void TrainIter::FillData(BatchData* data) {
     auto ic = image_desc.classes.begin();
     for (const auto& b : image_desc.boxes) {
       // sanitize box
-      auto x1 = std::max(0.f, b.x);
-      auto y1 = std::max(0.f, b.y);
-      auto x2 = std::min(image_desc.width - 1, x1 + std::max(0.f, b.width - 1));
-      auto y2 =
-          std::min(image_desc.height - 1, y1 + std::max(0.f, b.height - 1));
-      *b_i++ = x1 * image_desc.scale;
-      *b_i++ = y1 * image_desc.scale;
-      *b_i++ = x2 * image_desc.scale;
-      *b_i++ = y2 * image_desc.scale;
-      *b_i++ = *(ic++);  // class index
+      auto x1 = std::max(0.f, b.x * image_desc.scale);
+      auto y1 = std::max(0.f, b.y * image_desc.scale);
+      auto x2 = std::min(image_desc.width - 1,
+                         x1 + std::max(0.f, b.width * image_desc.scale - 1));
+      auto y2 = std::min(image_desc.height - 1,
+                         y1 + std::max(0.f, b.height * image_desc.scale - 1));
+      *b_i++ = x1;
+      *b_i++ = y1;
+      *b_i++ = x2;
+      *b_i++ = y2;
+
+      auto class_index = *(ic++);
+      *b_i++ = class_index;  // class index
+
+      //--TEST
+      //      cv::Point tl(static_cast<int>(x1), static_cast<int>(y1));
+      //      cv::Point br(static_cast<int>(x2), static_cast<int>(y2));
+      //      cv::Mat imgCopy = image_desc.image.clone();
+      //      cv::rectangle(imgCopy, tl, br, cv::Scalar(1, 0, 0));
+      //      cv::putText(imgCopy, std::to_string(class_index),
+      //                  cv::Point(tl.x + 5, tl.y + 5),   // Coordinates
+      //                  cv::FONT_HERSHEY_COMPLEX_SMALL,  // Font
+      //                  1.0,                             // Scale. 2.0 = 2x
+      //                  bigger cv::Scalar(100, 100, 255));      // BGR Color
+      //      cv::imwrite("det.png", imgCopy);
+      //--TEST
     }
     gt_boxes_pad_markers.push_back(
         {data->raw_gt_boxes_data_.size(), image_desc.boxes.size()});

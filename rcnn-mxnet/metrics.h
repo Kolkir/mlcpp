@@ -17,4 +17,11 @@ class RCNNLogLossMetric : public mxnet::cpp::EvalMetric {
   void Update(mxnet::cpp::NDArray labels, mxnet::cpp::NDArray preds) override;
 };
 
+class RPNL1LossMetric : public mxnet::cpp::EvalMetric {
+ public:
+  RPNL1LossMetric() : EvalMetric("RPNL1LossMetric") {}
+
+  void Update(mxnet::cpp::NDArray labels, mxnet::cpp::NDArray preds) override;
+};
+
 #endif  // METRICS_H

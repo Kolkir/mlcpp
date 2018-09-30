@@ -281,14 +281,28 @@ void Coco::LoadTrainData(const std::vector<uint32_t>& keep_classes) {
       for (auto& img : images_) {
         auto image_id = img.first;
         bool skip = true;
-        for (auto ant_id : image_to_ant_index_[image_id]) {
+        std::vector<uint32_t> ant_to_remove;
+        auto& ants = image_to_ant_index_[image_id];
+        for (auto ant_id : ants) {
           auto class_ind =
               cat_ind_to_class_ind_[annotations_[ant_id].category_id];
-          if (keep_classes_set.find(class_ind) != keep_classes_set.end())
+          bool is_keep_class =
+              keep_classes_set.find(class_ind) != keep_classes_set.end();
+          if (is_keep_class) {
             skip = false;
+          } else {
+            ant_to_remove.push_back(ant_id);
+          }
         }
-        if (skip)
+
+        if (skip) {
           images_to_remove.push_back(image_id);
+        } else {
+          for (auto ant_id : ant_to_remove) {
+            // leave only keep classes annotations
+            ants.erase(ant_id);
+          }
+        }
       }
       for (auto image_id : images_to_remove) {
         images_.erase(image_id);
@@ -324,6 +338,7 @@ ImageDesc Coco::GetImage(uint32_t index,
     std::advance(i, index);
     fs::path file_path(train_images_folder_);
     file_path /= i->second.name;
+    // std::cout << file_path << std::endl;
     cv::Mat img;
     float scale{0};
     std::tie(img, scale) = LoadImageFitSize(file_path.string(), height, width);

@@ -248,19 +248,27 @@ void InitiaizeRCNN(std::map<std::string, mxnet::cpp::NDArray>& args_map) {
   mxnet::cpp::Normal normal(0, 0.01f);
   mxnet::cpp::Zero zero;
   normal("rpn_conv_3x3_weight", &args_map["rpn_conv_3x3_weight"]);
+  args_map["rpn_conv_3x3_weight"].WaitAll();
   zero("rpn_conv_3x3_bias", &args_map["rpn_conv_3x3_bias"]);
+  args_map["rpn_conv_3x3_bias"].WaitAll();
 
   normal("rpn_cls_score_weight", &args_map["rpn_cls_score_weight"]);
+  args_map["rpn_cls_score_weight"].WaitAll();
   zero("rpn_cls_score_bias", &args_map["rpn_cls_score_bias"]);
+  args_map["rpn_cls_score_bias"].WaitAll();
 
   normal("rpn_bbox_pred_weight", &args_map["rpn_bbox_pred_weight"]);
+  args_map["rpn_bbox_pred_weight"].WaitAll();
   zero("rpn_bbox_pred_bias", &args_map["rpn_bbox_pred_bias"]);
+  args_map["rpn_bbox_pred_bias"].WaitAll();
 
   normal("cls_score_weight", &args_map["cls_score_weight"]);
+  args_map["cls_score_weight"].WaitAll();
   zero("cls_score_bias", &args_map["cls_score_bias"]);
+  args_map["cls_score_bias"].WaitAll();
 
   normal("bbox_pred_weight", &args_map["bbox_pred_weight"]);
+  args_map["bbox_pred_weight"].WaitAll();
   zero("bbox_pred_bias", &args_map["rpn_conv_3x3_bias"]);
-
-  mxnet::cpp::NDArray::WaitAll();
+  args_map["rpn_conv_3x3_bias"].WaitAll();
 }

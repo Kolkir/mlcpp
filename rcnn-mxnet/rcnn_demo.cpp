@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
       float scale{1};
       std::tie(img, scale) = LoadImageFitSize(image_path, params.img_short_side,
                                               params.img_long_side);
+
       if (img.empty()) {
         std::cout << "Failed to load image" << std::endl;
         return 1;
@@ -123,7 +124,7 @@ int main(int argc, char** argv) {
       auto scores = executor->outputs[1].Copy(Context::cpu());
       auto bbox_deltas = executor->outputs[2].Copy(Context::cpu());
       NDArray::WaitAll();
-      // delete executor;
+      delete executor;
 
       //--------- Decode result
       auto det =
