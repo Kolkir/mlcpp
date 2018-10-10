@@ -65,7 +65,9 @@ set(SOURCES_COMMON
     coco.h
     coco.cpp
     imagedb.h
-    imagedb.cpp)
+    imagedb.cpp
+    mxutils.h
+    mxutils.cpp)
 
 
 set(SOURCES_TRAIN

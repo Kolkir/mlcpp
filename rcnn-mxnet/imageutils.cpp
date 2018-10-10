@@ -66,7 +66,8 @@ std::vector<float> CVToMxnetFormat(const cv::Mat& img) {
   auto size = img.channels() * img.rows * img.cols;
   std::vector<float> array(static_cast<size_t>(size));
   size_t k = 0;
-  for (int c = 0; c < 3; ++c) {
+  // Convert to from BGR
+  for (int c = 2; c >= 0; --c) {
     for (int y = 0; y < img.rows; ++y) {
       for (int x = 0; x < img.cols; ++x) {
         auto t = (y * img.cols + x) * 3 + c;

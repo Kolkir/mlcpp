@@ -70,27 +70,40 @@ AnchorGenerator::AnchorGenerator(const Params& params)
     std::tie(rw, rh, rcx, rcy) = ltwh_to_whcxcy(anchors.row(i).array());
     Eigen::ArrayXf rws = rw * scales_;
     Eigen::ArrayXf rhs = rh * scales_;
-    auto anchors = whcxcy_to_anchors(rws, rhs, rcx, rcy);
-    for (Eigen::Index j = 0; j < anchors.rows(); ++j) {
-      base_anchors_.row(k++) = anchors.row(j);
+    auto anchors_ = whcxcy_to_anchors(rws, rhs, rcx, rcy);
+    for (Eigen::Index j = 0; j < anchors_.rows(); ++j) {
+      base_anchors_.row(k++) = anchors_.row(j);
     }
   }
 }
 
 Eigen::MatrixXf AnchorGenerator::Generate(uint32_t width,
                                           uint32_t height) const {
-  Eigen::ArrayXf shift_x = Eigen::ArrayXf::LinSpaced(width, 0, width) * stride_;
+  // float LinSpaced is very unprecise
+  Eigen::ArrayXf shift_x =
+      Eigen::ArrayXi::LinSpaced(width, 0, static_cast<int>(width))
+          .cast<float>();
+  shift_x *= stride_;
   Eigen::ArrayXf shift_y =
-      Eigen::ArrayXf::LinSpaced(height, 0, height) * stride_;
+      Eigen::ArrayXi::LinSpaced(height, 0, static_cast<int>(height))
+          .cast<float>();
+  shift_y *= stride_;
   Eigen::MatrixXf shift_X, shift_Y;
   std::tie(shift_X, shift_Y) = meshgrid(shift_x, shift_y);
-  Eigen::Map<Eigen::RowVectorXf> flat_x(shift_X.data(), shift_X.size());
-  Eigen::Map<Eigen::RowVectorXf> flat_y(shift_Y.data(), shift_Y.size());
-  Eigen::MatrixXf shifts(4, flat_x.size());
-  shifts << flat_x, flat_y, flat_x, flat_y;
+  shift_X.transposeInPlace();
+  shift_X.resize(1, shift_X.size());
+  shift_Y.transposeInPlace();
+  shift_Y.resize(1, shift_Y.size());
+  Eigen::MatrixXf shifts(4, shift_X.size());
+  shifts << shift_X, shift_Y, shift_X, shift_Y;
   shifts.transposeInPlace();
   auto ncells = shifts.rows();
-  Eigen::MatrixXf all_anchors = base_anchors_.colwise().replicate(ncells) +
-                                shifts.colwise().replicate(num_anchors_);
+  Eigen::MatrixXf all_anchors(ncells * num_anchors_, 4);
+
+  for (Eigen::Index i = 0, j = 0; i < ncells; ++i) {
+    for (Eigen::Index k = 0; k < num_anchors_; ++k) {
+      all_anchors.row(j++) = shifts.row(i) + base_anchors_.row(k);
+    }
+  }
   return all_anchors;
 }

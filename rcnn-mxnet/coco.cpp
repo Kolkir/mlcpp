@@ -235,7 +235,8 @@ struct CocoHandler
   Coco* coco_ = nullptr;
 };
 
-void Coco::LoadTrainData(const std::vector<uint32_t>& keep_classes) {
+void Coco::LoadTrainData(const std::vector<uint32_t>& keep_classes,
+                         float keep_aspect) {
   auto* file = std::fopen(train_annotations_file_.c_str(), "r");
   if (file) {
     char readBuffer[65536];
@@ -273,6 +274,21 @@ void Coco::LoadTrainData(const std::vector<uint32_t>& keep_classes) {
       auto pos = std::distance(coco_classes.begin(), i);
       cat_ind_to_class_ind_.insert({cat.second.id, static_cast<uint32_t>(pos)});
     }
+    // filter - leave images with required aspect ration only
+    if (keep_aspect > 0) {
+      images_to_remove.clear();
+      for (auto& img : images_) {
+        auto aspect = static_cast<float>(img.second.width) /
+                      static_cast<float>(img.second.height);
+        if (std::abs(aspect - keep_aspect) > 0.001f) {
+          images_to_remove.push_back(img.first);
+        }
+      }
+      for (auto image_id : images_to_remove) {
+        images_.erase(image_id);
+      }
+    }
+
     // filter - leave only required classes
     if (!keep_classes.empty()) {
       std::unordered_set<uint32_t> keep_classes_set;
@@ -318,8 +334,11 @@ void Coco::AddImage(CocoImage image) {
 }
 
 void Coco::AddAnnotation(CocoAnnotation annotation) {
-  annotations_.emplace(std::make_pair(annotation.id, annotation));
-  image_to_ant_index_[annotation.image_id].insert(annotation.id);
+  if (annotation.bbox.height > 0 && annotation.bbox.width > 0 &&
+      annotation.bbox.x >= 0 && annotation.bbox.y >= 0) {
+    annotations_.emplace(std::make_pair(annotation.id, annotation));
+    image_to_ant_index_[annotation.image_id].insert(annotation.id);
+  }
 }
 
 void Coco::AddCategory(CocoCategory category) {

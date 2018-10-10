@@ -4,6 +4,7 @@
 #include "bbox.h"
 #include "coco.h"
 #include "imageutils.h"
+#include "mxutils.h"
 #include "params.h"
 #include "rcnn.h"
 
@@ -67,13 +68,13 @@ int main(int argc, char** argv) {
           global_ctx, false);
       auto array = CVToMxnetFormat(img);
       data.SyncCopyFromCPU(array.data(), array.size());
-      data.WaitToRead();
 
       mxnet::cpp::NDArray im_info(mxnet::cpp::Shape(1, 3), global_ctx, false);
       std::vector<float> raw_im_info = {static_cast<float>(img.rows),
                                         static_cast<float>(img.cols), scale};
       im_info.SyncCopyFromCPU(raw_im_info.data(), raw_im_info.size());
-      im_info.WaitToRead();
+      NDArray::WaitAll();
+      CheckMXnetError("Load data");
 
       //----------- Load params
       std::map<std::string, mxnet::cpp::NDArray> args_map;
@@ -81,6 +82,9 @@ int main(int argc, char** argv) {
       std::tie(args_map, aux_map) = LoadNetParams(global_ctx, params_path);
       args_map["data"] = data;
       args_map["im_info"] = im_info;
+
+      NDArray::WaitAll();
+      CheckMXnetError("Load parameters from file");
 
       //----------- Check Shapes - shouldn't fail
       std::vector<std::string> args = net.ListArguments();
@@ -113,12 +117,11 @@ int main(int argc, char** argv) {
       mxnet::cpp::Executor* executor = net.SimpleBind(
           global_ctx, args_map, std::map<std::string, mxnet::cpp::NDArray>(),
           std::map<std::string, mxnet::cpp::OpReqType>(), aux_map);
+      CheckMXnetError("bind");
 
       executor->Forward(false);
-      // NDArray::WaitAll(); - hides exceptions
-      executor->outputs[0].WaitToRead();
-      executor->outputs[1].WaitToRead();
-      executor->outputs[2].WaitToRead();
+      NDArray::WaitAll();
+      CheckMXnetError("forward");
 
       auto rois = executor->outputs[0].Copy(Context::cpu());
       auto scores = executor->outputs[1].Copy(Context::cpu());

@@ -2,6 +2,7 @@
 #include "gputrainiter.h"
 #include "imageutils.h"
 #include "metrics.h"
+#include "mxutils.h"
 #include "params.h"
 #include "rcnn.h"
 #include "reporter.h"
@@ -14,18 +15,6 @@
 
 namespace fs = std::experimental::filesystem;
 
-void CheckMXnetError(const char* state) {
-  auto* err = MXGetLastError();
-  if (err) {
-    std::string msg(err);
-    if (!msg.empty()) {
-      std::cout << "MXNet unhandled error in " << state << " : " << err
-                << std::endl;
-      exit(-1);
-    }
-  }
-}
-
 static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
 // static mxnet::cpp::Context global_ctx(mxnet::cpp::kCPU, 0);
 
@@ -37,6 +26,8 @@ const cv::String keys =
     "{c check-point  |check-point.params| check point file name }";
 
 int main(int argc, char** argv) {
+  MXRandomSeed(5675317);
+
   cv::CommandLineParser parser(argc, argv, keys);
   parser.about("Faster R-CNN demo");
 
@@ -66,7 +57,7 @@ int main(int argc, char** argv) {
   }
 
   try {
-    check_point_file = fs::canonical(fs::absolute(check_point_file));
+    check_point_file = fs::absolute(check_point_file);
     coco_path = fs::canonical(fs::absolute(coco_path));
     if (!params_path.empty())
       params_path = fs::canonical(fs::absolute(params_path));
@@ -138,6 +129,7 @@ int main(int argc, char** argv) {
       aux_shape.clear();
       out_shape.clear();
       net.InferShape(arg_shapes, &in_shape, &aux_shape, &out_shape);
+      CheckMXnetError("InferShape");
 
       //----------- Initialize binding arrays
 
@@ -162,15 +154,19 @@ int main(int argc, char** argv) {
       }
 
       //----------- Train
-      uint32_t max_epoch = 10;
+      uint32_t max_epoch = 100;
 
       mxnet::cpp::Executor* executor{nullptr};
       // without aux_map - training fails with nans
       executor = net.SimpleBind(
           global_ctx, args_map, std::map<std::string, mxnet::cpp::NDArray>(),
           std::map<std::string, mxnet::cpp::OpReqType>(), aux_map);
+      args = net.ListArguments();
 
-      //      mxnet::cpp::Monitor monitor(1, std::regex("rpn.*"));
+      //      mxnet::cpp::Monitor monitor(1, std::regex("stage3.*"));
+      //      //.*|bbox_pred.*|prop_target.*|bbox_loss.*|rpn.*"));
+      //      //
+      //      std::regex("data|im_info|gt_boxes|label|bbox_target|bbox_weight"));
       //      monitor.install(executor);
 
       if (start_train) {
@@ -180,12 +176,15 @@ int main(int argc, char** argv) {
 
       std::cout << "Indexing trainig data set ..." << std::endl;
       Coco coco(coco_path);
-      coco.LoadTrainData({2, 3, 4, 6, 7});
-      TrainIter train_iter(&coco, params, feat_height, feat_width);
-      //      train_iter.AllocateGpuCache(
-      //          global_ctx, arg_shapes["data"], arg_shapes["im_info"],
-      //          arg_shapes["gt_boxes"], arg_shapes["label"],
-      //          arg_shapes["bbox_target"], arg_shapes["bbox_weight"]);
+      coco.LoadTrainData(
+          {2, 3, 4, 6, 7},  // train only on vehicles with fixed aspect ratio
+          static_cast<float>(params.img_long_side) /
+              static_cast<float>(params.img_short_side));
+      GpuTrainIter train_iter(&coco, params, feat_height, feat_width);
+      train_iter.AllocateGpuCache(
+          global_ctx, arg_shapes["data"], arg_shapes["im_info"],
+          arg_shapes["gt_boxes"], arg_shapes["label"],
+          arg_shapes["bbox_target"], arg_shapes["bbox_weight"]);
 
       auto batch_count = train_iter.GetBatchCount();
       std::cout << "Total images count: " << train_iter.GetSize() << std::endl;
@@ -193,7 +192,7 @@ int main(int argc, char** argv) {
 
       float lr = 0.001f;
       float lr_factor = 0.1f;
-      int lr_epoch = 3;  // epoch to decay lr
+      int lr_epoch = 10;  // epoch to decay lr
       int lr_step = (lr_epoch * static_cast<int>(train_iter.GetSize())) /
                     static_cast<int>(params.rcnn_batch_size);
 
@@ -217,20 +216,31 @@ int main(int argc, char** argv) {
           not_update_args.insert(arg_name);
         }
       }
-
-      Reporter reporter(false, 5, std::chrono::milliseconds(5000));
+#ifdef NDEBUG
+      Reporter reporter(false, 8, std::chrono::milliseconds(5000));
+#else
+      Reporter reporter(true, 8, std::chrono::milliseconds(5000));
+#endif
       reporter.SetLineDescription(0,
                                   "Epoch(" + std::to_string(max_epoch) + ")");
       reporter.SetLineDescription(1,
                                   "Batch(" + std::to_string(batch_count) + ")");
-      reporter.SetLineDescription(2, "RCNN accurary");
-      reporter.SetLineDescription(3, "RCNN log loss");
+      reporter.SetLineDescription(2, "PRN accuracy");
+      reporter.SetLineDescription(3, "PRN log loss");
       reporter.SetLineDescription(4, "PRN l1 loss");
+      reporter.SetLineDescription(5, "RCNN accurary");
+      reporter.SetLineDescription(6, "RCNN log loss");
+      reporter.SetLineDescription(7, "RCNN l1 loss");
       reporter.Start();
 
-      RCNNAccMetric acc_metric;
-      RCNNLogLossMetric log_loss_metric;
+      RPNAccMetric rpn_acc_metric;
+      RPNLogLossMetric rpn_log_loss_metric;
       RPNL1LossMetric rpn_l1_loss_metric;
+
+      RCNNAccMetric rcnn_acc_metric;
+      RCNNLogLossMetric rcnn_log_loss_metric;
+      RCNNL1LossMetric rcnn_l1_loss_metric;
+
       uint32_t batch_num = 0;
       for (uint32_t epoch = 0; epoch < max_epoch; ++epoch) {
         batch_num = 0;
@@ -246,11 +256,48 @@ int main(int argc, char** argv) {
 
           // monitor.tic();
           executor->Forward(true);
-          CheckMXnetError("forward");
-          executor->Backward();
-          CheckMXnetError("backward");
           mxnet::cpp::NDArray::WaitAll();
-          CheckMXnetError("after passes");
+          CheckMXnetError("forward");
+
+          // evaluate training metrics - every 100 batches
+          if (batch_num % 100 == 0) {
+            rpn_acc_metric.Reset();
+            rpn_log_loss_metric.Reset();
+            rpn_l1_loss_metric.Reset();
+
+            rcnn_acc_metric.Reset();
+            rcnn_log_loss_metric.Reset();
+            rcnn_l1_loss_metric.Reset();
+
+            CheckMXnetError("forward metrics");
+            rcnn_acc_metric.Update(executor->outputs[4], executor->outputs[2]);
+            CheckMXnetError("metric 1");
+            rcnn_log_loss_metric.Update(executor->outputs[4],
+                                        executor->outputs[2]);
+            CheckMXnetError("metric 2");
+            rcnn_l1_loss_metric.Update(executor->outputs[4],
+                                       executor->outputs[3]);
+            CheckMXnetError("metric 3");
+
+            rpn_acc_metric.Update(args_map["label"], executor->outputs[0]);
+            CheckMXnetError("metric 4");
+            rpn_log_loss_metric.Update(args_map["label"], executor->outputs[0]);
+            CheckMXnetError("metric 5");
+            rpn_l1_loss_metric.Update(args_map["bbox_weight"],
+                                      executor->outputs[1]);
+            CheckMXnetError("metric 6");
+
+            reporter.SetLineValue(2, rpn_acc_metric.Get());
+            reporter.SetLineValue(3, rpn_log_loss_metric.Get());
+            reporter.SetLineValue(4, rpn_l1_loss_metric.Get());
+            reporter.SetLineValue(5, rcnn_acc_metric.Get());
+            reporter.SetLineValue(6, rcnn_log_loss_metric.Get());
+            reporter.SetLineValue(7, rcnn_l1_loss_metric.Get());
+          }
+
+          executor->Backward();
+          mxnet::cpp::NDArray::WaitAll();
+          CheckMXnetError("backward");
           // monitor.toc_print();
 
           for (size_t i = 0; i < args.size(); ++i) {
@@ -262,26 +309,10 @@ int main(int argc, char** argv) {
           mxnet::cpp::NDArray::WaitAll();
           CheckMXnetError("updates");
 
-          // evaluate metrics - every 100 batches
-          // if (batch_num % 100 == 0) {
-          executor->Forward(false);
-          mxnet::cpp::NDArray::WaitAll();
-          CheckMXnetError("forward metrics");
-          acc_metric.Update(executor->outputs[4], executor->outputs[2]);
-          CheckMXnetError("metric 1");
-          log_loss_metric.Update(executor->outputs[4], executor->outputs[2]);
-          CheckMXnetError("metric 2");
-          rpn_l1_loss_metric.Update(args_map["bbox_weight"],
-                                    executor->outputs[1]);
-          CheckMXnetError("metric 3");
-
-          reporter.SetLineValue(2, acc_metric.Get());
-          reporter.SetLineValue(3, log_loss_metric.Get());
-          reporter.SetLineValue(4, rpn_l1_loss_metric.Get());
-          //}
           ++batch_num;
         }
         SaveNetParams(check_point_file, executor);
+        std::cout << "Parameters saved to " << check_point_file << std::endl;
       }
       reporter.Stop();
 

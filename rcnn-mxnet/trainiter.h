@@ -9,23 +9,7 @@
 #include <mxnet-cpp/MxNetCpp.h>
 
 #include <array>
-#include <atomic>
-#include <condition_variable>
-#include <queue>
 #include <random>
-#include <thread>
-
-struct BatchData {
-  // train input
-  std::vector<float> raw_im_data_;
-  std::vector<float> raw_im_info_data_;
-  std::vector<float> raw_gt_boxes_data_;
-
-  // train labels
-  std::vector<float> raw_label_;
-  std::vector<float> raw_bbox_target_;
-  std::vector<float> raw_bbox_weight_;
-};
 
 class TrainIter {
  public:
@@ -50,13 +34,11 @@ class TrainIter {
                mxnet::cpp::NDArray& bbox_weight_arr);
 
  private:
-  bool NextImpl(BatchData* data);
-  void FillData(BatchData* data);
-  void FillLabels(BatchData* data);
-  void InitializeCache();
-  void StartCacheThread();
-  void StopCacheThread();
-  void CacheProc();
+  void FillData();
+  void FillLabels();
+  void ReshapeLabels(unsigned int rows, unsigned int cols);
+  void ReshapeTargets(unsigned int rows, unsigned int cols);
+  void ReshapeWeights(unsigned int rows, unsigned int cols);
 
  private:
   ImageDb* image_db_{nullptr};
@@ -80,18 +62,15 @@ class TrainIter {
   AnchorGenerator anchor_generator_;
   AnchorSampler anchor_sampler_;
 
-  const static size_t cache_size_{32};
-  std::array<BatchData, cache_size_> data_cache_;
-  std::queue<BatchData*> available_data_;
-  std::queue<BatchData*> free_data_;
-  BatchData* current_data_{nullptr};
+  // train input
+  std::vector<float> raw_im_data_;
+  std::vector<float> raw_im_info_data_;
+  std::vector<float> raw_gt_boxes_data_;
 
-  std::mutex free_data_guard_;
-  std::mutex available_data_guard_;
-  std::condition_variable available_data_cond_;
-  std::condition_variable free_data_cond_;
-  std::unique_ptr<std::thread> cache_thread_;
-  std::atomic_bool stop_cache_flag_{false};
+  // train labels
+  std::vector<float> raw_label_;
+  std::vector<float> raw_bbox_target_;
+  std::vector<float> raw_bbox_weight_;
 };
 
 #endif  // TRAINITER_H

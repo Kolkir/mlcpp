@@ -36,6 +36,7 @@ Eigen::MatrixXf bbox_overlaps(const Eigen::MatrixXf& boxes,
   auto ks = query_boxes.rows();
   Eigen::MatrixXf overlaps = Eigen::MatrixXf::Zero(ns, ks);
 
+  // take care - element wise multiplication
   Eigen::ArrayXf query_box_area =
       ((query_boxes.block(0, 2, ks, 1) - query_boxes.block(0, 0, ks, 1))
            .array() +
@@ -322,6 +323,7 @@ SampleRois(const Eigen::MatrixXf& rois,
   // guard against the case when an image has fewer than fg_rois_per_image
   // foreground RoIs
   auto fg_indexes_count = fg_indexes_expr.count();
+  assert(fg_indexes_count > 0);
   auto fg_rois_this_image =
       std::min(static_cast<Eigen::Index>(fg_rois_per_image), fg_indexes_count);
   // sample foreground regions without replacement
@@ -384,6 +386,8 @@ SampleRois(const Eigen::MatrixXf& rois,
   }
 
   auto targets = bbox_transform(b_rois, boxes, box_stds);
+  assert(targets.rows() >= fg_rois_this_image);
+  assert(!(targets.array() > 1000).any());
 
   Eigen::MatrixXf bbox_targets =
       Eigen::MatrixXf::Zero(rois_per_image, 4 * num_classes);
@@ -394,6 +398,8 @@ SampleRois(const Eigen::MatrixXf& rois,
     bbox_targets.row(i).block(0, cls_ind * 4, 1, 4).array() = targets.row(i);
     bbox_weights.row(i).block(0, cls_ind * 4, 1, 4).array() = 1;
   }
+
+  // assert(!b_rois.array().isNaN().any());
 
   return std::make_tuple(b_rois, b_labels, bbox_targets, bbox_weights);
 }

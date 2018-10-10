@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -19,6 +20,10 @@ class Reporter {
   template <typename T>
   void SetLineValue(size_t index, T value) {
     values_[index] = static_cast<float>(value);
+    if (stdout_) {
+      std::cout << descriptions_[index].c_str() << ": " << values_[index]
+                << std::endl;
+    }
   }
 
   void Start();

@@ -143,7 +143,7 @@ mxnet::cpp::Symbol GetRCNNSymbol(const Params& params, bool train) {
                                                   params.rcnn_bbox_stds.end()))
                      .SetInput("rois", rois)
                      .SetInput("gt_boxes", gt_boxes)
-                     .CreateSymbol();
+                     .CreateSymbol("prop_target");
     rois = group[0];
     label = group[1];
     bbox_target = group[2];
@@ -267,7 +267,8 @@ void InitiaizeRCNN(std::map<std::string, mxnet::cpp::NDArray>& args_map) {
   zero("cls_score_bias", &args_map["cls_score_bias"]);
   args_map["cls_score_bias"].WaitAll();
 
-  normal("bbox_pred_weight", &args_map["bbox_pred_weight"]);
+  mxnet::cpp::Normal normal_w(0, 0.001f);
+  normal_w("bbox_pred_weight", &args_map["bbox_pred_weight"]);
   args_map["bbox_pred_weight"].WaitAll();
   zero("bbox_pred_bias", &args_map["rpn_conv_3x3_bias"]);
   args_map["rpn_conv_3x3_bias"].WaitAll();

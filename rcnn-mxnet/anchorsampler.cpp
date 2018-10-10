@@ -15,9 +15,19 @@ AnchorSampler::AnchorSampler(const Params& params)
 
 std::tuple<Eigen::MatrixXf, Eigen::MatrixXf, Eigen::MatrixXf>
 AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
-                      const Eigen::MatrixXf& gt_boxes,
+                      const Eigen::MatrixXf& all_gt_boxes,
                       float im_width,
                       float im_height) {
+  // filter out padded gt_boxes
+  auto num_valid_boxes = (all_gt_boxes.rightCols(1).array() > 0).count();
+  auto boxes_cols = all_gt_boxes.cols();
+  Eigen::MatrixXf gt_boxes(num_valid_boxes, all_gt_boxes.cols());
+  for (Eigen::Index i = 0, j = 0; i < num_valid_boxes; ++i) {
+    if (all_gt_boxes(i, boxes_cols - 1) > 0.f) {
+      gt_boxes.row(j++) = all_gt_boxes.row(i);
+    }
+  }
+
   auto n_anchors = anchors.rows();
   // filter out anchors outside the image region
   Eigen::ArrayXf indices_base = Eigen::ArrayXf::Constant(n_anchors, 1.f);
@@ -48,8 +58,8 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
   Eigen::MatrixXf bbox_targets = Eigen::MatrixXf::Zero(num_valid, 4);
   Eigen::MatrixXf bbox_weights = Eigen::MatrixXf::Zero(num_valid, 4);
 
-  std::random_device rd;
-  std::mt19937 mt(rd());
+  // std::random_device rd;
+  std::mt19937 mt(5675317);  // rd());
 
   // sample for positive labels
   if (gt_boxes.rows() > 0) {
@@ -58,7 +68,7 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
     auto overlaps = bbox_overlaps(valid_anchors, gt_boxes);
 
     // fg anchors: anchor with highest overlap for each gt
-    auto gt_max_overlaps =
+    Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> gt_max_overlaps =
         (overlaps.array() ==
          overlaps.colwise().maxCoeff().array().replicate(overlaps.rows(), 1))
             .matrix()
@@ -67,16 +77,33 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
     labels = (gt_max_overlaps.array() > 0).select(1.f, labels);
 
     // fg anchors: anchor with overlap > iou thresh
-    auto max_overlaps = overlaps.rowwise().maxCoeff();
+    Eigen::MatrixXf max_overlaps = overlaps.rowwise().maxCoeff();
     auto fg_indices_expr = max_overlaps.array() >= fg_overlap_;
     auto fg_indices = expr_row_indices(fg_indices_expr);
+    for (auto index : fg_indices) {
+      labels(index) = 1;
+    }
 
     // bg anchors: anchor with overlap < iou thresh
     auto bg_indices_expr = max_overlaps.array() < bg_overlap_;
     auto bg_indices = expr_row_indices(bg_indices_expr);
+    for (auto index : bg_indices) {
+      if (labels(index) < 0)  // don't reset previously selected rois
+        labels(index) = 0;
+    }
+
+    fg_indices.clear();
+    bg_indices.clear();
+    for (Eigen::Index i = 0; i < labels.rows(); ++i) {
+      if (labels(i, 0) > 0)
+        fg_indices.push_back(i);
+      else if (labels(i, 0) >= 0 && labels(i, 0) < 1)
+        bg_indices.push_back(i);
+    }
 
     // subsample positive anchors
-    Eigen::Index fg_labels_count = fg_indices_expr.count();
+    Eigen::Index fg_labels_count = static_cast<Eigen::Index>(fg_indices.size());
+    assert(fg_labels_count >= 1);
     if (fg_labels_count > num_fg_) {
       auto disable_inds = random_choice(
           fg_indices, static_cast<size_t>(fg_labels_count - num_fg_), mt);
@@ -86,7 +113,7 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
     }
 
     // subsample negative anchors
-    Eigen::Index bg_labels_count = bg_indices_expr.count();
+    Eigen::Index bg_labels_count = static_cast<Eigen::Index>(bg_indices.size());
     auto max_neg = num_batch_ - std::min(num_fg_, fg_labels_count);
     if (bg_labels_count > max_neg) {
       auto disable_inds = random_choice(
@@ -96,18 +123,22 @@ AnchorSampler::Assign(const Eigen::MatrixXf& anchors,
       }
     }
 
+    assert(fg_labels_count >= (labels.array() > 0).count());
+    assert(max_neg >= (labels.array() == 0).count());
+
     // make gt_box correspondence for each positive anchor
     Eigen::MatrixXf anchors_gt_boxes(valid_anchors.rows(), gt_boxes.cols());
     auto anchor_box_inds = argmax(overlaps).second;
     assert(labels.rows() == anchor_box_inds.rows());
-    for (Eigen::Index i = 0, j = 0; i < num_valid; ++i) {
-      anchors_gt_boxes.row(j++) = gt_boxes.row(anchor_box_inds(i));
+    for (Eigen::Index i = 0; i < num_valid; ++i) {
+      anchors_gt_boxes.row(i) = gt_boxes.row(anchor_box_inds(i));
     }
 
     // calculate anchor vs bbox offsets
-    auto raw_bbox_targets = bbox_transform(valid_anchors, anchors_gt_boxes);
+    auto raw_bbox_targets =
+        bbox_transform(valid_anchors, anchors_gt_boxes, {1, 1, 1, 1});
     bbox_targets = (labels.replicate(1, bbox_targets.cols()).array() >= 1.f)
-                       .select(1.f, raw_bbox_targets);
+                       .select(raw_bbox_targets, bbox_targets);
 
     // only fg anchors has bbox_targets
     bbox_weights = (labels.replicate(1, bbox_weights.cols()).array() >= 1.f)

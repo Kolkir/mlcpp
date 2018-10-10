@@ -54,6 +54,13 @@ void GpuTrainIter::GetData(mxnet::cpp::NDArray& im_arr,
   gpu_bbox_weight_arr.CopyTo(&bbox_weight_arr);
   mxnet::cpp::NDArray::WaitAll();
 
+  auto* err = MXGetLastError();
+  if (err && err[0] != 0) {
+    std::cout << "MXNet unhandled error in GpuTrainIter::GetData : " << err
+              << std::endl;
+    exit(-1);
+  }
+
   ScheduleLoadDataToGpu();
 }
 
