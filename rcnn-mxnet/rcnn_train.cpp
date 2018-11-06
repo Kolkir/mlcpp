@@ -21,8 +21,8 @@ static mxnet::cpp::Context global_ctx(mxnet::cpp::kGPU, 0);
 const cv::String keys =
     "{help h usage ? |                  | print this message   }"
     "{@coco_path     |<none>            | path to coco dataset }"
-    "{p params       |                  | path to trained parameters }"
-    "{s start-train  |                  | path to trained parameters }"
+    "{p params       |                  | path to trained resnet parameters }"
+    "{s start-train  |                  | flag to start initial training }"
     "{c check-point  |check-point.params| check point file name }";
 
 int main(int argc, char** argv) {
