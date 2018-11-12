@@ -1,6 +1,7 @@
 **Resources**
 1. https://github.com/multimodallearning/pytorch-mask-rcnn
 2. https://github.com/matterport/Mask_RCNN
+3. https://github.com/wannabeOG/Mask-RCNN
 
 **PyTorch C++ Frontend compilation**
 1. Checkout
