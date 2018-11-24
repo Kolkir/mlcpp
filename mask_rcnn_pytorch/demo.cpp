@@ -1,7 +1,9 @@
 #include "config.h"
 #include "imageutils.h"
 #include "maskrcnn.h"
+#include "stateloader.h"
 
+#include <torch/script.h>
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
 
@@ -47,6 +49,17 @@ int main(int argc, char** argv) {
       return 1;
     }
 
+    params_path = fs::canonical(params_path);
+    if (!fs::exists(params_path))
+      throw std::invalid_argument("Wrong file path for parameters");
+
+    image_path = fs::canonical(image_path);
+    if (!fs::exists(image_path))
+      throw std::invalid_argument("Wrong file path forimage");
+
+    // Load image
+    auto image = LoadImage(image_path);
+
     // Root directory of the project
     auto root_dir = fs::current_path();
     // Directory to save logs and trained model
@@ -59,13 +72,12 @@ int main(int argc, char** argv) {
     if (config->gpu_count > 0)
       model.to(torch::DeviceType::CUDA);
 
-    // Load weights trained on MS-COCO
-    torch::serialize::InputArchive archive;
-    archive.load_from(params_path);
-    model.load(archive);
+    // Load weights trained on MS - COCO
+    auto dict = LoadStateDict(params_path);
+    auto params = model.named_parameters(true /*recurse*/);
+    params = dict;
 
-    auto image = LoadImage(image_path);
-    auto results = model.detect(image);
+    auto results = model.Detect(image);
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;
     return 1;

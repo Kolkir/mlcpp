@@ -10,7 +10,11 @@ class MaskRCNN : public torch::nn::Module {
  public:
   MaskRCNN(std::string model_dir, std::shared_ptr<Config const> config);
 
-  bool detect(const at::Tensor& image);
+  bool Detect(const at::Tensor& image);
+
+ private:
+  void Build();
+  void InitializeWeights();
 
  private:
   std::string model_dir_;

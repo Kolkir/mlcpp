@@ -7,6 +7,8 @@ find_package(OpenCV REQUIRED)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 
+include_directories(${CMAKE_SOURCE_DIR}/../third_party/json/include)
+
 add_compile_options( -fopenmp
                      -pthread
                      -msse3
@@ -27,7 +29,9 @@ set(SOURCE_FILES
                     visualize.h
                     visualize.cpp
                     imageutils.h
-                    imageutils.cpp)
+                    imageutils.cpp
+                    stateloader.h
+                    stateloader.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 

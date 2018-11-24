@@ -39,3 +39,7 @@ pip install torch-1.0.0a0+4f0434d-cp37-cp37m-linux_x86_64.whl
      * CMAKE_INSTALL_PREFIX
      * CMAKE_CXX_COMPILER=g++-7
 4. For project specify ``CMAKE_PREFIX_PATH=directory where you install Torch``, if it is not a default system folders
+
+**Sharing weights**
+torch.save/load - use python pickle.
+torch.jit - can be used with tracing so in case complex training function it is tricky to use.
