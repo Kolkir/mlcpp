@@ -35,45 +35,46 @@ void MaskRCNN::Build() {
   // Bottom-up Layers
   // Returns a list of the last layers of each stage, 5 in total.
   // Don't create the thead (stage 5), so we pick the 4th item in the list.
-  ResNet resnet(ResNet::Architecture::ResNet101, true);
-  // auto [C1, C2, C3, C4, C5] = resnet.GetStages();
+  ResNetImpl resnet(ResNetImpl::Architecture::ResNet101, true);
+  auto [C1, C2, C3, C4, C5] = resnet.GetStages();
+
+  // Top-down Layers
+  // TODO: add assert to varify feature map sizes match what's in config
+  fpn_ = FPN(C1, C2, C3, C4, C5, /*out_channels*/ 256);
+  register_module("fpn", fpn_);
 
   /*
-// Top-down Layers
-// TODO: add assert to varify feature map sizes match what's in config
-self.fpn = FPN(C1, C2, C3, C4, C5, out_channels = 256);
+  // Generate Anchors
+  self.anchors =
+    Variable(torch
+                 .from_numpy(utils.generate_pyramid_anchors(
+                     config.RPN_ANCHOR_SCALES, config.RPN_ANCHOR_RATIOS,
+                     config.BACKBONE_SHAPES, config.BACKBONE_STRIDES,
+                     config.RPN_ANCHOR_STRIDE))
+                 .float(),
+             requires_grad = False);
+  if
+  self.config.GPU_COUNT : self.anchors = self.anchors.cuda();
 
-// Generate Anchors
-self.anchors =
-  Variable(torch
-               .from_numpy(utils.generate_pyramid_anchors(
-                   config.RPN_ANCHOR_SCALES, config.RPN_ANCHOR_RATIOS,
-                   config.BACKBONE_SHAPES, config.BACKBONE_STRIDES,
-                   config.RPN_ANCHOR_STRIDE))
-               .float(),
-           requires_grad = False);
-if
-self.config.GPU_COUNT : self.anchors = self.anchors.cuda();
+  // RPN
+  self.rpn = RPN(len(config.RPN_ANCHOR_RATIOS), config.RPN_ANCHOR_STRIDE, 256);
 
-// RPN
-self.rpn = RPN(len(config.RPN_ANCHOR_RATIOS), config.RPN_ANCHOR_STRIDE, 256);
+  // FPN Classifier
+  self.classifier =
+    Classifier(256, config.POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
 
-// FPN Classifier
-self.classifier =
-  Classifier(256, config.POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
+  // FPN Mask
+  self.mask =
+    Mask(256, config.MASK_POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
 
-// FPN Mask
-self.mask =
-  Mask(256, config.MASK_POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
+  // Fix batch norm layers
+  def set_bn_fix(m):
+    classname = m.__class__.__name__
+    if classname.find('BatchNorm') != -1:
+        for p in m.parameters(): p.requires_grad = False
 
-// Fix batch norm layers
-def set_bn_fix(m):
-  classname = m.__class__.__name__
-  if classname.find('BatchNorm') != -1:
-      for p in m.parameters(): p.requires_grad = False
-
-self.apply(set_bn_fix);
-  */
+  self.apply(set_bn_fix);
+    */
 }
 
 void MaskRCNN::InitializeWeights() {}

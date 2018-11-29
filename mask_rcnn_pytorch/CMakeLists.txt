@@ -35,7 +35,9 @@ set(SOURCE_FILES
                     resnet.h
                     resnet.cpp
                     nnutils.h
-                    nnutils.cpp)
+                    nnutils.cpp
+                    fpn.h
+                    fpn.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS "${CMAKE_PROJECT_NAME}_lib")

@@ -1,6 +1,9 @@
 #include "resnet.h"
 
-ResNet::ResNet(Architecture architecture, bool stage5) : stage5_{stage5} {
+ResNetImpl::ResNetImpl() {}
+
+ResNetImpl::ResNetImpl(Architecture architecture, bool stage5)
+    : stage5_{stage5} {
   assert(architecture == Architecture::ResNet50 ||
          architecture == Architecture::ResNet101);
 
@@ -40,31 +43,31 @@ ResNet::ResNet(Architecture architecture, bool stage5) : stage5_{stage5} {
   }
 }
 
-torch::nn::Sequential ResNet::MakeLayer(uint32_t planes,
-                                        uint32_t blocks,
-                                        uint32_t stride) {
+torch::nn::Sequential ResNetImpl::MakeLayer(uint32_t planes,
+                                            uint32_t blocks,
+                                            uint32_t stride) {
   torch::nn::Sequential downsample;
-  if (stride != 1 || inplanes_ != planes * Bottleneck::expansion) {
+  if (stride != 1 || inplanes_ != planes * BottleneckImpl::expansion) {
     downsample = torch::nn::Sequential(
-        torch::nn::Conv2d(
-            torch::nn::Conv2dOptions(inplanes_, planes * Bottleneck::expansion,
-                                     /*kernel [size, stride]*/ {1, stride})),
+        torch::nn::Conv2d(torch::nn::Conv2dOptions(
+            inplanes_, planes * BottleneckImpl::expansion,
+            /*kernel [size, stride]*/ {1, stride})),
         torch::nn::BatchNorm(
-            torch::nn::BatchNormOptions(planes * Bottleneck::expansion)
+            torch::nn::BatchNormOptions(planes * BottleneckImpl::expansion)
                 .eps(0.001)
                 .momentum(0.01)));
   }
   torch::nn::Sequential layers;
-  layers->push_back(Bottleneck(inplanes_, planes, stride, downsample));
-  inplanes_ = planes * Bottleneck::expansion;
+  layers->push_back(BottleneckImpl(inplanes_, planes, stride, downsample));
+  inplanes_ = planes * BottleneckImpl::expansion;
   for (uint32_t i = 1; i < blocks; ++i) {
-    layers->push_back(Bottleneck(inplanes_, planes));
+    layers->push_back(BottleneckImpl(inplanes_, planes));
   }
 
   return layers;
 }
 
-at::Tensor ResNet::forward(at::Tensor input) {
+at::Tensor ResNetImpl::forward(at::Tensor input) {
   input = c1_->forward(input);
   input = c2_->forward(input);
   input = c3_->forward(input);
@@ -74,10 +77,12 @@ at::Tensor ResNet::forward(at::Tensor input) {
   return input;
 }
 
-Bottleneck::Bottleneck(uint32_t inplanes,
-                       uint32_t planes,
-                       uint32_t stride,
-                       torch::nn::Sequential downsample)
+BottleneckImpl::BottleneckImpl() {}
+
+BottleneckImpl::BottleneckImpl(uint32_t inplanes,
+                               uint32_t planes,
+                               uint32_t stride,
+                               torch::nn::Sequential downsample)
     : conv1_{torch::nn::Conv2dOptions(inplanes,
                                       planes,
                                       /*kernel [size, stride]*/ {1, stride})},
@@ -92,16 +97,26 @@ Bottleneck::Bottleneck(uint32_t inplanes,
                                       /*kernel [size, stride]*/ {1})},
       bn3_{torch::nn::BatchNormOptions(planes * 4).eps(0.001).momentum(0.01)},
       relu_{torch::relu},
-      downsample_{downsample} {}
+      downsample_{downsample} {
+  register_module("conv1", conv1_);
+  register_module("bn1", bn1_);
+  register_module("padding2", padding2_);
+  register_module("conv2", conv2_);
+  register_module("bn2", bn2_);
+  register_module("conv3", conv3_);
+  register_module("bn3", bn3_);
+  register_module("relu", relu_);
+  register_module("downsample", downsample_);
+}
 
-at::Tensor Bottleneck::forward(at::Tensor x) {
+at::Tensor BottleneckImpl::forward(at::Tensor x) {
   auto residual = x;
 
   at::Tensor out = conv1_->forward(x);
   out = bn1_->forward(out);
   out = relu_->forward(out);
 
-  out = padding2_.forward(out);
+  out = padding2_->forward(out);
   out = conv2_->forward(out);
   out = bn2_->forward(out);
   out = relu_->forward(out);

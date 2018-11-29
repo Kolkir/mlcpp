@@ -2,7 +2,9 @@
 
 #include <cmath>
 
-SamePad2d::SamePad2d(uint32_t kernel_size, uint32_t stride)
+SamePad2dImpl::SamePad2dImpl() {}
+
+SamePad2dImpl::SamePad2dImpl(uint32_t kernel_size, uint32_t stride)
     : kernel_size_(kernel_size), stride_(stride) {}
 
 /* Makes output size is the same as input size,
@@ -13,7 +15,7 @@ SamePad2d::SamePad2d(uint32_t kernel_size, uint32_t stride)
  *                             |_________________|
  *                                            |________________|
  */
-at::Tensor SamePad2d::forward(at::Tensor input) {
+at::Tensor SamePad2dImpl::forward(at::Tensor input) {
   assert(input.ndimension() == 4);
   assert(stride_ != 0);
   auto in_width = input.size(2);
@@ -44,4 +46,31 @@ at::Tensor SamePad2d::forward(at::Tensor input) {
   input = at::cat({left, input, right}, 2);
 
   return input;
+}
+
+at::Tensor upsample(at::Tensor x, float scale_factor) {
+  auto output_size = [scale_factor, &x](uint32_t dim) {
+    std::vector<int64_t> sizes(dim);
+    for (size_t i = 0; i < dim; ++i) {
+      sizes[i] = static_cast<int64_t>(
+          std::floor(x.size(static_cast<int64_t>(i) + 2) * scale_factor));
+    }
+    return sizes;
+  };
+
+  std::vector<int64_t> sizes;
+  if (x.ndimension() == 3) {
+    sizes = output_size(1);
+    return torch::upsample_nearest1d(x, torch::IntList(sizes));
+  } else if (x.ndimension() == 4) {
+    sizes = output_size(2);
+    return torch::upsample_nearest2d(x, torch::IntList(sizes));
+  } else if (x.ndimension() == 5) {
+    sizes = output_size(3);
+    return torch::upsample_nearest3d(x, torch::IntList(sizes));
+  } else {
+    throw std::invalid_argument(
+        "Upsamle Input Error: Only 3D, 4D and 5D input Tensors supported : " +
+        std::to_string(x.ndimension()));
+  }
 }

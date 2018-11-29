@@ -6,34 +6,38 @@
 #include <torch/torch.h>
 #include <vector>
 
-class Bottleneck : public torch::nn::Module {
+class BottleneckImpl : public torch::nn::Module {
  public:
-  Bottleneck(uint32_t inplanes,
-             uint32_t planes,
-             uint32_t stride = 1,
-             torch::nn::Sequential downsample = nullptr);
+  BottleneckImpl();
+  BottleneckImpl(uint32_t inplanes,
+                 uint32_t planes,
+                 uint32_t stride = 1,
+                 torch::nn::Sequential downsample = nullptr);
 
   static constexpr uint32_t expansion{4};
 
   torch::Tensor forward(torch::Tensor x);
 
  private:
-  torch::nn::Conv2d conv1_;
-  torch::nn::BatchNorm bn1_;
-  SamePad2d padding2_;
-  torch::nn::Conv2d conv2_;
-  torch::nn::BatchNorm bn2_;
-  torch::nn::Conv2d conv3_;
-  torch::nn::BatchNorm bn3_;
-  torch::nn::Functional relu_;
-  torch::nn::Sequential downsample_;
+  torch::nn::Conv2d conv1_{nullptr};
+  torch::nn::BatchNorm bn1_{nullptr};
+  SamePad2d padding2_{nullptr};
+  torch::nn::Conv2d conv2_{nullptr};
+  torch::nn::BatchNorm bn2_{nullptr};
+  torch::nn::Conv2d conv3_{nullptr};
+  torch::nn::BatchNorm bn3_{nullptr};
+  torch::nn::Functional relu_{nullptr};
+  torch::nn::Sequential downsample_{nullptr};
 };
 
-class ResNet : public torch::nn::Module {
+TORCH_MODULE(Bottleneck);
+
+class ResNetImpl : public torch::nn::Module {
  public:
   enum Architecture { ResNet50, ResNet101 };
 
-  ResNet(Architecture architecture, bool stage5);
+  ResNetImpl();
+  ResNetImpl(Architecture architecture, bool stage5);
 
   torch::Tensor forward(torch::Tensor input);
 
@@ -49,11 +53,13 @@ class ResNet : public torch::nn::Module {
   std::vector<uint32_t> layers_{3, 4, 0, 3};
   bool stage5_{false};
 
-  torch::nn::Sequential c1_;
-  torch::nn::Sequential c2_;
-  torch::nn::Sequential c3_;
-  torch::nn::Sequential c4_;
-  torch::nn::Sequential c5_;
+  torch::nn::Sequential c1_{nullptr};
+  torch::nn::Sequential c2_{nullptr};
+  torch::nn::Sequential c3_{nullptr};
+  torch::nn::Sequential c4_{nullptr};
+  torch::nn::Sequential c5_{nullptr};
 };
+
+TORCH_MODULE(ResNet);
 
 #endif  // RESNET_H

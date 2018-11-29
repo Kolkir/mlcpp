@@ -2,6 +2,7 @@
 #define MASKRCNN_H
 
 #include "config.h"
+#include "fpn.h"
 
 #include <torch/torch.h>
 #include <memory>
@@ -19,6 +20,8 @@ class MaskRCNN : public torch::nn::Module {
  private:
   std::string model_dir_;
   std::shared_ptr<Config const> config_;
+
+  FPN fpn_;
 };
 
 #endif  // MASKRCNN_H
