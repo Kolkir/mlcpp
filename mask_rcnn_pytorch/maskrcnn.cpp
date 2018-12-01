@@ -1,4 +1,5 @@
 #include "maskrcnn.h"
+#include "anchors.h"
 #include "resnet.h"
 
 #include <cmath>
@@ -43,38 +44,34 @@ void MaskRCNN::Build() {
   fpn_ = FPN(C1, C2, C3, C4, C5, /*out_channels*/ 256);
   register_module("fpn", fpn_);
 
+  anchors_ = GeneratePyramidAnchors(
+      config_->rpn_anchor_scales, config_->rpn_anchor_ratios,
+      config_->backbone_shapes, config_->backbone_strides,
+      config_->rpn_anchor_stride);
+
+  if (config_->gpu_count > 0)
+    anchors_ = anchors_.toBackend(torch::Backend::CUDA);
   /*
-  // Generate Anchors
-  self.anchors =
-    Variable(torch
-                 .from_numpy(utils.generate_pyramid_anchors(
-                     config.RPN_ANCHOR_SCALES, config.RPN_ANCHOR_RATIOS,
-                     config.BACKBONE_SHAPES, config.BACKBONE_STRIDES,
-                     config.RPN_ANCHOR_STRIDE))
-                 .float(),
-             requires_grad = False);
-  if
-  self.config.GPU_COUNT : self.anchors = self.anchors.cuda();
+    // RPN
+    self.rpn = RPN(len(config.RPN_ANCHOR_RATIOS), config.RPN_ANCHOR_STRIDE,
+    256);
 
-  // RPN
-  self.rpn = RPN(len(config.RPN_ANCHOR_RATIOS), config.RPN_ANCHOR_STRIDE, 256);
+    // FPN Classifier
+    self.classifier =
+      Classifier(256, config.POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
 
-  // FPN Classifier
-  self.classifier =
-    Classifier(256, config.POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
+    // FPN Mask
+    self.mask =
+      Mask(256, config.MASK_POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
 
-  // FPN Mask
-  self.mask =
-    Mask(256, config.MASK_POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
+    // Fix batch norm layers
+    def set_bn_fix(m):
+      classname = m.__class__.__name__
+      if classname.find('BatchNorm') != -1:
+          for p in m.parameters(): p.requires_grad = False
 
-  // Fix batch norm layers
-  def set_bn_fix(m):
-    classname = m.__class__.__name__
-    if classname.find('BatchNorm') != -1:
-        for p in m.parameters(): p.requires_grad = False
-
-  self.apply(set_bn_fix);
-    */
+    self.apply(set_bn_fix);
+      */
 }
 
 void MaskRCNN::InitializeWeights() {}

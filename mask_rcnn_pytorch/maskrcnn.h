@@ -22,6 +22,7 @@ class MaskRCNN : public torch::nn::Module {
   std::shared_ptr<Config const> config_;
 
   FPN fpn_;
+  torch::Tensor anchors_;
 };
 
 #endif  // MASKRCNN_H

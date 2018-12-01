@@ -43,14 +43,14 @@ class Config {
 
   // The strides of each layer of the FPN Pyramid. These values
   // are based on a Resnet101 backbone.
-  std::vector<uint32_t> backbone_strides = {4, 8, 16, 32, 64};
-  std::vector<std::pair<uint32_t, uint32_t>> backbone_shapes;
+  std::vector<float> backbone_strides = {4, 8, 16, 32, 64};
+  std::vector<std::pair<float, float>> backbone_shapes;
 
   // Number of classification classes (including background)
   uint32_t num_classes = 1;  // Override in sub-classes
 
   // Length of square anchor side in pixels
-  std::vector<uint32_t> rpn_anchor_scales = {32, 64, 128, 256, 512};
+  std::vector<float> rpn_anchor_scales = {32, 64, 128, 256, 512};
 
   // Ratios of anchors at each cell (width/height)
   // A value of 1 represents a square anchor, and 0.5 is a wide anchor

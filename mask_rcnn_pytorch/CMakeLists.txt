@@ -37,27 +37,30 @@ set(SOURCE_FILES
                     nnutils.h
                     nnutils.cpp
                     fpn.h
-                    fpn.cpp)
+                    fpn.cpp
+                    anchors.h
+                    anchors.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
-list(APPEND REQUIRED_LIBS "${CMAKE_PROJECT_NAME}_lib")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})
 list(APPEND REQUIRED_LIBS ${OpenCV_LIBS})
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})
 
 
 add_library("${CMAKE_PROJECT_NAME}_lib" STATIC ${SOURCE_FILES})
+target_link_libraries("${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS})
 
 add_executable(${CMAKE_PROJECT_NAME} ${RESOURCE_FILES} demo.cpp)
-target_link_libraries(${CMAKE_PROJECT_NAME} ${REQUIRED_LIBS})
+target_link_libraries(${CMAKE_PROJECT_NAME} "${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS})
 
 
 set(TEST_FILES
     tests/catch.hpp
     tests/tests_main.cpp
     tests/nnutils_test.cpp
+    tests/anchor_test.cpp
     )
 
 add_executable("${CMAKE_PROJECT_NAME}_test" ${TEST_FILES})
-target_link_libraries(${CMAKE_PROJECT_NAME}_test ${REQUIRED_LIBS})
+target_link_libraries(${CMAKE_PROJECT_NAME}_test "${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS})
 
