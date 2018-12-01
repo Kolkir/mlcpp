@@ -51,27 +51,29 @@ void MaskRCNN::Build() {
 
   if (config_->gpu_count > 0)
     anchors_ = anchors_.toBackend(torch::Backend::CUDA);
+
+  // RPN
+  rpn_ =
+      RPN(config_->rpn_anchor_ratios.size(), config_->rpn_anchor_stride, 256);
   /*
-    // RPN
-    self.rpn = RPN(len(config.RPN_ANCHOR_RATIOS), config.RPN_ANCHOR_STRIDE,
-    256);
+      // FPN Classifier
+      self.classifier =
+        Classifier(256, config.POOL_SIZE, config.IMAGE_SHAPE,
+     config.NUM_CLASSES);
 
-    // FPN Classifier
-    self.classifier =
-      Classifier(256, config.POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
+      // FPN Mask
+      self.mask =
+        Mask(256, config.MASK_POOL_SIZE, config.IMAGE_SHAPE,
+     config.NUM_CLASSES);
 
-    // FPN Mask
-    self.mask =
-      Mask(256, config.MASK_POOL_SIZE, config.IMAGE_SHAPE, config.NUM_CLASSES);
+      // Fix batch norm layers
+      def set_bn_fix(m):
+        classname = m.__class__.__name__
+        if classname.find('BatchNorm') != -1:
+            for p in m.parameters(): p.requires_grad = False
 
-    // Fix batch norm layers
-    def set_bn_fix(m):
-      classname = m.__class__.__name__
-      if classname.find('BatchNorm') != -1:
-          for p in m.parameters(): p.requires_grad = False
-
-    self.apply(set_bn_fix);
-      */
+      self.apply(set_bn_fix);
+        */
 }
 
 void MaskRCNN::InitializeWeights() {}

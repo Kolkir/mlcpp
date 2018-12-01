@@ -39,7 +39,9 @@ set(SOURCE_FILES
                     fpn.h
                     fpn.cpp
                     anchors.h
-                    anchors.cpp)
+                    anchors.cpp
+                    rpn.h
+                    rpn.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})

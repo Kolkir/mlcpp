@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "fpn.h"
+#include "rpn.h"
 
 #include <torch/torch.h>
 #include <memory>
@@ -23,6 +24,7 @@ class MaskRCNN : public torch::nn::Module {
 
   FPN fpn_;
   torch::Tensor anchors_;
+  RPN rpn_;
 };
 
 #endif  // MASKRCNN_H
