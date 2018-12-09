@@ -43,3 +43,6 @@ pip install torch-1.0.0a0+4f0434d-cp37-cp37m-linux_x86_64.whl
 **Sharing weights**
 torch.save/load - use python pickle.
 torch.jit - can be used with tracing so in case complex training function it is tricky to use.
+
+**Access data
+auto t = *y.data<uint8_t>();  // see at::ScalarType::Byte use data for scalars

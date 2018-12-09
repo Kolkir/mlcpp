@@ -3,6 +3,7 @@ project(mask-rcnn)
 
 find_package(Torch REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(CUDA REQUIRED)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -16,6 +17,16 @@ add_compile_options( -fopenmp
                      -Wall
                      -Wextra
                      -Wno-unused-parameter)
+
+
+set(CUDA_NVCC_FLAGS "-std=c++14;")
+list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wall;")
+list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wextra;")
+list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wno-unused-parameter;")
+list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wno-unknown-pragmas;")
+set(CUDA_NVCC_FLAGS_RELEASE "-O3;-DNDEBUG;")
+set(CUDA_NVCC_FLAGS_DEBUG "-g;-O0;")
+set(CUDA_PROPAGATE_HOST_FLAGS ON)
 
 
 set(RESOURCE_FILES
@@ -41,7 +52,19 @@ set(SOURCE_FILES
                     anchors.h
                     anchors.cpp
                     rpn.h
-                    rpn.cpp)
+                    rpn.cpp
+                    classifier.h
+                    classifier.cpp
+                    roialign.h
+                    roialign.cpp
+                    mask.h
+                    mask.cpp
+                    roialign/cuda/crop_and_resize_kernel.cu
+                    roialign/cuda/crop_and_resize_kernel.h
+                    roialign/crop_and_resize.h
+                    roialign/crop_and_resize.cpp
+                    roialign/crop_and_resize_gpu.h
+                    roialign/crop_and_resize_gpu.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})
@@ -49,7 +72,7 @@ list(APPEND REQUIRED_LIBS ${OpenCV_LIBS})
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})
 
 
-add_library("${CMAKE_PROJECT_NAME}_lib" STATIC ${SOURCE_FILES})
+cuda_add_library("${CMAKE_PROJECT_NAME}_lib" STATIC ${SOURCE_FILES})
 target_link_libraries("${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS})
 
 add_executable(${CMAKE_PROJECT_NAME} ${RESOURCE_FILES} demo.cpp)
