@@ -70,14 +70,19 @@ int main(int argc, char** argv) {
     // Create model object.
     MaskRCNN model(model_dir, config);
     if (config->gpu_count > 0)
-      model.to(torch::DeviceType::CUDA);
+      model->to(torch::DeviceType::CUDA);
 
     // Load weights trained on MS - COCO
-    auto dict = LoadStateDict(params_path);
-    auto params = model.named_parameters(true /*recurse*/);
-    params = dict;
+    if (params_path.find(".json") != std::string::npos) {
+      auto dict = LoadStateDict(params_path);
+      auto params = model->named_parameters(true /*recurse*/);
+      params = dict;
+      torch::save(model, "params.dat");
+    } else {
+      torch::load(model, params_path);
+    }
 
-    auto results = model.Detect({image});
+    // auto results = model->Detect({image});
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;
     return 1;

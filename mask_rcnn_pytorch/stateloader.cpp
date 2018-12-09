@@ -25,7 +25,6 @@ struct DictHandler
   DictHandler() {}
 
   bool Double(double d) {
-    std::cout << "double " << d << std::endl;
     if (current_state_.top() == ReadState::List ||
         current_state_.top() == ReadState::TensorValue) {
       blob_.push_back(static_cast<float>(d));
@@ -37,7 +36,6 @@ struct DictHandler
   }
 
   bool Uint(unsigned u) {
-    std::cout << "uint " << u << std::endl;
     if (current_state_.top() == ReadState::List ||
         current_state_.top() == ReadState::TensorValue) {
       blob_.push_back(static_cast<float>(u));
@@ -52,7 +50,6 @@ struct DictHandler
 
   bool Key(const char* str, rapidjson::SizeType length, bool /*copy*/) {
     key_.assign(str, length);
-    std::cout << "key " << key_ << std::endl;
     if (current_state_.top() == ReadState::DictObject) {
       current_state_.push(ReadState::ParamName);
     } else {
@@ -62,7 +59,6 @@ struct DictHandler
   }
 
   bool StartObject() {
-    std::cout << "start object" << std::endl;
     if (current_state_.top() == ReadState::None) {
       current_state_.pop();
       current_state_.push(ReadState::DictObject);
@@ -73,7 +69,6 @@ struct DictHandler
   }
 
   bool EndObject(rapidjson::SizeType /*memberCount*/) {
-    std::cout << "end object" << std::endl;
     if (current_state_.top() != ReadState::DictObject) {
       throw std::logic_error("End object parsing error");
     }
@@ -90,7 +85,6 @@ struct DictHandler
   }
 
   bool StartArray() {
-    std::cout << "start array" << std::endl;
     if (current_state_.top() == ReadState::List) {
       current_state_.push(ReadState::List);
     } else if (current_state_.top() == ReadState::ParamName) {
@@ -110,14 +104,12 @@ struct DictHandler
   }
 
   bool EndArray(rapidjson::SizeType elementCount) {
-    std::cout << "end array" << std::endl;
     if (current_state_.top() == ReadState::List) {
       current_state_.pop();
     } else if (current_state_.top() == ReadState::SizeTensorPair) {
       current_state_.pop();
       assert(current_state_.top() == ReadState::ParamName);
       current_state_.pop();
-      std::cout << "Add new param" << std::endl;
       dict.insert(key_, tensor_);
     } else if (current_state_.top() == ReadState::TensorSize) {
       current_state_.pop();
@@ -137,7 +129,6 @@ struct DictHandler
         current_state_.pop();
         assert(current_state_.top() == ReadState::ParamName);
         current_state_.pop();
-        std::cout << "Add new param" << std::endl;
         dict.insert(key_, tensor_);
       }
     } else {
