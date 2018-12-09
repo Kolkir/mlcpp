@@ -4,7 +4,8 @@
 
 #include <cmath>
 
-MaskRCNN::MaskRCNN(std::string model_dir, std::shared_ptr<Config const> config)
+MaskRCNNImpl::MaskRCNNImpl(std::string model_dir,
+                           std::shared_ptr<Config const> config)
     : model_dir_(model_dir), config_(config) {
   Build();
   InitializeWeights();
@@ -18,7 +19,7 @@ MaskRCNN::MaskRCNN(std::string model_dir, std::shared_ptr<Config const> config)
  * scores: [N] float probability scores for the class IDs
  * masks: [H, W, N] instance binary masks
  */
-bool MaskRCNN::Detect(const std::vector<at::Tensor>& images) {
+bool MaskRCNNImpl::Detect(const std::vector<at::Tensor>& images) {
   // Mold inputs to format expected by the neural network
   auto [molded_images, image_metas, windows] = MoldInputs(images);
 
@@ -67,7 +68,7 @@ bool MaskRCNN::Detect(const std::vector<at::Tensor>& images) {
  * about each image. windows: [N, (y1, x1, y2, x2)]. The portion of the image
  * that has the original image (padding excluded).
  */
-std::tuple<at::Tensor, at::Tensor, at::Tensor> MaskRCNN::MoldInputs(
+std::tuple<at::Tensor, at::Tensor, at::Tensor> MaskRCNNImpl::MoldInputs(
     const std::vector<at::Tensor>& images) {
   torch::TensorList molded_images;
   torch::TensorList image_metas;
@@ -96,7 +97,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor> MaskRCNN::MoldInputs(
 }
 
 // Build Mask R-CNN architecture.
-void MaskRCNN::Build() {
+void MaskRCNNImpl::Build() {
   assert(config_);
 
   // Image size must be dividable by 2 multiple times
@@ -156,7 +157,7 @@ void MaskRCNN::Build() {
   apply(set_bn_fix);
 }
 
-void MaskRCNN::InitializeWeights() {
+void MaskRCNNImpl::InitializeWeights() {
   for (auto m : modules(false)) {
     if (m->name().find("Conv2d") != std::string::npos) {
       for (auto& p : m->named_parameters()) {

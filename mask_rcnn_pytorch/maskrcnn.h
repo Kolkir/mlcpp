@@ -10,9 +10,9 @@
 #include <torch/torch.h>
 #include <memory>
 
-class MaskRCNN : public torch::nn::Module {
+class MaskRCNNImpl : public torch::nn::Module {
  public:
-  MaskRCNN(std::string model_dir, std::shared_ptr<Config const> config);
+  MaskRCNNImpl(std::string model_dir, std::shared_ptr<Config const> config);
 
   bool Detect(const std::vector<at::Tensor>& images);
 
@@ -32,5 +32,7 @@ class MaskRCNN : public torch::nn::Module {
   Classifier classifier_{nullptr};
   Mask mask_{nullptr};
 };
+
+TORCH_MODULE(MaskRCNN);
 
 #endif  // MASKRCNN_H
