@@ -6,18 +6,14 @@ RPNImpl::RPNImpl(uint32_t anchors_per_location,
                  uint32_t anchor_stride,
                  uint32_t depth)
     : padding_(/*kernel_size*/ 3, /*stride*/ anchor_stride),
-      conv_shared_(torch::nn::Conv2dOptions(
-          depth,
-          512,
-          /*kernel [size, stride]*/ {3, anchor_stride})),
+      conv_shared_(
+          torch::nn::Conv2dOptions(depth, 512, 3).stride(anchor_stride)),
       relu_(torch::relu),
-      conv_class_(torch::nn::Conv2dOptions(512,
-                                           2 * anchors_per_location,
-                                           /*kernel[size, stride]*/ {1, 1})),
+      conv_class_(
+          torch::nn::Conv2dOptions(512, 2 * anchors_per_location, 1).stride(1)),
 
-      conv_bbox_(torch::nn::Conv2dOptions(512,
-                                          4 * anchors_per_location,
-                                          /*kernel[size, stride]*/ {1, 1})) {}
+      conv_bbox_(torch::nn::Conv2dOptions(512, 4 * anchors_per_location, 1)
+                     .stride(1)) {}
 
 std::tuple<at::Tensor, at::Tensor, at::Tensor> RPNImpl::forward(at::Tensor x) {
   // Shared convolutional base of the RPN

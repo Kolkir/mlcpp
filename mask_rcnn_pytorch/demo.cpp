@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     auto params = model.named_parameters(true /*recurse*/);
     params = dict;
 
-    auto results = model.Detect(image);
+    auto results = model.Detect({image});
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;
     return 1;

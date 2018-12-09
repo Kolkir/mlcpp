@@ -20,38 +20,26 @@ FPNImpl::FPNImpl(torch::nn::Sequential c1,
                                 /*padding*/ at::IntList({0}),
                                 /*dilation*/ at::IntList({1}),
                                 /*ceil_mode*/ false)),
-      p5_conv1_(torch::nn::Conv2dOptions(2048,
-                                         out_channels,
-                                         /*kernel [size, stride]*/ {1, 1})),
+      p5_conv1_(torch::nn::Conv2dOptions(2048, out_channels, 1).stride(1)),
       p5_conv2_(SamePad2d(/*kernel_size*/ 3, /*stride*/ 1),
-                torch::nn::Conv2d(torch::nn::Conv2dOptions(
-                    out_channels,
-                    out_channels,
-                    /*kernel [size, stride]*/ {3, 1}))),
-      p4_conv1_(torch::nn::Conv2dOptions(1024,
-                                         out_channels,
-                                         /*kernel [size, stride]*/ {1, 1})),
+                torch::nn::Conv2d(
+                    torch::nn::Conv2dOptions(out_channels, out_channels, 3)
+                        .stride(1))),
+      p4_conv1_(torch::nn::Conv2dOptions(1024, out_channels, 1).stride(1)),
       p4_conv2_(SamePad2d(/*kernel_size*/ 3, /*stride*/ 1),
-                torch::nn::Conv2d(torch::nn::Conv2dOptions(
-                    out_channels,
-                    out_channels,
-                    /*kernel [size, stride]*/ {3, 1}))),
-      p3_conv1_(torch::nn::Conv2dOptions(512,
-                                         out_channels,
-                                         /*kernel [size, stride]*/ {1, 1})),
+                torch::nn::Conv2d(
+                    torch::nn::Conv2dOptions(out_channels, out_channels, 3)
+                        .stride(1))),
+      p3_conv1_(torch::nn::Conv2dOptions(512, out_channels, 1).stride(1)),
       p3_conv2_(SamePad2d(/*kernel_size*/ 3, /*stride*/ 1),
-                torch::nn::Conv2d(torch::nn::Conv2dOptions(
-                    out_channels,
-                    out_channels,
-                    /*kernel [size, stride]*/ {3, 1}))),
-      p2_conv1_(torch::nn::Conv2dOptions(256,
-                                         out_channels,
-                                         /*kernel [size, stride]*/ {1, 1})),
+                torch::nn::Conv2d(
+                    torch::nn::Conv2dOptions(out_channels, out_channels, 3)
+                        .stride(1))),
+      p2_conv1_(torch::nn::Conv2dOptions(256, out_channels, 1).stride(1)),
       p2_conv2_(SamePad2d(/*kernel_size*/ 3, /*stride*/ 1),
-                torch::nn::Conv2d(torch::nn::Conv2dOptions(
-                    out_channels,
-                    out_channels,
-                    /*kernel [size, stride]*/ {3, 1}))) {
+                torch::nn::Conv2d(
+                    torch::nn::Conv2dOptions(out_channels, out_channels, 3)
+                        .stride(1))) {
   register_module("C1", c1_);
   register_module("C2", c2_);
   register_module("C3", c3_);
