@@ -20,6 +20,6 @@
  */
 torch::Tensor PyramidRoiAlign(std::vector<torch::Tensor> input,
                               uint32_t pool_size,
-                              const std::vector<uint32_t>& image_shape);
+                              const std::vector<int32_t>& image_shape);
 
 #endif  // ROIALIGN_H

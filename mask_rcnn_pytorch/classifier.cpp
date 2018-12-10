@@ -5,7 +5,7 @@ ClassifierImpl::ClassifierImpl() {}
 
 ClassifierImpl::ClassifierImpl(uint32_t depth,
                                uint32_t pool_size,
-                               const std::vector<uint32_t>& image_shape,
+                               const std::vector<int32_t>& image_shape,
                                uint32_t num_classes)
     :
 
@@ -27,7 +27,7 @@ ClassifierImpl::ClassifierImpl(uint32_t depth,
 std::tuple<at::Tensor, at::Tensor, at::Tensor> ClassifierImpl::forward(
     at::Tensor x,
     at::Tensor rois) {
-  // x = PyramidRoiAlign(rois + x, pool_size_, image_shape_);
+  x = PyramidRoiAlign({rois, x}, pool_size_, image_shape_);
   x = conv1_->forward(x);
   x = bn1_->forward(x);
   x = relu_->forward(x);

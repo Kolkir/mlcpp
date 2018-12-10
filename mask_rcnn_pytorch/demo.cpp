@@ -82,6 +82,14 @@ int main(int argc, char** argv) {
       torch::load(model, params_path);
     }
 
+    // Mold inputs to format expected by the neural network
+    auto [molded_images, image_metas, windows] =
+        MoldInputs({image}, *config.get());
+
+    //# Convert images to torch tensor
+    // molded_images = torch.from_numpy(molded_images.transpose(0, 3, 1,
+    // 2)).float()
+
     // auto results = model->Detect({image});
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;

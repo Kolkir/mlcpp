@@ -82,13 +82,13 @@ class Config {
   // Images are resized such that the smallest side is >= IMAGE_MIN_DIM and
   // the longest side is <= IMAGE_MAX_DIM. In case both conditions can't
   // be satisfied together the IMAGE_MAX_DIM is enforced.
-  uint32_t image_min_dim = 800;
-  uint32_t image_max_dim = 1024;
+  int32_t image_min_dim = 800;
+  int32_t image_max_dim = 1024;
   // If True, pad images with zeros such that they're (max_dim by max_dim)
   bool image_padding = true;  // currently, the False option is not supported
 
   // Image mean (RGB)
-  std::vector<float> mean_pixel = {123.7f, 116.8f, 103.9f};
+  std::vector<double> mean_pixel = {123.7, 116.8, 103.9};
 
   // Number of ROIs per image to feed to classifier/mask heads
   // The Mask RCNN paper uses 512 but often the RPN doesn't generate
@@ -143,7 +143,7 @@ class Config {
   uint32_t batch_size = 0;
 
   // input image size
-  std::vector<uint32_t> image_shape;
+  std::vector<int32_t> image_shape;
 };
 
 #endif  // CONFIG_H

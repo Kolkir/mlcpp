@@ -5,7 +5,7 @@ MaskImpl::MaskImpl() {}
 
 MaskImpl::MaskImpl(uint32_t depth,
                    uint32_t pool_size,
-                   const std::vector<uint32_t>& image_shape,
+                   const std::vector<int32_t>& image_shape,
                    uint32_t num_classes)
     : padding_(/*kernel_size*/ 3, /*stride*/ 1),
       conv1_(torch::nn::Conv2dOptions(depth,
@@ -36,7 +36,7 @@ MaskImpl::MaskImpl(uint32_t depth,
 }
 
 torch::Tensor MaskImpl::forward(at::Tensor x, at::Tensor rois) {
-  // x = PyramidRoiAlign(rois + x, pool_size_, image_shape_);
+  x = PyramidRoiAlign({rois, x}, pool_size_, image_shape_);
   x = conv1_->forward(padding_->forward(x));
   x = bn1_->forward(x);
   x = torch::relu(x);

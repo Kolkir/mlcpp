@@ -75,8 +75,10 @@ list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})
 cuda_add_library("${CMAKE_PROJECT_NAME}_lib" STATIC ${SOURCE_FILES})
 target_link_libraries("${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS})
 
+find_library(GOMP_LIBRARY gomp)
+
 add_executable(${CMAKE_PROJECT_NAME} ${RESOURCE_FILES} demo.cpp)
-target_link_libraries(${CMAKE_PROJECT_NAME} "${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS})
+target_link_libraries(${CMAKE_PROJECT_NAME} "${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS} ${GOMP_LIBRARY})
 
 
 set(TEST_FILES

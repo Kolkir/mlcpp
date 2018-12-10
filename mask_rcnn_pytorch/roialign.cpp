@@ -4,7 +4,7 @@
 
 at::Tensor PyramidRoiAlign(std::vector<at::Tensor> input,
                            uint32_t pool_size,
-                           const std::vector<uint32_t>& image_shape) {
+                           const std::vector<int32_t>& image_shape) {
   // Currently only supports batchsize 1
   for (auto& i : input)
     i = i.squeeze(0);

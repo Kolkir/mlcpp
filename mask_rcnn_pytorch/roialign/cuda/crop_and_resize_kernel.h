@@ -1,5 +1,5 @@
-#ifndef _CropAndResize_Kernel
-#define _CropAndResize_Kernel
+#ifndef CROPANDRESIZE_KERNEL
+#define CROPANDRESIZE_KERNEL
 
 #include <inttypes.h>
 
@@ -26,7 +26,7 @@ void CropAndResizeBackpropImageLaucher(const float* grads_ptr,
                                        int64_t num_boxes,
                                        int64_t batch,
                                        int64_t image_height,
-                                       int image_width,
+                                       int64_t image_width,
                                        int64_t crop_height,
                                        int64_t crop_width,
                                        int64_t depth,

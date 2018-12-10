@@ -10,7 +10,7 @@ class ClassifierImpl : public torch::nn::Module {
   ClassifierImpl();
   ClassifierImpl(uint32_t depth,
                  uint32_t pool_size,
-                 const std::vector<uint32_t>& image_shape,
+                 const std::vector<int32_t>& image_shape,
                  uint32_t num_classes);
 
   std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> forward(
@@ -27,7 +27,7 @@ class ClassifierImpl : public torch::nn::Module {
   torch::nn::Linear linear_bbox_{nullptr};
 
   uint32_t pool_size_{0};
-  std::vector<uint32_t> image_shape_;
+  std::vector<int32_t> image_shape_;
 };
 
 TORCH_MODULE(Classifier);

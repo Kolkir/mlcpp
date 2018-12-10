@@ -1,3 +1,6 @@
+#ifndef CROP_AND_RESIZE_H
+#define CROP_AND_RESIZE_H
+
 #include <torch/torch.h>
 
 void crop_and_resize_forward(at::Tensor image,
@@ -14,3 +17,5 @@ void crop_and_resize_backward(
     at::Tensor box_index,   // range in [0, batch_size)
     at::Tensor grads_image  // resize to [bsize, c, hc, wc]
 );
+
+#endif

@@ -4,6 +4,7 @@
 #include "classifier.h"
 #include "config.h"
 #include "fpn.h"
+#include "imageutils.h"
 #include "mask.h"
 #include "rpn.h"
 
@@ -14,13 +15,18 @@ class MaskRCNNImpl : public torch::nn::Module {
  public:
   MaskRCNNImpl(std::string model_dir, std::shared_ptr<Config const> config);
 
-  bool Detect(const std::vector<at::Tensor>& images);
+  bool Detect(at::Tensor images, const std::vector<ImageMeta>& image_metas);
 
  private:
   void Build();
   void InitializeWeights();
-  std::tuple<at::Tensor, at::Tensor, at::Tensor> MoldInputs(
-      const std::vector<at::Tensor>& images);
+
+  enum class Mode { Inference, Training };
+
+  std::tuple<at::Tensor, at::Tensor> Predict(
+      at::Tensor images,
+      const std::vector<ImageMeta>& image_metas,
+      Mode mode);
 
  private:
   std::string model_dir_;

@@ -19,24 +19,10 @@ MaskRCNNImpl::MaskRCNNImpl(std::string model_dir,
  * scores: [N] float probability scores for the class IDs
  * masks: [H, W, N] instance binary masks
  */
-bool MaskRCNNImpl::Detect(const std::vector<at::Tensor>& images) {
-  // Mold inputs to format expected by the neural network
-  auto [molded_images, image_metas, windows] = MoldInputs(images);
-
-  //# Convert images to torch tensor
-  // molded_images = torch.from_numpy(molded_images.transpose(0, 3, 1,
-  // 2)).float()
-
-  //# To GPU
-  // if self.config.GPU_COUNT:
-  //    molded_images = molded_images.cuda()
-
-  //# Wrap in variable
-  // molded_images = Variable(molded_images, volatile=True)
-
-  //# Run object detection
-  // detections, mrcnn_mask = self.predict([molded_images, image_metas],
-  // mode='inference')
+bool MaskRCNNImpl::Detect(at::Tensor images,
+                          const std::vector<ImageMeta>& image_metas) {
+  // Run object detection
+  auto [detections, mrcnn_mask] = Predict(images, image_metas, Mode::Inference);
 
   //# Convert to numpy
   // detections = detections.data.cpu().numpy()
@@ -46,7 +32,7 @@ bool MaskRCNNImpl::Detect(const std::vector<at::Tensor>& images) {
   // results = []
   // for i, image in enumerate(images):
   //    final_rois, final_class_ids, final_scores, final_masks =\
-//        self.unmold_detections(detections[i], mrcnn_mask[i],
+  //        self.unmold_detections(detections[i], mrcnn_mask[i],
   //                               image.shape, windows[i])
   //    results.append({
   //        "rois": final_rois,
@@ -57,43 +43,42 @@ bool MaskRCNNImpl::Detect(const std::vector<at::Tensor>& images) {
   // return results
   return false;
 }
-
-/*
- * Takes a list of images and modifies them to the format expected
- * as an input to the neural network.
- * images: List of image matricies [height,width,depth]. Images can
- * have different sizes.
- * Returns 3 matricies: molded_images: [N, h, w, 3].
- * Images resized and normalized. image_metas: [N, length of meta data]. Details
- * about each image. windows: [N, (y1, x1, y2, x2)]. The portion of the image
- * that has the original image (padding excluded).
- */
-std::tuple<at::Tensor, at::Tensor, at::Tensor> MaskRCNNImpl::MoldInputs(
-    const std::vector<at::Tensor>& images) {
-  torch::TensorList molded_images;
-  torch::TensorList image_metas;
-  std::vector<at::Tensor> windows;
-  for (const auto& image : images) {
-    // Resize image to fit the model expected size
-    // TODO: move resizing to mold_image()
-    //      molded_image, window, scale, padding = utils.resize_image(
-    //          image,
-    //          min_dim=self.config.IMAGE_MIN_DIM,
-    //          max_dim=self.config.IMAGE_MAX_DIM,
-    //          padding=self.config.IMAGE_PADDING)
-    //      molded_image = mold_image(molded_image, self.config)
-    //      # Build image_meta
-    //      image_meta = compose_image_meta(
-    //          0, image.shape, window,
-    //          np.zeros([self.config.NUM_CLASSES], dtype=np.int32))
-    //      # Append
-    //      molded_images.append(molded_image)
-    //      windows.append(window)
-    //      image_metas.append(image_meta)
+std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Predict(
+    at::Tensor images,
+    const std::vector<ImageMeta>& image_metas,
+    Mode mode) {
+  if (mode == Mode::Inference) {
+    eval();
+  } else if (mode == Mode::Training) {
+    // TODO: Implement
+    assert(false);
+  } else {
+    assert(false);
   }
-  // Pack into arrays
-  return {torch::stack(molded_images), torch::stack(image_metas),
-          torch::stack(windows)};
+
+  // Feature extraction
+  auto [p2_out, p3_out, p4_out, p5_out, p6_out] = fpn_->forward(images);
+
+  // Note that P6 is used in RPN, but not in the classifier heads.
+  std::vector<at::Tensor> rpn_feature_maps = {p2_out, p3_out, p4_out, p5_out,
+                                              p6_out};
+  std::vector<at::Tensor> mrcnn_feature_maps = {p2_out, p3_out, p4_out, p5_out};
+
+  // Loop through pyramid layers
+  std::vector<std::vector<at::Tensor>> layer_outputs;
+  for (auto p : rpn_feature_maps) {
+    auto [rpn_class_logits, rpn_probs, rpn_bbox] = rpn_->forward(p);
+    layer_outputs.push_back({rpn_class_logits, rpn_probs, rpn_bbox});
+  }
+
+  if (mode == Mode::Inference) {
+  } else if (mode == Mode::Training) {
+    // TODO: Implement
+    assert(false);
+  } else {
+    assert(false);
+  }
+  return {};
 }
 
 // Build Mask R-CNN architecture.
@@ -103,10 +88,10 @@ void MaskRCNNImpl::Build() {
   // Image size must be dividable by 2 multiple times
   auto h = config_->image_shape[0];
   auto w = config_->image_shape[1];
-  auto p = static_cast<uint32_t>(std::pow(2l, 6l));
-  if (static_cast<uint32_t>(static_cast<double>(h) / static_cast<double>(p)) !=
+  auto p = static_cast<int32_t>(std::pow(2l, 6l));
+  if (static_cast<int32_t>(static_cast<double>(h) / static_cast<double>(p)) !=
           h / p ||
-      static_cast<uint32_t>(static_cast<double>(w) / static_cast<double>(p)) !=
+      static_cast<int32_t>(static_cast<double>(w) / static_cast<double>(p)) !=
           w / p) {
     throw std::invalid_argument(
         "Image size must be dividable by 2 at least 6 times "
