@@ -46,3 +46,8 @@ torch.jit - can be used with tracing so in case complex training function it is 
 
 **Access data
 auto t = *y.data<uint8_t>();  // see at::ScalarType::Byte use data for scalars
+also [] operator can be used
+
+**Create tensors
+https://pytorch.org/cppdocs/notes/tensor_creation.html
+see torch::tensor function for creation tensor from initializer list

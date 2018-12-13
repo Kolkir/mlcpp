@@ -64,7 +64,17 @@ set(SOURCE_FILES
                     roialign/crop_and_resize.h
                     roialign/crop_and_resize.cpp
                     roialign/crop_and_resize_gpu.h
-                    roialign/crop_and_resize_gpu.cpp)
+                    roialign/crop_and_resize_gpu.cpp
+                    nms/cuda/nms_kernel.cu
+                    nms/cuda/nms_kernel.h
+                    nms/nms.h
+                    nms/nms.cpp
+                    nms/nms_cuda.h
+                    nms/nms_cuda.cpp
+                    proposallayer.h
+                    proposallayer.cpp
+                    nms.h
+                    nms.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})

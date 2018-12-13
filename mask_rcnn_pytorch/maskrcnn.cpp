@@ -1,5 +1,6 @@
 #include "maskrcnn.h"
 #include "anchors.h"
+#include "proposallayer.h"
 #include "resnet.h"
 
 #include <cmath>
@@ -65,11 +66,25 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Predict(
   std::vector<at::Tensor> mrcnn_feature_maps = {p2_out, p3_out, p4_out, p5_out};
 
   // Loop through pyramid layers
-  std::vector<std::vector<at::Tensor>> layer_outputs;
+  std::vector<at::Tensor> rpn_class_logits;
+  std::vector<at::Tensor> rpn_class;
+  std::vector<at::Tensor> rpn_bbox;
   for (auto p : rpn_feature_maps) {
-    auto [rpn_class_logits, rpn_probs, rpn_bbox] = rpn_->forward(p);
-    layer_outputs.push_back({rpn_class_logits, rpn_probs, rpn_bbox});
+    auto [class_logits, probs, bbox] = rpn_->forward(p);
+    rpn_class_logits.push_back(class_logits);
+    rpn_class.push_back(probs);
+    rpn_bbox.push_back(bbox);
   }
+
+  // Generate proposals
+  // Proposals are [batch, N, (y1, x1, y2, x2)] in normalized coordinates
+  // and zero padded.
+  auto proposal_count = mode == Mode::Training
+                            ? config_->post_nms_rois_training
+                            : config_->post_nms_rois_inference;
+  auto rpn_rois = ProposalLayer(
+      {torch::stack(rpn_class, 1), torch::stack(rpn_bbox, 1)}, proposal_count,
+      config_->rpn_nms_threshold, anchors_, config_);
 
   if (mode == Mode::Inference) {
   } else if (mode == Mode::Training) {
