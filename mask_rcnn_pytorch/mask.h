@@ -15,7 +15,8 @@ class MaskImpl : public torch::nn::Module {
            const std::vector<int32_t>& image_shape,
            uint32_t num_classes);
 
-  torch::Tensor forward(torch::Tensor x, torch::Tensor rois);
+  torch::Tensor forward(std::vector<torch::Tensor> feature_maps,
+                        torch::Tensor rois);
 
  private:
   SamePad2d padding_{nullptr};

@@ -35,8 +35,10 @@ MaskImpl::MaskImpl(uint32_t depth,
   conv_trans_bias_ = torch::zeros({256}, torch::requires_grad());
 }
 
-torch::Tensor MaskImpl::forward(at::Tensor x, at::Tensor rois) {
-  x = PyramidRoiAlign({rois, x}, pool_size_, image_shape_);
+torch::Tensor MaskImpl::forward(std::vector<torch::Tensor> feature_maps,
+                                at::Tensor rois) {
+  feature_maps.insert(feature_maps.begin(), rois);
+  auto x = PyramidRoiAlign(feature_maps, pool_size_, image_shape_);
   x = conv1_->forward(padding_->forward(x));
   x = bn1_->forward(x);
   x = torch::relu(x);

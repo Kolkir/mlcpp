@@ -14,7 +14,7 @@ class ClassifierImpl : public torch::nn::Module {
                  uint32_t num_classes);
 
   std::tuple<torch::Tensor, torch::Tensor, torch::Tensor> forward(
-      torch::Tensor x,
+      std::vector<torch::Tensor> feature_maps,
       torch::Tensor rois);
 
  private:

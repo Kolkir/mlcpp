@@ -5,6 +5,8 @@
 #include <vector>
 
 at::Tensor upsample(at::Tensor x, float scale_factor);
+at::Tensor unique1d(at::Tensor tensor);
+at::Tensor intersect1d(at::Tensor tensor1, at::Tensor tensor2);
 
 class SamePad2dImpl : public torch::nn::Module {
  public:

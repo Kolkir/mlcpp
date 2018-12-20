@@ -73,6 +73,8 @@ set(SOURCE_FILES
                     nms/nms_cuda.cpp
                     proposallayer.h
                     proposallayer.cpp
+                    detectionlayer.h
+                    detectionlayer.cpp
                     nms.h
                     nms.cpp)
 

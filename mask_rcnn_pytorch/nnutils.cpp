@@ -74,3 +74,25 @@ at::Tensor upsample(at::Tensor x, float scale_factor) {
         std::to_string(x.ndimension()));
   }
 }
+
+at::Tensor unique1d(at::Tensor tensor) {
+  if (tensor.size(0) == 0 || tensor.size(0) == 1)
+    return tensor;
+  std::tie(tensor, std::ignore) = tensor.sort();
+  auto unique_bool = tensor.narrow(0, 1, tensor.size(0) - 1) !=
+                     tensor.narrow(0, 0, tensor.size(0) - 1);
+  auto first_element =
+      torch::tensor({1}, at::dtype(at::kByte).requires_grad(false));
+  if (tensor.is_cuda())
+    first_element = first_element.cuda();
+  unique_bool = torch::cat({first_element, unique_bool}, /*dim*/ 0);
+  return tensor.masked_select(unique_bool);
+}
+
+at::Tensor intersect1d(at::Tensor tensor1, at::Tensor tensor2) {
+  auto aux = torch::cat({tensor1, tensor2}, /*dim*/ 0);
+  std::tie(aux, std::ignore) = aux.sort();
+  auto unique_bool =
+      aux.narrow(0, 1, aux.size(0) - 1) != aux.narrow(0, 0, aux.size(0) - 1);
+  return aux.narrow(0, 0, aux.size(0) - 1).take(unique_bool);
+}

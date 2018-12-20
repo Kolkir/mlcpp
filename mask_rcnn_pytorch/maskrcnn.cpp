@@ -1,5 +1,6 @@
 #include "maskrcnn.h"
 #include "anchors.h"
+#include "detectionlayer.h"
 #include "proposallayer.h"
 #include "resnet.h"
 
@@ -20,29 +21,16 @@ MaskRCNNImpl::MaskRCNNImpl(std::string model_dir,
  * scores: [N] float probability scores for the class IDs
  * masks: [H, W, N] instance binary masks
  */
-bool MaskRCNNImpl::Detect(at::Tensor images,
-                          const std::vector<ImageMeta>& image_metas) {
+std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Detect(
+    at::Tensor images,
+    const std::vector<ImageMeta>& image_metas) {
   // Run object detection
   auto [detections, mrcnn_mask] = Predict(images, image_metas, Mode::Inference);
 
-  //# Convert to numpy
-  // detections = detections.data.cpu().numpy()
-  // mrcnn_mask = mrcnn_mask.permute(0, 1, 3, 4, 2).data.cpu().numpy()
+  detections = detections.cpu();
+  mrcnn_mask = mrcnn_mask.permute({0, 1, 3, 4, 2}).cpu();
 
-  //# Process detections
-  // results = []
-  // for i, image in enumerate(images):
-  //    final_rois, final_class_ids, final_scores, final_masks =\
-  //        self.unmold_detections(detections[i], mrcnn_mask[i],
-  //                               image.shape, windows[i])
-  //    results.append({
-  //        "rois": final_rois,
-  //        "class_ids": final_class_ids,
-  //        "scores": final_scores,
-  //        "masks": final_masks,
-  //    })
-  // return results
-  return false;
+  return {detections, mrcnn_mask};
 }
 std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Predict(
     at::Tensor images,
@@ -84,9 +72,43 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Predict(
                             : config_->post_nms_rois_inference;
   auto rpn_rois = ProposalLayer(
       {torch::stack(rpn_class, 1), torch::stack(rpn_bbox, 1)}, proposal_count,
-      config_->rpn_nms_threshold, anchors_, config_);
+      config_->rpn_nms_threshold, anchors_, *config_);
 
   if (mode == Mode::Inference) {
+    // Network Heads
+    // Proposal classifier and BBox regressor heads
+    auto [mrcnn_class_logits, mrcnn_class, mrcnn_bbox] =
+        classifier_->forward(mrcnn_feature_maps, rpn_rois);
+
+    // Detections
+    // output is [batch, num_detections, (y1, x1, y2, x2, class_id, score)] in
+    // image coordinates
+    at::Tensor detections = DetectionLayer(
+        *config_.get(), rpn_rois, mrcnn_class, mrcnn_bbox, image_metas);
+
+    // Convert boxes to normalized coordinates
+    auto h = static_cast<float>(config_->image_shape[0]);
+    auto w = static_cast<float>(config_->image_shape[1]);
+
+    auto scale =
+        torch::tensor({h, w, h, w}, at::dtype(at::kFloat).requires_grad(false));
+
+    if (config_->gpu_count > 0)
+      scale = scale.cuda();
+    auto detection_boxes = detections.narrow(1, 0, 4) / scale;
+
+    // Add back batch dimension
+    detection_boxes = detection_boxes.unsqueeze(0);
+
+    // Create masks for detections
+    auto mrcnn_mask = mask_->forward(mrcnn_feature_maps, detection_boxes);
+
+    // Add back batch dimension
+    detections = detections.unsqueeze(0);
+    mrcnn_mask = mrcnn_mask.unsqueeze(0);
+
+    return {detections, mrcnn_mask};
+
   } else if (mode == Mode::Training) {
     // TODO: Implement
     assert(false);

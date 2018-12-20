@@ -5,10 +5,24 @@
 
 namespace {
 /*
- * Applies the given deltas to the given boxes.
- * boxes: [N, 4] where each row is y1, x1, y2, x2
- * deltas: [N, 4] where each row is [dy, dx, log(dh), log(dw)]
+ * boxes: [N, 4] each col is y1, x1, y2, x2
+ * window: [4] in the form y1, x1, y2, x2
  */
+at::Tensor ClipBoxes(at::Tensor boxes, Window window) {
+  boxes =
+      torch::stack({boxes.narrow(1, 0, 1).clamp(static_cast<float>(window.x1),
+                                                static_cast<float>(window.x2)),
+                    boxes.narrow(1, 1, 1).clamp(static_cast<float>(window.y1),
+                                                static_cast<float>(window.y2)),
+                    boxes.narrow(1, 2, 1).clamp(static_cast<float>(window.x1),
+                                                static_cast<float>(window.x2)),
+                    boxes.narrow(1, 3, 1).clamp(static_cast<float>(window.y1),
+                                                static_cast<float>(window.y2))},
+                   1);
+  return boxes;
+}
+}  // namespace
+
 at::Tensor ApplyBoxDeltas(at::Tensor boxes, at::Tensor deltas) {
   // Convert to y, x, h, w
   auto height = boxes.narrow(1, 2, 1) - boxes.narrow(1, 0, 1);
@@ -29,31 +43,11 @@ at::Tensor ApplyBoxDeltas(at::Tensor boxes, at::Tensor deltas) {
   return result;
 }
 
-/*
- * boxes: [N, 4] each col is y1, x1, y2, x2
- * window: [4] in the form y1, x1, y2, x2
- */
-at::Tensor ClipBoxes(at::Tensor boxes, Window window) {
-  boxes =
-      torch::stack({boxes.narrow(1, 0, 1).clamp(static_cast<float>(window.x1),
-                                                static_cast<float>(window.x2)),
-                    boxes.narrow(1, 1, 1).clamp(static_cast<float>(window.y1),
-                                                static_cast<float>(window.y2)),
-                    boxes.narrow(1, 2, 1).clamp(static_cast<float>(window.x1),
-                                                static_cast<float>(window.x2)),
-                    boxes.narrow(1, 3, 1).clamp(static_cast<float>(window.y1),
-                                                static_cast<float>(window.y2))},
-                   1);
-  return boxes;
-}
-
-}  // namespace
-
 at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
                          uint32_t proposal_count,
                          float nms_threshold,
                          at::Tensor anchors,
-                         std::shared_ptr<const Config> config) {
+                         const Config& config) {
   // Currently only supports batchsize 1
   inputs[0] = inputs[0].squeeze(0);
   inputs[1] = inputs[1].squeeze(0);
@@ -64,9 +58,9 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
   // Box deltas [batch, num_rois, 4]
   auto deltas = inputs[1];
   auto std_dev =
-      torch::tensor(config->rpn_bbox_std_dev,
+      torch::tensor(config.rpn_bbox_std_dev,
                     at::TensorOptions().requires_grad(false).dtype(at::kFloat));
-  if (config->gpu_count > 0)
+  if (config.gpu_count > 0)
     std_dev = std_dev.cuda();
   deltas = deltas * std_dev;
 
@@ -86,8 +80,8 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
   auto boxes = ApplyBoxDeltas(anchors, deltas);
 
   // Clip to image boundaries. [batch, N, (y1, x1, y2, x2)]
-  auto height = config->image_shape[2];
-  auto width = config->image_shape[3];
+  auto height = config.image_shape[0];
+  auto width = config.image_shape[1];
   Window window{0, 0, height, width};
   boxes = ClipBoxes(boxes, window);
 
@@ -106,7 +100,7 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
                      static_cast<float>(height), static_cast<float>(width)},
                     at::requires_grad(false).dtype(at::kFloat));
 
-  if (config->gpu_count > 0)
+  if (config.gpu_count > 0)
     norm = norm.cuda();
   auto normalized_boxes = boxes / norm;
 

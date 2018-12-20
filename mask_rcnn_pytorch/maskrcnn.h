@@ -15,7 +15,9 @@ class MaskRCNNImpl : public torch::nn::Module {
  public:
   MaskRCNNImpl(std::string model_dir, std::shared_ptr<Config const> config);
 
-  bool Detect(at::Tensor images, const std::vector<ImageMeta>& image_metas);
+  std::tuple<at::Tensor, at::Tensor> Detect(
+      at::Tensor images,
+      const std::vector<ImageMeta>& image_metas);
 
  private:
   void Build();

@@ -25,9 +25,10 @@ ClassifierImpl::ClassifierImpl(uint32_t depth,
       image_shape_(image_shape) {}
 
 std::tuple<at::Tensor, at::Tensor, at::Tensor> ClassifierImpl::forward(
-    at::Tensor x,
+    std::vector<at::Tensor> feature_maps,
     at::Tensor rois) {
-  x = PyramidRoiAlign({rois, x}, pool_size_, image_shape_);
+  feature_maps.insert(feature_maps.begin(), rois);
+  auto x = PyramidRoiAlign(feature_maps, pool_size_, image_shape_);
   x = conv1_->forward(x);
   x = bn1_->forward(x);
   x = relu_->forward(x);

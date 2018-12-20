@@ -18,7 +18,7 @@ class InferenceConfig : public Config {
   InferenceConfig() {
     if (!torch::cuda::is_available())
       throw std::runtime_error("Cuda is not available");
-    gpu_count = 1;
+    gpu_count = 0;
     images_per_gpu = 1;
     UpdateSettings();
   }
@@ -82,15 +82,24 @@ int main(int argc, char** argv) {
       torch::load(model, params_path);
     }
 
+    std::vector<cv::Mat> images{image};
     // Mold inputs to format expected by the neural network
     auto [molded_images, image_metas, windows] =
-        MoldInputs({image}, *config.get());
+        MoldInputs(images, *config.get());
 
-    //# Convert images to torch tensor
-    // molded_images = torch.from_numpy(molded_images.transpose(0, 3, 1,
-    // 2)).float()
+    auto [detections, mrcnn_mask] = model->Detect(molded_images, image_metas);
 
-    // auto results = model->Detect({image});
+    // Process detections
+    //[final_rois, final_class_ids, final_scores, final_masks]
+    using Result = std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor>;
+    std::vector<Result> results;
+    for (size_t i = 0; i < images.size(); ++i) {
+      auto result = UnmoldDetections(detections[static_cast<int64_t>(i)],
+                                     mrcnn_mask[static_cast<int64_t>(i)],
+                                     image.size(), windows[i]);
+      results.push_back(result);
+    }
+
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;
     return 1;
