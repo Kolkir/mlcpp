@@ -4,6 +4,11 @@
 #include <torch/torch.h>
 #include <vector>
 
+at::Tensor index_select_2d(at::Tensor y,
+                           at::Tensor x,
+                           at::Tensor target,
+                           int64_t dim = 1);
+
 at::Tensor upsample(at::Tensor x, float scale_factor);
 at::Tensor unique1d(at::Tensor tensor);
 at::Tensor intersect1d(at::Tensor tensor1, at::Tensor tensor2);

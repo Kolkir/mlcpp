@@ -1,4 +1,5 @@
 #include "fpn.h"
+#include "debug.h"
 #include "nnutils.h"
 
 FPNImpl::FPNImpl() {}

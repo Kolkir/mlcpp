@@ -88,9 +88,9 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
  * scores: [N] Float probability scores of the class_id
  * masks: [height, width, num_instances] Instance masks
  */
-std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> UnmoldDetections(
-    at::Tensor detections,
-    at::Tensor mrcnn_mask,
-    const cv::Size& image_shape,
-    const Window& window);
+std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>
+UnmoldDetections(at::Tensor detections,
+                 at::Tensor mrcnn_mask,
+                 const cv::Size& image_shape,
+                 const Window& window);
 #endif  // IMAGEUTILS_H

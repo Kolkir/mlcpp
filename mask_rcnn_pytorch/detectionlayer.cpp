@@ -1,4 +1,5 @@
 #include "detectionlayer.h"
+#include "debug.h"
 #include "nms.h"
 #include "nnutils.h"
 #include "proposallayer.h"
@@ -11,13 +12,13 @@ namespace {
  */
 at::Tensor ClipToWindow(const Window& window, at::Tensor boxes) {
   boxes.narrow(1, 0, 1) = boxes.narrow(1, 0, 1).clamp(
-      static_cast<float>(window.x1), static_cast<float>(window.x2));
+      static_cast<float>(window.y1), static_cast<float>(window.y2));
   boxes.narrow(1, 1, 1) = boxes.narrow(1, 1, 1).clamp(
-      static_cast<float>(window.y1), static_cast<float>(window.y2));
-  boxes.narrow(1, 2, 1) = boxes.narrow(1, 2, 1).clamp(
       static_cast<float>(window.x1), static_cast<float>(window.x2));
-  boxes.narrow(1, 3, 1) = boxes.narrow(1, 3, 1).clamp(
+  boxes.narrow(1, 2, 1) = boxes.narrow(1, 2, 1).clamp(
       static_cast<float>(window.y1), static_cast<float>(window.y2));
+  boxes.narrow(1, 3, 1) = boxes.narrow(1, 3, 1).clamp(
+      static_cast<float>(window.x1), static_cast<float>(window.x2));
   return boxes;
 }
 
@@ -47,10 +48,11 @@ at::Tensor RefineDetections(at::Tensor rois,
   auto idx = torch::arange(class_ids.size(0), at::dtype(at::kLong));
   if (config.gpu_count > 0)
     idx = idx.cuda();
-  auto class_scores =
-      probs.take(class_ids + idx * probs.size(1));  //[idx, class_ids.data];
-  auto deltas_specific =
-      deltas.take(class_ids + idx * deltas.size(1));  //[idx, class_ids.data];
+
+  auto class_scores = index_select_2d(idx, class_ids, probs);
+  // probs.take(class_ids + idx * probs.size(1));  //[idx, class_ids.data];
+  auto deltas_specific = index_select_2d(idx, class_ids, deltas);
+  // deltas.take(class_ids + idx * deltas.size(1));  //[idx, class_ids.data];
 
   // Apply bounding box deltas
   // Shape: [boxes, (y1, x1, y2, x2)] in normalized coordinates
@@ -81,12 +83,15 @@ at::Tensor RefineDetections(at::Tensor rois,
   // Filter out background boxes
   auto keep_bool = class_ids > 0;
 
-  //  // Filter out low  confidence boxes
+  // Filter out low  confidence boxes
   if (config.detection_min_confidence > 0) {
     keep_bool = keep_bool * (class_scores >= config.detection_min_confidence);
   }
-  auto keep = torch::nonzero(keep_bool).narrow(1, 0, 1).to(
-      at::dtype(at::kLong));  // [:, 0];
+
+  auto keep = torch::nonzero(keep_bool)
+                  .narrow(1, 0, 1)
+                  .to(at::dtype(at::kLong))
+                  .squeeze();  // [:, 0];
 
   // Apply per-class NMS
   auto pre_nms_class_ids = class_ids.take(keep);
@@ -98,18 +103,21 @@ at::Tensor RefineDetections(at::Tensor rois,
   for (int64_t i = 0; i < nms_class_ids.size(0); ++i) {
     auto class_id = nms_class_ids[i];
     //    // Pick detections of this class
-    auto ixs = torch::nonzero(pre_nms_class_ids == class_id).narrow(1, 0, 1);
+    auto ixs =
+        torch::nonzero(pre_nms_class_ids == class_id).narrow(1, 0, 1).squeeze();
 
     // Sort
-    auto ix_rois = pre_nms_rois.take(ixs);
-    auto ix_scores = pre_nms_scores.take(ixs);
+    auto ix_rois = pre_nms_rois.index_select(0, ixs);
+
+    auto ix_scores = pre_nms_scores.index_select(0, ixs);
     at::Tensor order;
-    std::tie(ix_scores, order) = ix_scores.sort(/*descending*/ true);
+    std::tie(ix_scores, order) =
+        ix_scores.unsqueeze(1).sort(0, /*descending*/ true);
+    order = order.squeeze();
     ix_rois = ix_rois.index_select(0, order);  //[order.data, :];
 
-    auto class_keep =
-        Nms(torch::cat({ix_rois, ix_scores.unsqueeze(1)}, /*dim*/ 1),
-            config.detection_nms_threshold);
+    auto class_keep = Nms(torch::cat({ix_rois, ix_scores}, /*dim*/ 1),
+                          config.detection_nms_threshold);
 
     // Map indicies
     class_keep = keep.take(ixs.take(order.take(class_keep)));
@@ -122,12 +130,12 @@ at::Tensor RefineDetections(at::Tensor rois,
   keep = intersect1d(keep, nms_keep);
 
   // Keep top detections
-  auto roi_count = config.detection_max_instances;
+  auto scores = class_scores.take(keep).unsqueeze(1);
   at::Tensor top_ids;
-  std::tie(std::ignore, top_ids) =
-      class_scores.take(keep).sort(/*descending*/ true);
-  top_ids = top_ids.narrow(0, roi_count, top_ids.size(0));
-  keep = keep.take(top_ids);
+  std::tie(scores, top_ids) = scores.sort(0, /*descending*/ true);
+  auto roi_count = config.detection_max_instances;
+  top_ids = top_ids.narrow(0, 0, std::min(roi_count, top_ids.size(0)));
+  keep = keep.take(top_ids.squeeze());
 
   // Arrange output as [N, (y1, x1, y2, x2, class_id, score)]
   // Coordinates are in image domain.

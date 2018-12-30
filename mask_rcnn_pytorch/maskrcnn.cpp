@@ -1,5 +1,6 @@
 #include "maskrcnn.h"
 #include "anchors.h"
+#include "debug.h"
 #include "detectionlayer.h"
 #include "proposallayer.h"
 #include "resnet.h"
@@ -70,9 +71,10 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Predict(
   auto proposal_count = mode == Mode::Training
                             ? config_->post_nms_rois_training
                             : config_->post_nms_rois_inference;
-  auto rpn_rois = ProposalLayer(
-      {torch::stack(rpn_class, 1), torch::stack(rpn_bbox, 1)}, proposal_count,
-      config_->rpn_nms_threshold, anchors_, *config_);
+  auto scores = torch::cat(rpn_class, 1);
+  auto deltas = torch::cat(rpn_bbox, 1);
+  auto rpn_rois = ProposalLayer({scores, deltas}, proposal_count,
+                                config_->rpn_nms_threshold, anchors_, *config_);
 
   if (mode == Mode::Inference) {
     // Network Heads
@@ -159,14 +161,17 @@ void MaskRCNNImpl::Build() {
   // RPN
   rpn_ =
       RPN(config_->rpn_anchor_ratios.size(), config_->rpn_anchor_stride, 256);
+  register_module("rpn", rpn_);
 
   // FPN Classifier
   classifier_ = Classifier(256, config_->pool_size, config_->image_shape,
                            config_->num_classes);
+  register_module("classifier", classifier_);
 
   // FPN Mask
   mask_ = Mask(256, config_->mask_pool_size, config_->image_shape,
                config_->num_classes);
+  register_module("mask", mask_);
 
   // Fix batch norm layers
   auto set_bn_fix = [](const std::string& name, Module& m) {

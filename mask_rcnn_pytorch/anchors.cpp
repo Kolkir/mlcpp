@@ -1,12 +1,9 @@
 #include "anchors.h"
+#include "debug.h"
 
 #include <iostream>
 
 namespace {
-
-void PrintTensor(torch::Tensor x) {
-  std::cout << x << std::endl;
-}
 
 /*
  *   scale: anchor size in pixels. Example: [32, 64, 128]
@@ -35,18 +32,19 @@ torch::Tensor GenerateAnchors(torch::Tensor scales,
   auto shifts_y = torch::arange(0, shape.first, anchor_stride) * feature_stride;
   auto shifts_x =
       torch::arange(0, shape.second, anchor_stride) * feature_stride;
+
   mesh = torch::meshgrid({shifts_x, shifts_y});
-  shifts_x = mesh[0].flatten();
-  shifts_y = mesh[1].flatten();
+  shifts_x = mesh[0].permute({1, 0}).flatten();
+  shifts_y = mesh[1].permute({1, 0}).flatten();
 
   // Enumerate combinations of shifts, widths, and heights
   mesh = torch::meshgrid({widths, shifts_x});
-  auto box_widths = mesh[0];
-  auto box_centers_x = mesh[1];
+  auto box_widths = mesh[0].permute({1, 0});
+  auto box_centers_x = mesh[1].permute({1, 0});
 
   mesh = torch::meshgrid({heights, shifts_y});
-  auto box_heights = mesh[0];
-  auto box_centers_y = mesh[1];
+  auto box_heights = mesh[0].permute({1, 0});
+  auto box_centers_y = mesh[1].permute({1, 0});
 
   // Reshape to get a list of (y, x) and a list of (h, w)
   auto box_centers =

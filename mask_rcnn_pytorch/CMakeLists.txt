@@ -33,6 +33,8 @@ set(RESOURCE_FILES
                     README.md)
 
 set(SOURCE_FILES
+                    debug.h
+                    debug.cpp
                     config.h
                     config.cpp
                     maskrcnn.h

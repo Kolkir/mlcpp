@@ -1,4 +1,5 @@
 #include "rpn.h"
+#include "debug.h"
 
 RPNImpl::RPNImpl() {}
 
@@ -13,7 +14,13 @@ RPNImpl::RPNImpl(uint32_t anchors_per_location,
           torch::nn::Conv2dOptions(512, 2 * anchors_per_location, 1).stride(1)),
 
       conv_bbox_(torch::nn::Conv2dOptions(512, 4 * anchors_per_location, 1)
-                     .stride(1)) {}
+                     .stride(1)) {
+  register_module("padding", padding_);
+  register_module("conv_shared", conv_shared_);
+  register_module("relu", relu_);
+  register_module("conv_class", conv_class_);
+  register_module("conv_bbox", conv_bbox_);
+}
 
 std::tuple<at::Tensor, at::Tensor, at::Tensor> RPNImpl::forward(at::Tensor x) {
   // Shared convolutional base of the RPN

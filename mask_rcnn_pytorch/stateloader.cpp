@@ -1,4 +1,5 @@
 #include "stateloader.h"
+#include "debug.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/filereadstream.h>
@@ -111,6 +112,8 @@ struct DictHandler
       assert(current_state_.top() == ReadState::ParamName);
       current_state_.pop();
       dict.insert(key_, tensor_);
+      std::cout << key_ << " : " << tensor_.type().toString() << " : "
+                << tensor_.dim() << "\n";
     } else if (current_state_.top() == ReadState::TensorSize) {
       current_state_.pop();
       if (elementCount == 0) {
@@ -122,14 +125,17 @@ struct DictHandler
     } else if (current_state_.top() == ReadState::TensorValue) {
       current_state_.pop();
       assert(index_ == static_cast<int64_t>(blob_.size()));
-      at::Tensor tensor_image = torch::from_blob(
-          blob_.data(), at::IntList(size_), at::CPU(at::kFloat));
+      tensor_ = torch::from_blob(blob_.data(), at::IntList(size_),
+                                 at::dtype(at::kFloat))
+                    .clone();  // clone to copy temp data
       if (blob_.size() == 1) {
         assert(current_state_.top() == ReadState::SizeTensorPair);
         current_state_.pop();
         assert(current_state_.top() == ReadState::ParamName);
         current_state_.pop();
         dict.insert(key_, tensor_);
+        std::cout << key_ << " : " << tensor_.type().toString() << " : "
+                  << tensor_.dim() << "\n";
       }
     } else {
       throw std::logic_error("End array parsing error");

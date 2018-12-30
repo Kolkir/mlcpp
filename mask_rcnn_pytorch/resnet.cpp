@@ -1,4 +1,5 @@
 #include "resnet.h"
+#include "debug.h"
 
 ResNetImpl::ResNetImpl() {}
 

@@ -1,7 +1,5 @@
-#ifndef CROPANDRESIZE_KERNEL
-#define CROPANDRESIZE_KERNEL
-
-#include <inttypes.h>
+#ifndef _CropAndResize_Kernel
+#define _CropAndResize_Kernel
 
 #ifdef __cplusplus
 extern "C" {
@@ -9,27 +7,27 @@ extern "C" {
 
 void CropAndResizeLaucher(const float* image_ptr,
                           const float* boxes_ptr,
-                          const int64_t* box_ind_ptr,
-                          int64_t num_boxes,
-                          int64_t batch,
-                          int64_t image_height,
-                          int64_t image_width,
-                          int64_t crop_height,
-                          int64_t crop_width,
-                          int64_t depth,
+                          const int* box_ind_ptr,
+                          int num_boxes,
+                          int batch,
+                          int image_height,
+                          int image_width,
+                          int crop_height,
+                          int crop_width,
+                          int depth,
                           float extrapolation_value,
                           float* crops_ptr);
 
 void CropAndResizeBackpropImageLaucher(const float* grads_ptr,
                                        const float* boxes_ptr,
-                                       const int64_t* box_ind_ptr,
-                                       int64_t num_boxes,
-                                       int64_t batch,
-                                       int64_t image_height,
-                                       int64_t image_width,
-                                       int64_t crop_height,
-                                       int64_t crop_width,
-                                       int64_t depth,
+                                       const int* box_ind_ptr,
+                                       int num_boxes,
+                                       int batch,
+                                       int image_height,
+                                       int image_width,
+                                       int crop_height,
+                                       int crop_width,
+                                       int depth,
                                        float* grads_image_ptr);
 
 #ifdef __cplusplus

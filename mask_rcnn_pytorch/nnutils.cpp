@@ -1,4 +1,5 @@
 #include "nnutils.h"
+#include "debug.h"
 
 #include <cmath>
 
@@ -93,6 +94,19 @@ at::Tensor intersect1d(at::Tensor tensor1, at::Tensor tensor2) {
   auto aux = torch::cat({tensor1, tensor2}, /*dim*/ 0);
   std::tie(aux, std::ignore) = aux.sort();
   auto unique_bool =
-      aux.narrow(0, 1, aux.size(0) - 1) != aux.narrow(0, 0, aux.size(0) - 1);
-  return aux.narrow(0, 0, aux.size(0) - 1).take(unique_bool);
+      aux.narrow(0, 1, aux.size(0) - 1) == aux.narrow(0, 0, aux.size(0) - 1);
+  return aux.narrow(0, 0, aux.size(0) - 1).masked_select(unique_bool);
+}
+
+at::Tensor index_select_2d(at::Tensor y,
+                           at::Tensor x,
+                           at::Tensor target,
+                           int64_t dim) {
+  auto tmp = target.index_select(0, y).unbind();
+  int64_t i = 0;
+  for (auto& v : tmp) {
+    v = v.narrow(dim - 1, *x[i].data<int64_t>(), 1).squeeze();
+    ++i;
+  }
+  return torch::stack(tmp);
 }

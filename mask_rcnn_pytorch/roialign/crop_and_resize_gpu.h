@@ -1,6 +1,3 @@
-#ifndef CROP_AND_RESIZE_GPU_H
-#define CROP_AND_RESIZE_GPU_H
-
 #include <torch/torch.h>
 
 void crop_and_resize_gpu_forward(
@@ -8,8 +5,8 @@ void crop_and_resize_gpu_forward(
     at::Tensor boxes,      // [y1, x1, y2, x2]
     at::Tensor box_index,  // range in [0, batch_size)
     const float extrapolation_value,
-    const uint32_t crop_height,
-    const uint32_t crop_width,
+    const int crop_height,
+    const int crop_width,
     at::Tensor crops);
 
 void crop_and_resize_gpu_backward(
@@ -18,5 +15,3 @@ void crop_and_resize_gpu_backward(
     at::Tensor box_index,   // range in [0, batch_size)
     at::Tensor grads_image  // resize to [bsize, c, hc, wc]
 );
-
-#endif

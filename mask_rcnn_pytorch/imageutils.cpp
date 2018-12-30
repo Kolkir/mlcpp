@@ -1,4 +1,6 @@
 #include "imageutils.h"
+#include "debug.h"
+#include "nnutils.h"
 
 cv::Mat LoadImage(const std::string path) {
   cv::Mat image = cv::imread(path, cv::IMREAD_COLOR);
@@ -8,14 +10,16 @@ cv::Mat LoadImage(const std::string path) {
 at::Tensor CvImageToTensor(const cv::Mat& image) {
   // Idea taken from https://github.com/pytorch/pytorch/issues/12506
   // we have to split the interleaved channels
+  assert(image.channels() == 3);
   cv::Mat bgr[3];
   cv::split(image, bgr);
   cv::Mat channelsConcatenated;
-  vconcat(bgr[0], bgr[1], channelsConcatenated);
-  vconcat(channelsConcatenated, bgr[2], channelsConcatenated);
+  cv::vconcat(bgr[2], bgr[1], channelsConcatenated);
+  cv::vconcat(channelsConcatenated, bgr[0], channelsConcatenated);
 
   cv::Mat channelsConcatenatedFloat;
   channelsConcatenated.convertTo(channelsConcatenatedFloat, CV_32FC3);
+  assert(channelsConcatenatedFloat.isContinuous());
 
   std::vector<int64_t> dims{static_cast<int64_t>(image.channels()),
                             static_cast<int64_t>(image.rows),
@@ -23,7 +27,9 @@ at::Tensor CvImageToTensor(const cv::Mat& image) {
 
   at::TensorOptions options(at::kFloat);
   at::Tensor tensor_image =
-      torch::from_blob(channelsConcatenated.data, at::IntList(dims), options);
+      torch::from_blob(channelsConcatenated.data, at::IntList(dims),
+                       options.requires_grad(false))
+          .clone();  // clone is required to copy data from temporary object
   return tensor_image;
 }
 
@@ -54,7 +60,8 @@ std::tuple<cv::Mat, Window, float, Padding> ResizeImage(cv::Mat image,
   if (scale != 1.f) {
     cv::resize(image, image,
                cv::Size(static_cast<int>(std::round(w * scale)),
-                        static_cast<int>(std::round(h * scale))));
+                        static_cast<int>(std::round(h * scale))),
+               cv::INTER_LINEAR);
   }
   // Need padding?
   if (do_padding) {
@@ -79,9 +86,9 @@ std::tuple<cv::Mat, Window, float, Padding> ResizeImage(cv::Mat image,
  * colors in RGB order.
  */
 cv::Mat MoldImage(cv::Mat image, const Config& config) {
-  image.convertTo(image, CV_32F);
-  cv::Scalar mean(config.mean_pixel[0], config.mean_pixel[1],
-                  config.mean_pixel[2]);
+  assert(image.channels() == 3);
+  cv::Scalar mean(config.mean_pixel[2], config.mean_pixel[1],
+                  config.mean_pixel[0]);
   image -= mean;
   return image;
 }
@@ -97,7 +104,9 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
     auto [molded_image, window, scale, padding] =
         ResizeImage(image, config.image_min_dim, config.image_max_dim,
                     config.image_padding);
+    molded_image.convertTo(molded_image, CV_32FC3);
     molded_image = MoldImage(molded_image, config);
+
     // Build image_meta
     ImageMeta image_meta{0, image.rows, image.cols, window,
                          std::vector<int32_t>(config.num_classes, 0)};
@@ -126,17 +135,27 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
  * bbox: [y1, x1, y2, x2]. The box to fit the mask in.
  * Returns a binary mask with the same size as the original image.
  */
-at::Tensor UnmoldMask(at::Tensor mask,
-                      at::Tensor bbox,
-                      const cv::Size& image_shape) {
+cv::Mat UnmoldMask(at::Tensor mask,
+                   at::Tensor bbox,
+                   const cv::Size& image_shape) {
   const float threshold = 0.5f;
   auto y1 = *bbox[0].data<int32_t>();
   auto x1 = *bbox[1].data<int32_t>();
   auto y2 = *bbox[2].data<int32_t>();
   auto x2 = *bbox[3].data<int32_t>();
-  mask = torch::upsample_bilinear2d(mask, {y2 - y1, x2 - x1}, true)
+
+  cv::Mat cv_mask(mask.size(0), mask.size(1), CV_32FC1, mask.data<float>());
+  cv::resize(cv_mask, cv_mask, cv::Size(x2 - x1, y2 - y1));
+  cv::threshold(cv_mask, cv_mask, threshold, 1, cv::THRESH_BINARY);
+  cv_mask *= 255;
+
+  cv::Mat full_mask = cv::Mat::zeros(image_shape, CV_32FC1);
+  cv_mask.copyTo(full_mask(cv::Rect(x1, y1, x2 - x1, y2 - y1)));
+
+  /*
+  mask = torch::upsample_bilinear2d(mask.unsqueeze(0), {y2 - y1, x2 - x1}, true)
              .to(at::dtype(at::kFloat)) /
-         255.0;
+         255.0f;
   mask = torch::where(mask >= threshold, torch::tensor(1.f), torch::tensor(0.f))
              .to(at::dtype(at::kByte));
 
@@ -144,27 +163,34 @@ at::Tensor UnmoldMask(at::Tensor mask,
   auto full_mask = torch::zeros({image_shape.height, image_shape.width},
                                 at::dtype(at::kByte));
   full_mask.narrow(0, y1, y2).narrow(1, x1, x2) = mask;
+  */
+  full_mask.convertTo(full_mask, CV_8UC1);
   return full_mask;
 }
 
-std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> UnmoldDetections(
-    at::Tensor detections,
-    at::Tensor mrcnn_mask,
-    const cv::Size& image_shape,
-    const Window& window) {
+std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>
+UnmoldDetections(at::Tensor detections,
+                 at::Tensor mrcnn_mask,
+                 const cv::Size& image_shape,
+                 const Window& window) {
   // How many detections do we have?
   // Detections array is padded with zeros. Find the first class_id == 0.
-  auto zero_ix = (detections.narrow(1, 4, 1) == 0).nonzero()[0];
+  auto zero_ix = (detections.narrow(1, 4, 1) == 0).nonzero();
+  if (zero_ix.size(0) > 0)
+    zero_ix = zero_ix[0];
   auto N =
       zero_ix.size(0) > 0 ? *zero_ix[0].data<uint8_t>() : detections.size(0);
 
   //  Extract boxes, class_ids, scores, and class-specific masks
   auto boxes = detections.narrow(0, 0, N).narrow(1, 0, 4);  //[:N, :4];
-  auto class_ids =
-      detections.narrow(0, 0, N).narrow(1, 4, 1).to(at::dtype(at::kInt));
+  auto class_ids = detections.narrow(0, 0, N)
+                       .narrow(1, 4, 1)
+                       .to(at::dtype(at::kLong))
+                       .squeeze();
   auto scores = detections.narrow(0, 0, N).narrow(1, 5, 1);
-  auto masks = mrcnn_mask.narrow(0, 0, N).index_select(
-      3, class_ids);  // [np.arange(N), :, :, class_ids];
+  auto masks = index_select_2d(torch::arange(N, at::dtype(at::kLong)),
+                               class_ids, mrcnn_mask,
+                               3);  // [np.arange(N), :, :, class_ids];
 
   // Compute scale and shift to translate coordinates to image domain.
   auto h_scale =
@@ -184,25 +210,28 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> UnmoldDetections(
   // stages of training when the network weights are still a bit random.
   auto include_ix = (((boxes.narrow(1, 2, 1) - boxes.narrow(1, 0, 1)) *
                       (boxes.narrow(1, 3, 1) - boxes.narrow(1, 1, 1))) > 0)
-                        .nonzero()[0];
+                        .nonzero();
+  include_ix = include_ix.narrow(1, 0, 1).squeeze();
   if (include_ix.size(0) > 0) {
     boxes = boxes.index_select(0, include_ix);
     class_ids = class_ids.index_select(0, include_ix);
     scores = scores.index_select(0, include_ix);
     masks = masks.index_select(0, include_ix);
     N = class_ids.size(0);
+  } else {
+    // TODO: make  empty tensors
   }
   // Resize masks to original image size and set boundary threshold.
-  std::vector<at::Tensor> full_masks_vec;
+  std::vector<cv::Mat> full_masks_vec;
   for (int64_t i = 0; i < N; ++i) {
     // Convert neural network mask to full size mask
     auto full_mask = UnmoldMask(masks[i], boxes[i], image_shape);
     full_masks_vec.push_back(full_mask);
   }
 
-  at::Tensor full_masks = torch::empty({0, masks.size(1), masks.size(2)});
-  if (!full_masks_vec.empty())
-    full_masks = torch::stack(full_masks_vec);
+  //  at::Tensor full_masks = torch::empty({0, masks.size(1), masks.size(2)});
+  //  if (!full_masks_vec.empty())
+  //    full_masks = torch::stack(full_masks_vec);
 
-  return {boxes, class_ids, scores, full_masks};
+  return {boxes, class_ids, scores, full_masks_vec};
 }

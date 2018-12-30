@@ -7,6 +7,19 @@
 
 #include <torch/torch.h>
 
+class DeconvImpl : public torch::nn::Module {
+ public:
+  DeconvImpl();
+
+  torch::Tensor forward(torch::Tensor x);
+
+ private:
+  torch::Tensor conv_trans_weights_;
+  torch::Tensor conv_trans_bias_;
+};
+
+TORCH_MODULE(Deconv);
+
 class MaskImpl : public torch::nn::Module {
  public:
   MaskImpl();
@@ -29,11 +42,10 @@ class MaskImpl : public torch::nn::Module {
   torch::nn::Conv2d conv4_{nullptr};
   torch::nn::BatchNorm bn4_{nullptr};
   torch::nn::Conv2d conv5_{nullptr};
+  Deconv deconv_{nullptr};
 
   uint32_t pool_size_{0};
   std::vector<int32_t> image_shape_;
-  torch::Tensor conv_trans_weights_;
-  torch::Tensor conv_trans_bias_;
 };
 
 TORCH_MODULE(Mask);

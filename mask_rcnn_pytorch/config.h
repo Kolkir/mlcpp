@@ -113,7 +113,7 @@ class Config {
   std::vector<float> bbox_std_dev = {0.1f, 0.1f, 0.2f, 0.2f};
 
   // Max number of final detections
-  uint32_t detection_max_instances = 100;
+  int64_t detection_max_instances = 100;
 
   // Minimum probability value to accept a detected instance
   // ROIs below this threshold are skipped

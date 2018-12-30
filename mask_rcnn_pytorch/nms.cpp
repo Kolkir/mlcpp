@@ -1,4 +1,5 @@
 #include "nms.h"
+#include "debug.h"
 
 #include "nms/nms.h"
 #include "nms/nms_cuda.h"
@@ -17,7 +18,7 @@ at::Tensor Nms(at::Tensor dets, float thresh) {
     auto y2 = dets.narrow(1, 2, 1);  //[:, 2];
     auto areas = (x2 - x1 + 1) * (y2 - y1 + 1);
     cpu_nms(keep, num_out, dets, order, areas, thresh);
-    return keep.narrow(1, *num_out.data<int64_t>(), 1);  //[:num_out[0]];
+    return keep.narrow(0, 0, *num_out.data<int64_t>());  //[:num_out[0]];
   } else {
     auto dets_temp = torch::full(dets.sizes(), 0, at::dtype(at::kFloat)).cuda();
     dets_temp.narrow(1, 0, 1) = dets.narrow(1, 1, 1);
@@ -27,7 +28,7 @@ at::Tensor Nms(at::Tensor dets, float thresh) {
     dets_temp.narrow(1, 4, 1) = dets.narrow(1, 4, 1);
     dets = dets.index(order).contiguous();
     gpu_nms(keep, num_out, dets_temp, thresh);
-    auto ind = keep.narrow(1, *num_out.data<int64_t>(), 1).cuda();
+    auto ind = keep.narrow(0, 0, *num_out.data<int64_t>()).cuda();
     return order[ind].contiguous();
   }
 }

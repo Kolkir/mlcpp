@@ -1,4 +1,6 @@
 #include "config.h"
+#include "debug.h"
+
 #include <experimental/filesystem>
 
 namespace fs = std::experimental::filesystem;

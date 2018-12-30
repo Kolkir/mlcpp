@@ -1,4 +1,5 @@
 #include "roialign.h"
+#include "debug.h"
 #include "roialign/crop_and_resize.h"
 #include "roialign/crop_and_resize_gpu.h"
 
@@ -63,15 +64,14 @@ at::Tensor PyramidRoiAlign(std::vector<at::Tensor> input,
     // Here we use the simplified approach of a single value per bin,
     // which is how it's done in tf.crop_and_resize()
     // Result: [batch * num_boxes, pool_height, pool_width, channels]
-    auto ind =
-        torch::zeros({level_boxes.size(0)},
-                     at::requires_grad(false).dtype(at::ScalarType::Int));
+    auto ind = torch::zeros({level_boxes.size(0)},
+                            at::requires_grad(false).dtype(at::kInt));
     if (level_boxes.is_cuda())
       ind = ind.cuda();
     // CropAndResizeFunction needs batch dimension
     feature_maps[i] = feature_maps[i].unsqueeze(0);
 
-    torch::Tensor pooled_features;
+    torch::Tensor pooled_features = torch::zeros({1}, at::dtype(at::kFloat));
     if (boxes.is_cuda()) {
       crop_and_resize_gpu_forward(feature_maps[i], level_boxes, ind, 0,
                                   pool_size, pool_size, pooled_features);
