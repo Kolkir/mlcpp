@@ -174,3 +174,48 @@ torch::OrderedDict<std::string, torch::Tensor> LoadStateDict(
   }
   return torch::OrderedDict<std::string, torch::Tensor>();
 }
+
+void LoadStateDict(torch::nn::Module& module, const std::string& file_name) {
+  // Load weights trained on MS - COCO
+  if (file_name.find(".json") != std::string::npos) {
+    torch::autograd::GradMode::set_enabled(
+        false);  // make parameters copying possible
+    auto new_params = LoadStateDict(file_name);
+    auto params = module.named_parameters(true /*recurse*/);
+    auto buffers = module.named_buffers(true /*recurse*/);
+
+    for (auto& val : new_params) {
+      auto name = val.key();
+      // fix naming
+      auto pos = name.find("running_var");
+      if (pos != std::string::npos) {
+        name.replace(pos, 11, "running_variance");
+      }
+
+      auto* t = params.find(name);
+      if (t != nullptr) {
+        std::cout << name << " copy\n";
+        t->copy_(val.value());
+      } else {
+        t = buffers.find(name);
+        if (t != nullptr) {
+          std::cout << name << " copy\n";
+          t->copy_(val.value());
+        } else {
+          // throw std::logic_error(name + " parameter not found!");
+          std::cout << name + " parameter not found!\n";
+        }
+      }
+    }
+    torch::autograd::GradMode::set_enabled(true);
+
+    // torch::save(model, "params.dat");
+    std::cout << "Model state converted!\n";
+    // exit(0);
+  } else {
+    torch::serialize::InputArchive archive;
+    archive.load_from(file_name);
+    module.load(archive);
+  }
+  std::cout.flush();
+}

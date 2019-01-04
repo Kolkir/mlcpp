@@ -1,3 +1,4 @@
+#include "cocoloader.h"
 #include "config.h"
 #include "debug.h"
 #include "imageutils.h"
@@ -32,12 +33,6 @@ const cv::String keys =
     "{@image         |<none>| path to image }";
 
 int main(int argc, char** argv) {
-//  std::vector<float> blob = {1, 2, 3, 4, 5, 6, 7, 8, 9,
-//                             1, 2, 3, 4, 5, 6, 7, 8, 9};
-//  auto x = torch::from_blob(blob.data(), {1, 2, 3, 3});
-
-//  std::cerr << x;
-//  exit(0);
 #ifndef NDEBUG
   // initialize debug print function
   auto x__ = torch::tensor({1, 2, 3, 4});
@@ -90,46 +85,7 @@ int main(int argc, char** argv) {
     if (config->gpu_count > 0)
       model->to(torch::DeviceType::CUDA);
 
-    // Load weights trained on MS - COCO
-    if (params_path.find(".json") != std::string::npos) {
-      torch::autograd::GradMode::set_enabled(
-          false);  // make parameters copying possible
-      auto new_params = LoadStateDict(params_path);
-      auto params = model->named_parameters(true /*recurse*/);
-      auto buffers = model->named_buffers(true /*recurse*/);
-
-      for (auto& val : new_params) {
-        auto name = val.key();
-        // fix naming
-        auto pos = name.find("running_var");
-        if (pos != std::string::npos) {
-          name.replace(pos, 11, "running_variance");
-        }
-
-        auto* t = params.find(name);
-        if (t != nullptr) {
-          std::cout << name << " copy\n";
-          t->copy_(val.value());
-        } else {
-          t = buffers.find(name);
-          if (t != nullptr) {
-            std::cout << name << " copy\n";
-            t->copy_(val.value());
-          } else {
-            // throw std::logic_error(name + " parameter not found!");
-            std::cout << name + " parameter not found!\n";
-          }
-        }
-      }
-      torch::autograd::GradMode::set_enabled(true);
-
-      // torch::save(model, "params.dat");
-      std::cout << "Model state converted!\n";
-      // exit(0);
-    } else {
-      torch::load(model, params_path);
-    }
-    std::cout.flush();
+    LoadStateDict(*model, params_path);
 
     auto [detections, mrcnn_mask] = model->Detect(molded_images, image_metas);
 

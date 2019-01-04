@@ -21,4 +21,6 @@
 torch::OrderedDict<std::string, torch::Tensor> LoadStateDict(
     const std::string& file_name);
 
+void LoadStateDict(torch::nn::Module& module, const std::string& file_name);
+
 #endif  // STATELOADER_H
