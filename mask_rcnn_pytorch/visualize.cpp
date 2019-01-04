@@ -105,8 +105,14 @@ void visualize(const cv::Mat& image,
     auto class_id = *class_ids[i].data<int64_t>();
     auto score = *scores[i].data<float>();
 
-    cv::Mat mask = masks[i].clone();
-    img.setTo(cv::Scalar(0, 0, 0), mask);
+    cv::Mat bin_mask = masks[i].clone();
+    cv::Mat mask_ch[3];
+    mask_ch[2] = bin_mask;
+    mask_ch[0] = cv::Mat::zeros(img.size(), CV_8UC1);
+    mask_ch[1] = cv::Mat::zeros(img.size(), CV_8UC1);
+    cv::Mat mask;
+    cv::merge(mask_ch, 3, mask);
+    cv::addWeighted(img, 1, mask, 0.5, 0, img);
 
     cv::Point tl(static_cast<int>(x1), static_cast<int>(y1));
     cv::Point br(static_cast<int>(x2), static_cast<int>(y2));
@@ -117,7 +123,7 @@ void visualize(const cv::Mat& image,
                 cv::Point(tl.x + 5, tl.y + 5),   // Coordinates
                 cv::FONT_HERSHEY_COMPLEX_SMALL,  // Font
                 1.0,                             // Scale. 2.0 = 2x bigger
-                cv::Scalar(100, 100, 255));      // BGR Color
+                cv::Scalar(255, 100, 255));      // BGR Color
   }
   cv::imwrite("result.png", img);
 }
