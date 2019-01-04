@@ -78,7 +78,11 @@ set(SOURCE_FILES
                     detectionlayer.h
                     detectionlayer.cpp
                     nms.h
-                    nms.cpp)
+                    nms.cpp
+                    cocoloader.h
+                    cocoloader.cpp
+                    cocodataset.h
+                    cocodataset.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})
@@ -91,8 +95,13 @@ target_link_libraries("${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS})
 
 find_library(GOMP_LIBRARY gomp)
 
-add_executable(${CMAKE_PROJECT_NAME} ${RESOURCE_FILES} demo.cpp)
-target_link_libraries(${CMAKE_PROJECT_NAME} "${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS} ${GOMP_LIBRARY})
+add_executable("${CMAKE_PROJECT_NAME}_demo" ${RESOURCE_FILES} demo.cpp)
+target_link_libraries("${CMAKE_PROJECT_NAME}_demo" "${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS} ${GOMP_LIBRARY})
+
+
+add_executable("${CMAKE_PROJECT_NAME}_train" train.cpp)
+target_link_libraries("${CMAKE_PROJECT_NAME}_train" "${CMAKE_PROJECT_NAME}_lib" ${REQUIRED_LIBS} ${GOMP_LIBRARY})
+
 
 
 set(TEST_FILES
