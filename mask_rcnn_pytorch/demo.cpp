@@ -85,7 +85,11 @@ int main(int argc, char** argv) {
     if (config->gpu_count > 0)
       model->to(torch::DeviceType::CUDA);
 
-    LoadStateDict(*model, params_path);
+    if (params_path.find(".json") != std::string::npos) {
+      LoadStateDictJson(*model, params_path);
+    } else {
+      LoadStateDict(*model, params_path);
+    }
 
     auto [detections, mrcnn_mask] = model->Detect(molded_images, image_metas);
 

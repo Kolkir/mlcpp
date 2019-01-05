@@ -18,9 +18,13 @@
  *     json.dump(raw_state_dict, outfile)
  */
 
-torch::OrderedDict<std::string, torch::Tensor> LoadStateDict(
+torch::OrderedDict<std::string, torch::Tensor> LoadStateDictJson(
     const std::string& file_name);
 
+void LoadStateDictJson(torch::nn::Module& module, const std::string& file_name);
+
+void SaveStateDict(const torch::nn::Module& module,
+                   const std::string& file_name);
 void LoadStateDict(torch::nn::Module& module, const std::string& file_name);
 
 #endif  // STATELOADER_H

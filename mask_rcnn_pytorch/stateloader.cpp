@@ -155,7 +155,7 @@ struct DictHandler
 };
 }  // namespace
 
-torch::OrderedDict<std::string, torch::Tensor> LoadStateDict(
+torch::OrderedDict<std::string, torch::Tensor> LoadStateDictJson(
     const std::string& file_name) {
   auto* file = std::fopen(file_name.c_str(), "r");
   if (file) {
@@ -175,12 +175,12 @@ torch::OrderedDict<std::string, torch::Tensor> LoadStateDict(
   return torch::OrderedDict<std::string, torch::Tensor>();
 }
 
-void LoadStateDict(torch::nn::Module& module, const std::string& file_name) {
+void LoadStateDictJson(torch::nn::Module& module,
+                       const std::string& file_name) {
   // Load weights trained on MS - COCO
   if (file_name.find(".json") != std::string::npos) {
-    torch::autograd::GradMode::set_enabled(
-        false);  // make parameters copying possible
-    auto new_params = LoadStateDict(file_name);
+    torch::NoGradGuard no_grad;
+    auto new_params = LoadStateDictJson(file_name);
     auto params = module.named_parameters(true /*recurse*/);
     auto buffers = module.named_buffers(true /*recurse*/);
 
@@ -207,15 +207,42 @@ void LoadStateDict(torch::nn::Module& module, const std::string& file_name) {
         }
       }
     }
-    torch::autograd::GradMode::set_enabled(true);
 
-    // torch::save(model, "params.dat");
-    std::cout << "Model state converted!\n";
-    // exit(0);
+    auto pos = file_name.find_last_of(".");
+    std::string new_file_name = file_name.substr(0, pos + 1);
+    new_file_name += "dat";
+    SaveStateDict(module, new_file_name);
+    std::cout << "Model state converted to file :" << new_file_name << "\n";
   } else {
-    torch::serialize::InputArchive archive;
-    archive.load_from(file_name);
-    module.load(archive);
+    throw std::invalid_argument("Can't load not a Json file!");
   }
   std::cout.flush();
+}
+
+void SaveStateDict(const torch::nn::Module& module,
+                   const std::string& file_name) {
+  torch::serialize::OutputArchive archive;
+  auto params = module.named_parameters(true /*recurse*/);
+  auto buffers = module.named_buffers(true /*recurse*/);
+  for (const auto& val : params) {
+    archive.write(val.key(), val.value());
+  }
+  for (const auto& val : buffers) {
+    archive.write(val.key(), val.value(), /*is_buffer*/ true);
+  }
+  archive.save_to(file_name);
+}
+
+void LoadStateDict(torch::nn::Module& module, const std::string& file_name) {
+  torch::serialize::InputArchive archive;
+  archive.load_from(file_name);
+  torch::NoGradGuard no_grad;
+  auto params = module.named_parameters(true /*recurse*/);
+  auto buffers = module.named_buffers(true /*recurse*/);
+  for (auto& val : params) {
+    archive.read(val.key(), val.value());
+  }
+  for (auto& val : buffers) {
+    archive.read(val.key(), val.value(), /*is_buffer*/ true);
+  }
 }
