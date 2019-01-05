@@ -2,6 +2,7 @@
 #define MASKRCNN_H
 
 #include "classifier.h"
+#include "cocodataset.h"
 #include "config.h"
 #include "fpn.h"
 #include "imageutils.h"
@@ -18,6 +19,12 @@ class MaskRCNNImpl : public torch::nn::Module {
   std::tuple<at::Tensor, at::Tensor> Detect(
       at::Tensor images,
       const std::vector<ImageMeta>& image_metas);
+
+  void Train(std::unique_ptr<CocoDataset> train_dataset,
+             std::unique_ptr<CocoDataset> val_dataset,
+             float learning_rate,
+             uint32_t epochs,
+             const std::string& layers);
 
  private:
   void Build();

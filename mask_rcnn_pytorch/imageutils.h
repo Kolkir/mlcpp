@@ -50,13 +50,23 @@ struct ImageMeta {
  *      coordinates of the image part of the full image (excluding
  *      the padding). The x2, y2 pixels are not included.
  *  scale: The scale factor used to resize the image
- *  padding: Padding added to the image [(top, bottom), (left, right), (0, 0)]
+ *  padding: Padding added to the image
  */
 std::tuple<cv::Mat, Window, float, Padding> ResizeImage(
     cv::Mat image,
     int32_t min_dim,
     int32_t max_dim,
     bool do_padding = false);
+
+/* Resizes a mask using the given scale and padding.
+ * Typically, you get the scale and padding from resize_image() to
+ * ensure both, the image and the mask, are resized consistently.
+ * scale: mask scaling factor
+ * padding: Padding to add to the mask
+ */
+std::vector<cv::Mat> ResizeMasks(std::vector<cv::Mat> masks,
+                                 float scale,
+                                 const Padding& padding);
 
 /*
  * Takes a list of images and modifies them to the format expected

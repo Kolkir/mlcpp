@@ -138,13 +138,14 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
 cv::Mat UnmoldMask(at::Tensor mask,
                    at::Tensor bbox,
                    const cv::Size& image_shape) {
-  const float threshold = 0.5f;
+  const double threshold = 0.5;
   auto y1 = *bbox[0].data<int32_t>();
   auto x1 = *bbox[1].data<int32_t>();
   auto y2 = *bbox[2].data<int32_t>();
   auto x2 = *bbox[3].data<int32_t>();
 
-  cv::Mat cv_mask(mask.size(0), mask.size(1), CV_32FC1, mask.data<float>());
+  cv::Mat cv_mask(static_cast<int>(mask.size(0)),
+                  static_cast<int>(mask.size(1)), CV_32FC1, mask.data<float>());
   cv::resize(cv_mask, cv_mask, cv::Size(x2 - x1, y2 - y1));
   cv::threshold(cv_mask, cv_mask, threshold, 1, cv::THRESH_BINARY);
   cv_mask *= 255;
@@ -152,18 +153,6 @@ cv::Mat UnmoldMask(at::Tensor mask,
   cv::Mat full_mask = cv::Mat::zeros(image_shape, CV_32FC1);
   cv_mask.copyTo(full_mask(cv::Rect(x1, y1, x2 - x1, y2 - y1)));
 
-  /*
-  mask = torch::upsample_bilinear2d(mask.unsqueeze(0), {y2 - y1, x2 - x1}, true)
-             .to(at::dtype(at::kFloat)) /
-         255.0f;
-  mask = torch::where(mask >= threshold, torch::tensor(1.f), torch::tensor(0.f))
-             .to(at::dtype(at::kByte));
-
-  // Put the mask in the right location.
-  auto full_mask = torch::zeros({image_shape.height, image_shape.width},
-                                at::dtype(at::kByte));
-  full_mask.narrow(0, y1, y2).narrow(1, x1, x2) = mask;
-  */
   full_mask.convertTo(full_mask, CV_8UC1);
   return full_mask;
 }
@@ -229,9 +218,25 @@ UnmoldDetections(at::Tensor detections,
     full_masks_vec.push_back(full_mask);
   }
 
-  //  at::Tensor full_masks = torch::empty({0, masks.size(1), masks.size(2)});
-  //  if (!full_masks_vec.empty())
-  //    full_masks = torch::stack(full_masks_vec);
-
   return {boxes, class_ids, scores, full_masks_vec};
+}
+
+std::vector<cv::Mat> ResizeMasks(std::vector<cv::Mat> masks,
+                                 float scale,
+                                 const Padding& padding) {
+  std::vector<cv::Mat> res_masks;
+  for (const auto& mask : masks) {
+    cv::Mat m;
+    cv::resize(mask, m,
+               cv::Size(static_cast<int>(std::round(mask.cols * scale)),
+                        static_cast<int>(std::round(mask.rows * scale))),
+               cv::INTER_LINEAR);
+
+    cv::copyMakeBorder(m, m, padding.top_pad, padding.bottom_pad,
+                       padding.left_pad, padding.right_pad, cv::BORDER_CONSTANT,
+                       cv::Scalar(0, 0, 0));
+
+    res_masks.push_back(m);
+  }
+  return res_masks;
 }

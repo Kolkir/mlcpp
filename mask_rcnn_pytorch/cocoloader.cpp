@@ -417,7 +417,7 @@ ImageDesc CocoLoader::GetImage(uint64_t index) const {
         result.boxes.push_back(ant.bbox);
         const auto& cat = categories_.at(ant.category_id);
         uint32_t class_ind = cat_ind_to_class_ind_.at(cat.id);
-        result.classes.push_back(static_cast<float>(class_ind));
+        result.classes.push_back(static_cast<int32_t>(class_ind));
 
         result.masks.push_back(
             ConvertPolygonsToMask(ant.segmentation, img.size()));

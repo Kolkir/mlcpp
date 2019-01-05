@@ -1,10 +1,10 @@
+#include "cocodataset.h"
 #include "cocoloader.h"
 #include "config.h"
 #include "debug.h"
 #include "imageutils.h"
 #include "maskrcnn.h"
 #include "stateloader.h"
-#include "visualize.h"
 
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
@@ -29,19 +29,10 @@ class TrainConfig : public Config {
 
 const cv::String keys =
     "{help h usage ? |      | print this message   }"
-    "{@params        |<none>| path to trained parameters }"
-    "{@image         |<none>| path to image }";
+    "{@data_dir      |<none>| path to coco dataset root folder}"
+    "{@params        |<none>| path to trained parameters }";
 
 int main(int argc, char** argv) {
-  CocoLoader cloader(
-      "/media/disk2/data_sets/coco/train2017",
-      "/media/disk2/data_sets/coco/annotations/instances_train2017.json");
-  cloader.LoadData();
-  auto im_desc = cloader.GetImage(4566);
-  std::cerr << im_desc.id << "\n";
-  cv::Mat img = cloader.DrawAnnotedImage(im_desc.id);
-  cv::imwrite("coco_test.png", img);
-  exit(0);
 #ifndef NDEBUG
   // initialize debug print function
   auto x__ = torch::tensor({1, 2, 3, 4});
@@ -56,8 +47,8 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    std::string params_path = parser.get<cv::String>(0);
-    std::string image_path = parser.get<cv::String>(1);
+    std::string data_path = parser.get<cv::String>(0);
+    std::string params_path = parser.get<cv::String>(1);
 
     // Chech parsing errors
     if (!parser.check()) {
@@ -70,10 +61,6 @@ int main(int argc, char** argv) {
     if (!fs::exists(params_path))
       throw std::invalid_argument("Wrong file path for parameters");
 
-    image_path = fs::canonical(image_path);
-    if (!fs::exists(image_path))
-      throw std::invalid_argument("Wrong file path forimage");
-
     auto config = std::make_shared<TrainConfig>();
 
     // Root directory of the project
@@ -85,6 +72,39 @@ int main(int argc, char** argv) {
     MaskRCNN model(model_dir, config);
     if (config->gpu_count > 0)
       model->to(torch::DeviceType::CUDA);
+
+    // load weights
+    LoadStateDictJson(*model, params_path);
+
+    // Make data sets
+    auto train_loader = std::make_unique<CocoLoader>(
+        fs::path(data_path) / "train2017",
+        fs::path(data_path) / "annotations/instances_train2017.json");
+    auto train_set =
+        std::make_unique<CocoDataset>(std::move(train_loader), config);
+
+    auto val_loader = std::make_unique<CocoLoader>(
+        fs::path(data_path) / "val2017",
+        fs::path(data_path) / "annotations/instances_val2017.json");
+    auto val_set = std::make_unique<CocoDataset>(std::move(val_loader), config);
+
+    // Training - Stage 1
+    std::cout << "Training network heads" << std::endl;
+    model->Train(std::move(train_set), std::move(val_set),
+                 config->learning_rate, /*epochs*/ 40, "heads");
+
+    // Training - Stage 2
+    // Finetune layers from ResNet stage 4 and up
+    std::cout << "Fine tune Resnet stage 4 and up" << std::endl;
+    model->Train(std::move(train_set), std::move(val_set),
+                 config->learning_rate, /*epochs*/ 120, "4+");
+
+    // Training - Stage 3
+    // Fine tune all layers
+    std::cout << "Fine tune all layers" << std::endl;
+    model->Train(std::move(train_set), std::move(val_set),
+                 config->learning_rate / 10,
+                 /*epochs*/ 160, "all");
 
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;

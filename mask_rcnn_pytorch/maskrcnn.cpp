@@ -33,6 +33,13 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Detect(
 
   return {detections, mrcnn_mask};
 }
+
+void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
+                         std::unique_ptr<CocoDataset> val_dataset,
+                         float learning_rate,
+                         uint32_t epochs,
+                         const std::string& layers) {}
+
 std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Predict(
     at::Tensor images,
     const std::vector<ImageMeta>& image_metas,

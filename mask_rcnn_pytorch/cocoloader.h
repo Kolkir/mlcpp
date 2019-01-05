@@ -68,7 +68,7 @@ struct ImageDesc {
   cv::Mat image;
   std::vector<cv::Mat> masks;
   std::vector<CocoBBox> boxes;
-  std::vector<float> classes;
+  std::vector<int32_t> classes;
 };
 
 class CocoLoader {
