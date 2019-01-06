@@ -77,6 +77,8 @@ set(SOURCE_FILES
                     proposallayer.cpp
                     detectionlayer.h
                     detectionlayer.cpp
+                    detectiontargetlayer.h
+                    detectiontargetlayer.cpp
                     nms.h
                     nms.cpp
                     cocoloader.h

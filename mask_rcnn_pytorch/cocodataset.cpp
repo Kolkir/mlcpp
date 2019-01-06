@@ -1,12 +1,12 @@
 #include "cocodataset.h"
 
-CocoDataset::CocoDataset(std::unique_ptr<CocoLoader> loader,
+CocoDataset::CocoDataset(std::shared_ptr<CocoLoader> loader,
                          std::shared_ptr<const Config> config)
-    : loader_(std::move(loader)), config_(config) {
+    : loader_(loader), config_(config) {
   loader_->LoadData();
 }
 
-Sample CocoDataset::Get(size_t index) {
+Sample CocoDataset::get(size_t index) {
   auto img_desc = loader_->GetImage(index);
 
   auto [image, window, scale, padding] =
@@ -21,6 +21,6 @@ Sample CocoDataset::Get(size_t index) {
   return result;
 }
 
-size_t CocoDataset::GetSize() const {
+torch::optional<size_t> CocoDataset::size() const {
   return loader_->GetImagesCount();
 }

@@ -7,9 +7,12 @@
 
 #include <torch/torch.h>
 
-struct Sample {
+struct Input {
   torch::Tensor image;
   ImageMeta image_meta;
+};
+
+struct Target {
   torch::Tensor rpn_match;
   torch::Tensor rpn_bbox;
   torch::Tensor gt_class_ids;
@@ -17,18 +20,18 @@ struct Sample {
   torch::Tensor gt_masks;
 };
 
-class CocoDataset {
- public:
-  CocoDataset(std::unique_ptr<CocoLoader> loader,
-              std::shared_ptr<const Config> config);
-  CocoDataset(const CocoDataset&) = delete;
-  CocoDataset& operator=(const CocoDataset&) = delete;
+using Sample = torch::data::Example<Input, Target>;
 
-  Sample Get(size_t index);
-  size_t GetSize() const;
+class CocoDataset : public torch::data::Dataset<CocoDataset, Sample> {
+ public:
+  CocoDataset(std::shared_ptr<CocoLoader> loader,
+              std::shared_ptr<const Config> config);
+
+  Sample get(size_t index) override;
+  torch::optional<size_t> size() const override;
 
  private:
-  std::unique_ptr<CocoLoader> loader_;
+  std::shared_ptr<CocoLoader> loader_;
   std::shared_ptr<const Config> config_;
 };
 

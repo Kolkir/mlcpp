@@ -16,26 +16,74 @@ class MaskRCNNImpl : public torch::nn::Module {
  public:
   MaskRCNNImpl(std::string model_dir, std::shared_ptr<Config const> config);
 
+  /* Runs the detection pipeline.
+   * images: List of images, potentially of different sizes.
+   * Returns a list of dicts, one dict per image. The dict contains:
+   *      rois: [N, (y1, x1, y2, x2)] detection bounding boxes
+   *      class_ids: [N] int class IDs
+   *      scores: [N] float probability scores for the class IDs
+   *      masks: [H, W, N] instance binary masks
+   */
+
   std::tuple<at::Tensor, at::Tensor> Detect(
       at::Tensor images,
       const std::vector<ImageMeta>& image_metas);
 
+  /*
+   * Train the model.
+   * train_dataset, val_dataset: Training and validation Dataset objects.
+   * learning_rate: The learning rate to train with
+   * epochs: Number of training epochs. Note that previous training epochs
+   *         are considered to be done alreay, so this actually determines
+   *         the epochs to train in total rather than in this particaular
+   *         call.
+   * layers: Allows selecting wich layers to train. It can be:
+   *           - A regular expression to match layer names to train
+   *          - One of these predefined values:
+   *            heaads: The RPN, classifier and mask heads of the network
+   *            all: All the layers
+   *            3+: Train Resnet stage 3 and up
+   *            4+: Train Resnet stage 4 and up
+   *            5+: Train Resnet stage 5 and up
+   */
   void Train(std::unique_ptr<CocoDataset> train_dataset,
              std::unique_ptr<CocoDataset> val_dataset,
-             float learning_rate,
+             double learning_rate,
              uint32_t epochs,
-             const std::string& layers);
+             std::string layers_regex);
 
  private:
   void Build();
   void InitializeWeights();
+  void SetTrainableLayers(const std::string& layers_regex);
+  std::string GetCheckpointPath(uint32_t epoch) const;
+  std::tuple<float, float, float, float, float, float> TrainEpoch(
+      torch::data::DataLoader<CocoDataset,
+                              torch::data::samplers::RandomSampler>&
+          datagenerator,
+      torch::optim::SGD& optimizer,
+      torch::optim::SGD& optimizer_bn,
+      uint32_t steps);
 
-  enum class Mode { Inference, Training };
+  std::tuple<std::vector<at::Tensor>, at::Tensor, at::Tensor, at::Tensor>
+  PredictRPN(at::Tensor images, uint32_t proposal_count);
 
-  std::tuple<at::Tensor, at::Tensor> Predict(
+  std::tuple<at::Tensor, at::Tensor> PredictInference(
       at::Tensor images,
-      const std::vector<ImageMeta>& image_metas,
-      Mode mode);
+      const std::vector<ImageMeta>& image_metas);
+
+  std::tuple<at::Tensor,
+             at::Tensor,
+             at::Tensor,
+             at::Tensor,
+             at::Tensor,
+             at::Tensor,
+             at::Tensor,
+             at::Tensor>
+  PredictTraining(at::Tensor images,
+                  at::Tensor gt_class_ids,
+                  at::Tensor gt_boxes,
+                  at::Tensor gt_masks);
 
  private:
   std::string model_dir_;
