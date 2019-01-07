@@ -85,6 +85,22 @@ class MaskRCNNImpl : public torch::nn::Module {
                   at::Tensor gt_boxes,
                   at::Tensor gt_masks);
 
+  std::tuple<torch::Tensor,
+             torch::Tensor,
+             torch::Tensor,
+             torch::Tensor,
+             torch::Tensor>
+  ComputeLosses(torch::Tensor rpn_match,
+                torch::Tensor rpn_bbox,
+                torch::Tensor rpn_class_logits,
+                torch::Tensor rpn_pred_bbox,
+                torch::Tensor target_class_ids,
+                torch::Tensor mrcnn_class_logits,
+                torch::Tensor target_deltas,
+                torch::Tensor mrcnn_bbox,
+                torch::Tensor target_mask,
+                torch::Tensor mrcnn_mask);
+
  private:
   std::string model_dir_;
   std::shared_ptr<Config const> config_;

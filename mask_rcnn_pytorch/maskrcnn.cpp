@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "detectionlayer.h"
 #include "detectiontargetlayer.h"
+#include "loss.h"
 #include "proposallayer.h"
 #include "resnet.h"
 #include "stateloader.h"
@@ -164,6 +165,32 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
     auto [rpn_class_logits, rpn_pred_bbox, target_class_ids, mrcnn_class_logits,
           target_deltas, mrcnn_bbox, target_mask, mrcnn_mask] =
         PredictTraining(images, gt_class_ids, gt_boxes, gt_masks);
+
+    // Compute losses
+    auto [rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss, mrcnn_bbox_loss,
+          mrcnn_mask_loss] =
+        ComputeLosses(rpn_match, rpn_bbox, rpn_class_logits, rpn_pred_bbox,
+                      target_class_ids, mrcnn_class_logits, target_deltas,
+                      mrcnn_bbox, target_mask, mrcnn_mask);
+    auto loss = rpn_class_loss + rpn_bbox_loss + mrcnn_class_loss +
+                mrcnn_bbox_loss + mrcnn_mask_loss;
+
+    // Backpropagation
+    loss.backward();
+    torch::nn::utils::clip_grad_norm(parameters(), 5.0);
+    if ((batch_count % config_->batch_size) == 0) {
+      optimizer.step();
+      optimizer.zero_grad();
+      batch_count = 0;
+    }
+
+    // TODO: Progress
+    // TODO: Statistics
+
+    // Break after 'steps' steps
+    if (step == steps - 1)
+      break;
+    ++step;
   }
 
   return {loss_sum,
@@ -172,6 +199,34 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
           loss_mrcnn_class_sum,
           loss_mrcnn_bbox_sum,
           loss_mrcnn_mask_sum};
+}
+
+std::tuple<torch::Tensor,
+           torch::Tensor,
+           torch::Tensor,
+           torch::Tensor,
+           torch::Tensor>
+MaskRCNNImpl::ComputeLosses(torch::Tensor rpn_match,
+                            torch::Tensor rpn_bbox,
+                            torch::Tensor rpn_class_logits,
+                            torch::Tensor rpn_pred_bbox,
+                            torch::Tensor target_class_ids,
+                            torch::Tensor mrcnn_class_logits,
+                            torch::Tensor target_deltas,
+                            torch::Tensor mrcnn_bbox,
+                            torch::Tensor target_mask,
+                            torch::Tensor mrcnn_mask) {
+  auto rpn_class_loss = ComputeRpnClassLoss(rpn_match, rpn_class_logits);
+  auto rpn_bbox_loss = ComputeRpnBBoxLoss(rpn_bbox, rpn_match, rpn_pred_bbox);
+  auto mrcnn_class_loss =
+      ComputeMrcnnClassLoss(target_class_ids, mrcnn_class_logits);
+  auto mrcnn_bbox_loss =
+      ComputeMrcnnBBoxLoss(target_deltas, target_class_ids, mrcnn_bbox);
+  auto mrcnn_mask_loss =
+      ComputeMrcnnMaskLoss(target_mask, target_class_ids, mrcnn_mask);
+
+  return {rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss, mrcnn_bbox_loss,
+          mrcnn_mask_loss};
 }
 
 std::tuple<std::vector<at::Tensor>, at::Tensor, at::Tensor, at::Tensor>
