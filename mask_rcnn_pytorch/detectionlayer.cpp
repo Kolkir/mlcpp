@@ -1,26 +1,11 @@
 #include "detectionlayer.h"
+#include "boxutils.h"
 #include "debug.h"
 #include "nms.h"
 #include "nnutils.h"
 #include "proposallayer.h"
 
 namespace {
-
-/*
- *    window: (y1, x1, y2, x2). The window in the image we want to clip to.
- *    boxes: [N, (y1, x1, y2, x2)]
- */
-at::Tensor ClipToWindow(const Window& window, at::Tensor boxes) {
-  boxes.narrow(1, 0, 1) = boxes.narrow(1, 0, 1).clamp(
-      static_cast<float>(window.y1), static_cast<float>(window.y2));
-  boxes.narrow(1, 1, 1) = boxes.narrow(1, 1, 1).clamp(
-      static_cast<float>(window.x1), static_cast<float>(window.x2));
-  boxes.narrow(1, 2, 1) = boxes.narrow(1, 2, 1).clamp(
-      static_cast<float>(window.y1), static_cast<float>(window.y2));
-  boxes.narrow(1, 3, 1) = boxes.narrow(1, 3, 1).clamp(
-      static_cast<float>(window.x1), static_cast<float>(window.x2));
-  return boxes;
-}
 
 /*
  * Refine classified proposals and filter overlaps and return final detections.

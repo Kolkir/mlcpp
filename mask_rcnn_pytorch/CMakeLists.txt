@@ -84,7 +84,9 @@ set(SOURCE_FILES
                     cocoloader.h
                     cocoloader.cpp
                     cocodataset.h
-                    cocodataset.cpp)
+                    cocodataset.cpp
+                    boxutils.h
+                    boxutils.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})

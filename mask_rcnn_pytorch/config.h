@@ -103,7 +103,7 @@ class Config {
   // Pooled ROIs
   uint32_t pool_size = 7;
   uint32_t mask_pool_size = 14;
-  std::vector<uint32_t> mask_shape = {28, 28};
+  std::vector<int32_t> mask_shape = {28, 28};
 
   // Maximum number of ground truth instances to use in one image
   uint32_t max_gt_instances = 100;
