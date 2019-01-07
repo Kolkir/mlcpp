@@ -177,7 +177,7 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
 
     // Backpropagation
     loss.backward();
-    torch::nn::utils::clip_grad_norm(parameters(), 5.0);
+    ClipGradNorm(parameters(), 5.0f);
     if ((batch_count % config_->batch_size) == 0) {
       optimizer.step();
       optimizer.zero_grad();

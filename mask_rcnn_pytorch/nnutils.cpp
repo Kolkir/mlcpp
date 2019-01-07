@@ -110,3 +110,20 @@ at::Tensor index_select_2d(at::Tensor y,
   }
   return torch::stack(tmp);
 }
+
+void ClipGradNorm(std::vector<at::Tensor> parameters, float max_norm) {
+  double total_norm = 0.0;
+  for (auto& p : parameters) {
+    if (p.requires_grad()) {
+      auto param_norm = p.grad().norm();
+      total_norm += std::pow(param_norm.item<float>(), 2.f);
+      total_norm = std::pow(total_norm, (1. / 2.));
+    }
+  }
+  auto clip_coef = max_norm / (total_norm + 1e-6);
+  if (clip_coef < 1) {
+    for (auto& p : parameters) {
+      p.grad().mul_(clip_coef);
+    }
+  }
+}

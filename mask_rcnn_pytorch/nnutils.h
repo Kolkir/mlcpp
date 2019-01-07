@@ -4,6 +4,18 @@
 #include <torch/torch.h>
 #include <vector>
 
+/* Clips gradient norm of an iterable of parameters.
+ * The norm is computed over all gradients together, as if they were
+ * concatenated into a single vector. Gradients are modified in-place.
+ * Arguments:
+ *     parameters (Iterable[Tensor] or Tensor): an iterable of Tensors or a
+ *         single Tensor that will have gradients normalized
+ *     max_norm (float or int): max norm of the gradients
+ * Returns:
+ *     Total norm of the parameters (viewed as a single vector).
+ */
+void ClipGradNorm(std::vector<at::Tensor> parameters, float max_norm);
+
 at::Tensor index_select_2d(at::Tensor y,
                            at::Tensor x,
                            at::Tensor target,
