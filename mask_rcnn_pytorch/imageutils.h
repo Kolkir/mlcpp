@@ -31,7 +31,7 @@ struct ImageMeta {
   int32_t image_width{0};
   int32_t image_height{0};
   Window window;
-  std::vector<int32_t> active_class_ids;
+  // std::vector<int32_t> active_class_ids; Unused
 };
 
 /*
@@ -64,9 +64,23 @@ std::tuple<cv::Mat, Window, float, Padding> ResizeImage(
  * scale: mask scaling factor
  * padding: Padding to add to the mask
  */
-std::vector<cv::Mat> ResizeMasks(std::vector<cv::Mat> masks,
+std::vector<cv::Mat> ResizeMasks(const std::vector<cv::Mat>& masks,
                                  float scale,
                                  const Padding& padding);
+
+/* Resize masks to a smaller version to cut memory load.
+ */
+std::vector<cv::Mat> MinimizeMasks(const std::vector<float>& boxes,
+                                   const std::vector<cv::Mat>& masks,
+                                   int32_t width,
+                                   int32_t height);
+
+/*
+ * Takes RGB images with 0-255 values and subtraces
+ * the mean pixel and converts it to float. Expects image
+ * colors in RGB order.
+ */
+cv::Mat MoldImage(cv::Mat image, const Config& config);
 
 /*
  * Takes a list of images and modifies them to the format expected

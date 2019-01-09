@@ -41,6 +41,20 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Detect(
   return {detections, mrcnn_mask};
 }
 
+void MaskRCNNImpl::PrintLoss(float loss,
+                             float loss_rpn_class,
+                             float loss_rpn_bbox,
+                             float loss_mrcnn_class,
+                             float loss_mrcnn_bbox,
+                             float loss_mrcnn_mask) {
+  std::cout << "\tLoss sum : " << loss << "\n";
+  std::cout << "\tloss_rpn_class : " << loss_rpn_class << "\n";
+  std::cout << "\tloss_rpn_bbox : " << loss_rpn_bbox << "\n";
+  std::cout << "\tloss_mrcnn_class, : " << loss_mrcnn_class << "\n";
+  std::cout << "\tloss_mrcnn_bbox : " << loss_mrcnn_bbox << "\n";
+  std::cout << "\tloss_mrcnn_mask : " << loss_mrcnn_mask << "\n";
+}
+
 void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
                          std::unique_ptr<CocoDataset> val_dataset,
                          double learning_rate,
@@ -107,17 +121,96 @@ void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
                    config_->steps_per_epoch);
 
     // Validation
-    // TODO: Implement validation
-    //    auto [val_loss, val_loss_rpn_class, val_loss_rpn_bbox,
-    //    val_loss_mrcnn_class,
-    //          val_loss_mrcnn_bbox, val_loss_mrcnn_mask] =
-    //        ValidEpoch(val_loader, config_->validation_steps);
+    auto [val_loss, val_loss_rpn_class, val_loss_rpn_bbox, val_loss_mrcnn_class,
+          val_loss_mrcnn_bbox, val_loss_mrcnn_mask] =
+        ValidEpoch(*val_loader, config_->validation_steps);
 
     // Show statistics
-    // TODO: Implement training statistics
+    std::cout << "Epoch " << epoch << " of " << epochs << " :\n";
+    std::cout << "Training losses :\n";
+    PrintLoss(loss, loss_rpn_class, loss_rpn_bbox, loss_mrcnn_class,
+              loss_mrcnn_bbox, loss_mrcnn_mask);
+    std::cout << "Validation losses :\n";
+    PrintLoss(val_loss, val_loss_rpn_class, val_loss_rpn_bbox,
+              val_loss_mrcnn_class, val_loss_mrcnn_bbox, val_loss_mrcnn_mask);
+    std::cout.flush();
 
     SaveStateDict(*this, GetCheckpointPath(epoch));
   }
+}
+
+std::tuple<float, float, float, float, float, float> MaskRCNNImpl::ValidEpoch(
+    torch::data::DataLoader<CocoDataset, torch::data::samplers::RandomSampler>&
+        datagenerator,
+    uint32_t steps) {
+  float loss_sum = 0;
+  float loss_rpn_class_sum = 0;
+  float loss_rpn_bbox_sum = 0;
+  float loss_mrcnn_class_sum = 0;
+  float loss_mrcnn_bbox_sum = 0;
+  float loss_mrcnn_mask_sum = 0;
+  uint32_t step = 0;
+
+  for (auto input : datagenerator) {
+    assert(input.size() == 1);
+
+    // Wrap input in variables
+    auto images = input[0].data.image.unsqueeze(0);  // add batch size dimention
+    auto rpn_match = input[0].target.rpn_match;
+    auto rpn_bbox = input[0].target.rpn_bbox;
+    auto gt_class_ids = input[0].target.gt_class_ids;
+    auto gt_boxes = input[0].target.gt_boxes;
+    auto gt_masks = input[0].target.gt_masks;
+
+    // To GPU
+    if (config_->gpu_count > 0) {
+      images = images.cuda();
+      rpn_match = rpn_match.cuda();
+      rpn_bbox = rpn_bbox.cuda();
+      gt_class_ids = gt_class_ids.cuda();
+      gt_boxes = gt_boxes.cuda();
+      gt_masks = gt_masks.cuda();
+    }
+
+    // Run object detection
+    auto [rpn_class_logits, rpn_pred_bbox, target_class_ids, mrcnn_class_logits,
+          target_deltas, mrcnn_bbox, target_mask, mrcnn_mask] =
+        PredictTraining(images, gt_class_ids, gt_boxes, gt_masks);
+
+    // Compute losses
+    auto [rpn_class_loss, rpn_bbox_loss, mrcnn_class_loss, mrcnn_bbox_loss,
+          mrcnn_mask_loss] =
+        ComputeLosses(rpn_match, rpn_bbox, rpn_class_logits, rpn_pred_bbox,
+                      target_class_ids, mrcnn_class_logits, target_deltas,
+                      mrcnn_bbox, target_mask, mrcnn_mask);
+    auto loss = rpn_class_loss + rpn_bbox_loss + mrcnn_class_loss +
+                mrcnn_bbox_loss + mrcnn_mask_loss;
+
+    // Progress
+    float loss_value = loss.cpu().data<float>()[0];
+    std::cout << "Validation step " << step << " of " << steps
+              << " steps, loss sum = " << loss_value << "\n";
+
+    // Statistics
+    loss_sum += loss_value / steps;
+    loss_rpn_class_sum += rpn_class_loss.cpu().data<float>()[0] / steps;
+    loss_rpn_bbox_sum += rpn_bbox_loss.cpu().data<float>()[0] / steps;
+    loss_mrcnn_class_sum += mrcnn_class_loss.cpu().data<float>()[0] / steps;
+    loss_mrcnn_bbox_sum += mrcnn_bbox_loss.cpu().data<float>()[0] / steps;
+    loss_mrcnn_mask_sum += mrcnn_mask_loss.cpu().data<float>()[0] / steps;
+
+    // Break after 'steps' steps
+    if (step == steps - 1)
+      break;
+    ++step;
+  }
+
+  return {loss_sum,
+          loss_rpn_class_sum,
+          loss_rpn_bbox_sum,
+          loss_mrcnn_class_sum,
+          loss_mrcnn_bbox_sum,
+          loss_mrcnn_mask_sum};
 }
 
 std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
@@ -181,11 +274,25 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
     if ((batch_count % config_->batch_size) == 0) {
       optimizer.step();
       optimizer.zero_grad();
+
+      optimizer_bn.step();
+      optimizer_bn.zero_grad();
+
       batch_count = 0;
     }
 
-    // TODO: Progress
-    // TODO: Statistics
+    // Progress
+    float loss_value = loss.cpu().data<float>()[0];
+    std::cout << "Training step " << step << " of " << steps
+              << " steps, loss sum = " << loss_value << "\n";
+
+    // Statistics
+    loss_sum += loss_value / steps;
+    loss_rpn_class_sum += rpn_class_loss.cpu().data<float>()[0] / steps;
+    loss_rpn_bbox_sum += rpn_bbox_loss.cpu().data<float>()[0] / steps;
+    loss_mrcnn_class_sum += mrcnn_class_loss.cpu().data<float>()[0] / steps;
+    loss_mrcnn_bbox_sum += mrcnn_bbox_loss.cpu().data<float>()[0] / steps;
+    loss_mrcnn_mask_sum += mrcnn_mask_loss.cpu().data<float>()[0] / steps;
 
     // Break after 'steps' steps
     if (step == steps - 1)
@@ -397,7 +504,7 @@ void MaskRCNNImpl::Build() {
   auto [C1, C2, C3, C4, C5] = resnet.GetStages();
 
   // Top-down Layers
-  // TODO: add assert to varify feature map sizes match what's in config
+  // TODO: (Legacy)add assert to varify feature map sizes match what's in config
   fpn_ = FPN(C1, C2, C3, C4, C5, /*out_channels*/ 256);
   register_module("fpn", fpn_);
 

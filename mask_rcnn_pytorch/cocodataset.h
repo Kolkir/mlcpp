@@ -33,6 +33,7 @@ class CocoDataset : public torch::data::Dataset<CocoDataset, Sample> {
  private:
   std::shared_ptr<CocoLoader> loader_;
   std::shared_ptr<const Config> config_;
+  torch::Tensor anchors_;
 };
 
 #endif  // COCODATASET_H

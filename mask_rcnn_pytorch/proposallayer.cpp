@@ -36,7 +36,7 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
   order = order.narrow(0, 0, pre_nms_limit).flatten();    //[:pre_nms_limit];
   scores = scores.narrow(0, 0, pre_nms_limit).flatten();  //[:pre_nms_limit];
 
-  // TODO : Support batch size > 1 ff.
+  // TODO : (Legacy)Support batch size > 1 ff.
   deltas = deltas.index_select(0, order);    //[order.data, :];
   anchors = anchors.index_select(0, order);  //[order.data, :];
 

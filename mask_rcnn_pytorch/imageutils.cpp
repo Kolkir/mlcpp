@@ -80,11 +80,6 @@ std::tuple<cv::Mat, Window, float, Padding> ResizeImage(cv::Mat image,
   return {image, window, scale, padding};
 }
 
-/*
- * Takes RGB images with 0-255 values and subtraces
- * the mean pixel and converts it to float. Expects image
- * colors in RGB order.
- */
 cv::Mat MoldImage(cv::Mat image, const Config& config) {
   assert(image.channels() == 3);
   cv::Scalar mean(config.mean_pixel[2], config.mean_pixel[1],
@@ -108,8 +103,7 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
     molded_image = MoldImage(molded_image, config);
 
     // Build image_meta
-    ImageMeta image_meta{0, image.rows, image.cols, window,
-                         std::vector<int32_t>(config.num_classes, 0)};
+    ImageMeta image_meta{0, image.rows, image.cols, window};
 
     // To tensor
     auto img_t = CvImageToTensor(molded_image);
@@ -208,7 +202,11 @@ UnmoldDetections(at::Tensor detections,
     masks = masks.index_select(0, include_ix);
     N = class_ids.size(0);
   } else {
-    // TODO: make  empty tensors
+    boxes = torch::empty({}, boxes.options());
+    class_ids = torch::empty({}, class_ids.options());
+    scores = torch::empty({}, scores.options());
+    masks = torch::empty({}, masks.options());
+    N = 0;
   }
   // Resize masks to original image size and set boundary threshold.
   std::vector<cv::Mat> full_masks_vec;
@@ -221,7 +219,7 @@ UnmoldDetections(at::Tensor detections,
   return {boxes, class_ids, scores, full_masks_vec};
 }
 
-std::vector<cv::Mat> ResizeMasks(std::vector<cv::Mat> masks,
+std::vector<cv::Mat> ResizeMasks(const std::vector<cv::Mat>& masks,
                                  float scale,
                                  const Padding& padding) {
   std::vector<cv::Mat> res_masks;
@@ -239,4 +237,28 @@ std::vector<cv::Mat> ResizeMasks(std::vector<cv::Mat> masks,
     res_masks.push_back(m);
   }
   return res_masks;
+}
+
+std::vector<cv::Mat> MinimizeMasks(const std::vector<float>& boxes,
+                                   const std::vector<cv::Mat>& masks,
+                                   int32_t width,
+                                   int32_t height) {
+  cv::Size mini_shape(width, height);
+  std::vector<cv::Mat> mini_masks;
+  size_t i = 0;
+  for (auto& m : masks) {
+    auto b_ind = i * 4;
+    auto y1 = static_cast<int32_t>(boxes[b_ind]);
+    auto x1 = static_cast<int32_t>(boxes[b_ind + 1]);
+    auto y2 = static_cast<int32_t>(boxes[b_ind + 2]);
+    auto x2 = static_cast<int32_t>(boxes[b_ind + 3]);
+    auto m_crop = m(cv::Rect(x1, y1, x2 - x1, y2 - y1));
+    if (m_crop.empty())
+      throw std::logic_error("Invalid bounding box with area of zero");
+    m_crop.convertTo(m_crop, CV_32FC1);
+    cv::resize(m_crop, m_crop, mini_shape, cv::INTER_LINEAR);
+    cv::threshold(m_crop, m_crop, 127, 1, cv::THRESH_BINARY);
+    mini_masks.push_back(m_crop);
+  }
+  return mini_masks;
 }

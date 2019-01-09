@@ -63,7 +63,7 @@ at::Tensor RefineDetections(at::Tensor rois,
   // Round and cast to  int since we're deadling with pixels now
   refined_rois = torch::round(refined_rois);
 
-  // TODO: Filter out  boxes with zero area
+  // TODO: (Legacy)Filter out  boxes with zero area
 
   // Filter out background boxes
   auto keep_bool = class_ids > 0;

@@ -66,7 +66,7 @@ class Config {
   float rpn_nms_threshold = 0.7f;
 
   // How many anchors per image to use for RPN training
-  uint32_t rpn_train_anchors_per_image = 256;
+  int32_t rpn_train_anchors_per_image = 256;
 
   // ROIs kept after non-maximum supression (training and inference)
   uint32_t post_nms_rois_training = 2000;
@@ -75,7 +75,7 @@ class Config {
   // If enabled, resizes instance masks to a smaller size to reduce
   // memory load. Recommended when using high-resolution images.
   bool use_mini_mask = true;
-  std::vector<uint32_t> mini_mask_shape = {
+  std::vector<int32_t> mini_mask_shape = {
       56, 56};  // (height, width) of the mini-mask
 
   // Input image resing

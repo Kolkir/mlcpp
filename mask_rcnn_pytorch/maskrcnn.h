@@ -64,6 +64,11 @@ class MaskRCNNImpl : public torch::nn::Module {
       torch::optim::SGD& optimizer,
       torch::optim::SGD& optimizer_bn,
       uint32_t steps);
+  std::tuple<float, float, float, float, float, float> ValidEpoch(
+      torch::data::DataLoader<CocoDataset,
+                              torch::data::samplers::RandomSampler>&
+          datagenerator,
+      uint32_t steps);
 
   std::tuple<std::vector<at::Tensor>, at::Tensor, at::Tensor, at::Tensor>
   PredictRPN(at::Tensor images, uint32_t proposal_count);
@@ -100,6 +105,12 @@ class MaskRCNNImpl : public torch::nn::Module {
                 torch::Tensor mrcnn_bbox,
                 torch::Tensor target_mask,
                 torch::Tensor mrcnn_mask);
+  void PrintLoss(float loss,
+                 float loss_rpn_class,
+                 float loss_rpn_bbox,
+                 float loss_mrcnn_class,
+                 float loss_mrcnn_bbox,
+                 float loss_mrcnn_mask);
 
  private:
   std::string model_dir_;
