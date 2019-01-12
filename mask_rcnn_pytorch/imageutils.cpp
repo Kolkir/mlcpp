@@ -10,27 +10,31 @@ cv::Mat LoadImage(const std::string path) {
 at::Tensor CvImageToTensor(const cv::Mat& image) {
   // Idea taken from https://github.com/pytorch/pytorch/issues/12506
   // we have to split the interleaved channels
-  assert(image.channels() == 3);
-  cv::Mat bgr[3];
-  cv::split(image, bgr);
-  cv::Mat channelsConcatenated;
-  cv::vconcat(bgr[2], bgr[1], channelsConcatenated);
-  cv::vconcat(channelsConcatenated, bgr[0], channelsConcatenated);
-
   cv::Mat channelsConcatenatedFloat;
-  channelsConcatenated.convertTo(channelsConcatenatedFloat, CV_32FC3);
-  assert(channelsConcatenatedFloat.isContinuous());
+  if (image.channels() == 3) {
+    cv::Mat bgr[3];
+    cv::split(image, bgr);
+    cv::Mat channelsConcatenated;
+    cv::vconcat(bgr[2], bgr[1], channelsConcatenated);
+    cv::vconcat(channelsConcatenated, bgr[0], channelsConcatenated);
 
+    channelsConcatenated.convertTo(channelsConcatenatedFloat, CV_32FC3);
+    assert(channelsConcatenatedFloat.isContinuous());
+  } else if (image.channels() == 1) {
+    image.convertTo(channelsConcatenatedFloat, CV_32FC3);
+  } else {
+    throw std::invalid_argument("CvImageToTensor: Unsupported image format");
+  }
   std::vector<int64_t> dims{static_cast<int64_t>(image.channels()),
                             static_cast<int64_t>(image.rows),
                             static_cast<int64_t>(image.cols)};
 
   at::TensorOptions options(at::kFloat);
   at::Tensor tensor_image =
-      torch::from_blob(channelsConcatenated.data, at::IntList(dims),
+      torch::from_blob(channelsConcatenatedFloat.data, at::IntList(dims),
                        options.requires_grad(false))
           .clone();  // clone is required to copy data from temporary object
-  return tensor_image;
+  return tensor_image.squeeze();
 }
 
 std::tuple<cv::Mat, Window, float, Padding> ResizeImage(cv::Mat image,

@@ -78,15 +78,16 @@ void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
     layers_regex = layer_regex_i->second;
   SetTrainableLayers(layers_regex);
 
+  int32_t workers_num = 1;
   auto train_loader = torch::data::make_data_loader(
       *train_dataset,
       torch::data::DataLoaderOptions().batch_size(1).workers(
-          4));  // random sampler is default
+          workers_num));  // random sampler is default
 
   auto val_loader = torch::data::make_data_loader(
       *val_dataset,
       torch::data::DataLoaderOptions().batch_size(1).workers(
-          4));  // random sampler is default
+          workers_num));  // random sampler is default
 
   // Optimizer object
   // Add L2 Regularization
@@ -383,15 +384,15 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
                               at::Tensor gt_masks) {
   train();
   // Set batchnorm always in eval mode during training
-  auto set_bn_eval = [](const std::string& name, Module& m) {
-    if (name.find("BatchNorm") != std::string::npos) {
+  auto set_bn_eval = [](const std::string& /*name*/, Module& m) {
+    if (m.name().find("BatchNorm") != std::string::npos) {
       m.eval();
     }
   };
   apply(set_bn_eval);
 
   auto [mrcnn_feature_maps, rpn_rois, rpn_class_logits, rpn_bbox] =
-      PredictRPN(images, config_->post_nms_rois_inference);
+      PredictRPN(images, config_->post_nms_rois_training);
 
   // Normalize coordinates
   auto h = static_cast<float>(config_->image_shape[0]);

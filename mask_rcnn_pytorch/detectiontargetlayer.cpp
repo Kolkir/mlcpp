@@ -22,13 +22,16 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
 
   // Compute overlaps matrix [proposals, gt_boxes]
   auto overlaps = BBoxOverlaps(proposals, gt_boxes);
-  std::cerr << overlaps << "\n";
 
   // Determine postive and negative ROIs
   auto roi_iou_max = std::get<0>(torch::max(overlaps, /*dim*/ 1));
 
   // 1. Positive ROIs are those with >= 0.5 IoU with a GT box
   auto positive_roi_bool = roi_iou_max >= 0.5;
+
+  at::Tensor roi_gt_class_ids;
+  at::Tensor deltas;
+  at::Tensor masks;
 
   // Subsample ROIs. Aim for 33% positive
   // Positive ROIs
@@ -40,8 +43,10 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
 
     positive_count =
         int(config.train_rois_per_image * config.roi_positive_ratio);
-    auto rand_idx = torch::randperm(positive_indices.size(0));
-    rand_idx = rand_idx.narrow(0, 0, positive_count);
+    auto rand_idx =
+        torch::randperm(positive_indices.size(0), at::dtype(at::kLong));
+    rand_idx = rand_idx.narrow(
+        0, 0, std::min(positive_indices.size(0), positive_count));
     if (config.gpu_count > 0) {
       rand_idx = rand_idx.cuda();
     }
@@ -54,10 +59,10 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     auto roi_gt_box_assignment =
         std::get<1>(torch::max(positive_overlaps, /*dim*/ 1));
     auto roi_gt_boxes = gt_boxes.index_select(0, roi_gt_box_assignment);
-    auto roi_gt_class_ids = gt_class_ids.take(roi_gt_box_assignment);
+    roi_gt_class_ids = gt_class_ids.take(roi_gt_box_assignment);
 
     //   Compute bbox refinement for positive ROIs
-    auto deltas = BoxRefinement(positive_rois, roi_gt_boxes);
+    deltas = BoxRefinement(positive_rois, roi_gt_boxes);
     deltas.set_requires_grad(false);
     auto std_dev = torch::tensor(config.rpn_bbox_std_dev,
                                  at::dtype(at::kFloat).requires_grad(false));
@@ -72,8 +77,8 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     //   Compute mask targets
     auto boxes = positive_rois;
     if (config.use_mini_mask) {
-      //          Transform ROI corrdinates from normalized image space
-      //          to normalized mini-mask space.
+      // Transform ROI corrdinates from normalized image space
+      // to normalized mini-mask space.
       auto yxyx = positive_rois.chunk(4, /*dim*/ 1);
       auto y1 = yxyx[0];
       auto x1 = yxyx[1];
@@ -96,8 +101,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
                                  at::requires_grad(false).dtype(at::kInt));
     if (config.gpu_count > 0)
       box_ids = box_ids.cuda();
-    torch::Tensor masks =
-        torch::zeros({}, at::dtype(at::kFloat).requires_grad(false));
+    masks = torch::zeros({}, at::dtype(at::kFloat).requires_grad(false));
     if (config.gpu_count > 0) {
       crop_and_resize_gpu_forward(roi_masks.unsqueeze(1), boxes, box_ids, 0,
                                   config.mask_shape[0], config.mask_shape[1],
@@ -127,8 +131,10 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     auto negative_indices = torch::nonzero(negative_roi_bool).narrow(1, 0, 1);
     auto r = 1.0f / config.roi_positive_ratio;
     negative_count = static_cast<int64_t>(r * positive_count - positive_count);
-    auto rand_idx = torch::randperm(negative_indices.size(0));
-    rand_idx = rand_idx.narrow(0, 0, negative_count);
+    auto rand_idx =
+        torch::randperm(negative_indices.size(0), at::dtype(at::kLong));
+    rand_idx = rand_idx.narrow(
+        0, 0, std::min(negative_indices.size(0), negative_count));
     if (config.gpu_count > 0)
       rand_idx = rand_idx.cuda();
     negative_indices = negative_indices.take(rand_idx);
@@ -140,18 +146,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
 
   // Append negative ROIs and pad bbox deltas and masks that
   // are not used for negative ROIs with zeros.
-  auto rois = torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
-  auto roi_gt_class_ids =
-      torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
-  auto deltas = torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
-  auto masks = torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
-  if (config.gpu_count) {
-    rois = rois.cuda();
-    roi_gt_class_ids = roi_gt_class_ids.cuda();
-    deltas = deltas.cuda();
-    masks = masks.cuda();
-  }
-
+  at::Tensor rois;
   if (positive_count > 0 && negative_count > 0) {
     rois = torch::cat({positive_rois, negative_rois}, /*dim*/ 0);
     auto zeros = torch::zeros({negative_count},
@@ -188,6 +183,18 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     if (config.gpu_count > 0)
       zeros = zeros.cuda();
     masks = zeros;
+  } else {
+    rois = torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
+    roi_gt_class_ids =
+        torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
+    deltas = torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
+    masks = torch::empty({}, at::dtype(at::kFloat).requires_grad(false));
+    if (config.gpu_count) {
+      rois = rois.cuda();
+      roi_gt_class_ids = roi_gt_class_ids.cuda();
+      deltas = deltas.cuda();
+      masks = masks.cuda();
+    }
   }
   return {rois, roi_gt_class_ids, deltas, masks};
 }

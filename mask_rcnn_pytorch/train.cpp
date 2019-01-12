@@ -74,7 +74,11 @@ int main(int argc, char** argv) {
       model->to(torch::DeviceType::CUDA);
 
     // load weights
-    LoadStateDictJson(*model, params_path);
+    if (params_path.find(".json") != std::string::npos) {
+      LoadStateDictJson(*model, params_path);
+    } else {
+      LoadStateDict(*model, params_path);
+    }
 
     // Make data sets
     auto train_loader = std::make_unique<CocoLoader>(

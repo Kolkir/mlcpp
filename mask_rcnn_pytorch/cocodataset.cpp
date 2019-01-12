@@ -26,7 +26,8 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
   // They are excluded on loading stage
 
   // Compute overlaps [num_anchors, num_gt_boxes]
-  auto overlaps = BBoxOverlaps(anchors, gt_boxes);
+  // use loops because anchors are too big
+  auto overlaps = BBoxOverlapsLoops(anchors, gt_boxes);
 
   // Match anchors to GT Boxes
   // If an anchor overlaps a GT box with IoU >= 0.7 then it's positive.
@@ -39,8 +40,10 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
   // 1. Set negative anchors first. They get overwritten below if a GT box is
   // matched to them. Skip boxes in crowd areas.
   auto anchor_iou_argmax = torch::argmax(overlaps, /*dim*/ 1);
-  auto anchor_iou_max = index_select_2d(torch::arange(overlaps.size(0)),
-                                        anchor_iou_argmax, overlaps);
+
+  auto anchor_iou_max =
+      index_select_2d(torch::arange(overlaps.size(0), at::dtype(at::kLong)),
+                      anchor_iou_argmax, overlaps);
   rpn_match =
       torch::where((anchor_iou_max < 0.3), torch::tensor(-1), rpn_match);
   // 2. Set an anchor for each GT box (regardless of IoU value).
@@ -56,28 +59,26 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
   auto extra = ids.size(0) - (config.rpn_train_anchors_per_image / 2);
   if (extra > 0) {
     // Reset the extra ones to neutral
-    auto idx = torch::randperm(ids.size(0));
+    auto idx = torch::randperm(ids.size(0), at::dtype(at::kLong));
     idx = idx.narrow(0, 0, extra);
     ids = ids.take(idx);  // random::choice(ids, extra, replace=False)
     rpn_match.index_select(0, ids) = 0;
   }
   // Same for negative proposals
-  auto positives_num =
-      torch::sum(rpn_match == 1)
-          .cpu()
-          .data<int32_t>()[0];  // or: auto positives_num = ids.size(0);
+  auto positives_num = torch::sum(rpn_match == 1).cpu().data<int64_t>()[0];
+  // or: auto positives_num = ids.size(0);
   ids = (rpn_match == -1).nonzero().narrow(1, 0, 1);
   extra = ids.size(0) - (config.rpn_train_anchors_per_image - positives_num);
   if (extra > 0) {
     // Rest the extra ones to neutral
-    auto idx = torch::randperm(ids.size(0));
+    auto idx = torch::randperm(ids.size(0), at::dtype(at::kLong));
     idx = idx.narrow(0, 0, extra);
     ids = ids.take(idx);  // random::choice(ids, extra, replace=False)
     rpn_match.index_select(0, ids) = 0;
   }
   // For positive anchors, compute shift and scale needed to transform them
   // to match the corresponding GT boxes.
-  ids = (rpn_match == 1).nonzero().narrow(1, 0, 1);
+  ids = (rpn_match == 1).nonzero().narrow(1, 0, 1).squeeze();
 
   auto gt = gt_boxes.index_select(0, anchor_iou_argmax.take(ids));
   auto a = anchors.index_select(0, ids);
@@ -129,7 +130,7 @@ Sample CocoDataset::get(size_t index) {
 
   // Make training sample
   Sample result;
-  img_desc.image = MoldImage(img_desc.image, *config_);
+  img_desc.image = MoldImage(image, *config_);
   result.data.image = CvImageToTensor(img_desc.image);
   result.data.image_meta.image_id = static_cast<int32_t>(img_desc.id);
   result.data.image_meta.window = window;
