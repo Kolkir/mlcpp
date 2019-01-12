@@ -7,8 +7,15 @@
 
 /* Computes IoU overlaps between two sets of boxes.
  * boxes1, boxes2: [N, (y1, x1, y2, x2)].
+ * !!! Requires a lot of memory - but without loops
  */
 torch::Tensor BBoxOverlaps(torch::Tensor boxes1, torch::Tensor boxes2);
+
+/* Computes IoU overlaps between two sets of boxes.
+ * boxes1, boxes2: [N, (y1, x1, y2, x2)].
+ * For better performance, pass the largest set first and the smaller second.
+ */
+torch::Tensor BBoxOverlapsLoops(torch::Tensor boxes1, torch::Tensor boxes2);
 
 /* Compute refinement needed to transform box to gt_box.
  * box and gt_box are [N, (y1, x1, y2, x2)]

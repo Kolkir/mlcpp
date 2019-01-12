@@ -16,10 +16,11 @@ torch::Tensor BBoxOverlaps(torch::Tensor boxes1, torch::Tensor boxes2) {
   auto x1 = torch::max(b1[1], b2[1]).narrow(1, 0, 1);
   auto y2 = torch::min(b1[2], b2[2]).narrow(1, 0, 1);
   auto x2 = torch::min(b1[3], b2[3]).narrow(1, 0, 1);
-  auto zeros = torch::zeros(y1.size(0), at::requires_grad(false));
+  auto zeros = torch::zeros({y1.size(0), 1}, at::requires_grad(false));
   if (y1.is_cuda())
     zeros = zeros.cuda();
-  auto intersection = torch::max(x2 - x1, zeros) * torch::max(y2 - y1, zeros);
+  auto intersection =
+      torch::mul(torch::max(x2 - x1, zeros), torch::max(y2 - y1, zeros));
 
   // 3. Compute unions
   auto b1_area = (b1[2] - b1[1]) * (b1[3] - b1[0]);
@@ -31,6 +32,46 @@ torch::Tensor BBoxOverlaps(torch::Tensor boxes1, torch::Tensor boxes2) {
   auto iou = intersection / box_union;
   auto overlaps = iou.view({boxes2_repeat, boxes1_repeat});
 
+  return overlaps;
+}
+
+/* Calculates IoU of the given box with the array of the given boxes.
+ * box: 1D vector [y1, x1, y2, x2]
+ * boxes: [boxes_count, (y1, x1, y2, x2)]
+ * box_area: float. the area of 'box'
+ * boxes_area: array of length boxes_count.
+ * Note: the areas are passed in rather than calculated here for
+ *       efficency. Calculate once in the caller to avoid duplicate work.
+ */
+static at::Tensor ComputeIou(at::Tensor box,
+                             at::Tensor boxes,
+                             at::Tensor box_area,
+                             at::Tensor boxes_area) {
+  auto y1 = torch::max(box[0], boxes.narrow(1, 0, 1));
+  auto y2 = torch::min(box[2], boxes.narrow(1, 2, 1));
+  auto x1 = torch::max(box[1], boxes.narrow(1, 1, 1));
+  auto x2 = torch::min(box[3], boxes.narrow(1, 3, 1));
+  auto intersection = torch::max(x2 - x1, torch::tensor(0.f)) *
+                      torch::max(y2 - y1, torch::tensor(0.f));
+  auto union_ = box_area + boxes_area - intersection;
+  auto iou = intersection / union_;
+  return iou;
+}
+
+torch::Tensor BBoxOverlapsLoops(torch::Tensor boxes1, torch::Tensor boxes2) {
+  // Areas of anchors and GT boxes
+  auto area1 = (boxes1.narrow(1, 2, 1) - boxes1.narrow(1, 0, 1)) *
+               (boxes1.narrow(1, 3, 1) - boxes1.narrow(1, 1, 1));
+  auto area2 = (boxes2.narrow(1, 2, 1) - boxes2.narrow(1, 0, 1)) *
+               (boxes2.narrow(1, 3, 1) - boxes2.narrow(1, 1, 1));
+
+  // Compute overlaps to generate matrix [boxes1 count, boxes2 count]
+  // Each cell contains the IoU value.
+  auto overlaps = torch::zeros({boxes1.size(0), boxes2.size(0)});
+  for (int64_t i = 0; i < overlaps.size(1); ++i) {
+    auto box2 = boxes2[i];
+    overlaps.narrow(1, i, 1) = ComputeIou(box2, boxes1, area2[i], area1);
+  }
   return overlaps;
 }
 
@@ -50,7 +91,7 @@ torch::Tensor BoxRefinement(torch::Tensor box, torch::Tensor gt_box) {
   auto dh = torch::log(gt_height / height);
   auto dw = torch::log(gt_width / width);
 
-  auto result = torch::stack({dy, dx, dh, dw}, /*dim*/ 1);
+  auto result = torch::stack({dy, dx, dh, dw}, /*dim*/ 1).squeeze();
   return result;
 }
 
