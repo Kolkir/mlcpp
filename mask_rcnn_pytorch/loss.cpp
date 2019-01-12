@@ -4,7 +4,8 @@
 at::Tensor ComputeRpnClassLoss(at::Tensor rpn_match,
                                at::Tensor rpn_class_logits) {
   // Squeeze last dim to simplify
-  rpn_match = rpn_match.squeeze(2);
+  if (rpn_match.dim() == 2)
+    rpn_match = rpn_match.squeeze(2);
 
   // Get anchor classes. Convert the -1/+1 match to 0/1 values.
   auto anchor_class = (rpn_match == 1).to(at::dtype(at::kLong));
@@ -58,7 +59,7 @@ at::Tensor ComputeRpnBBoxLoss(at::Tensor target_bbox,
 at::Tensor ComputeMrcnnClassLoss(at::Tensor target_class_ids,
                                  at::Tensor pred_class_logits) {
   at::Tensor loss;
-  if (!target_class_ids.sizes().empty()) {
+  if (!is_empty(target_class_ids)) {
     loss = torch::nll_loss2d(pred_class_logits,
                              target_class_ids.to(at::dtype(at::kLong)));
   } else {
@@ -74,7 +75,7 @@ at::Tensor ComputeMrcnnBBoxLoss(at::Tensor target_bbox,
                                 at::Tensor target_class_ids,
                                 at::Tensor pred_bbox) {
   at::Tensor loss;
-  if (!target_class_ids.sizes().empty()) {
+  if (!is_empty(target_class_ids)) {
     // Only positive ROIs contribute to the loss. And only
     // the right class_id of each ROI. Get their indicies.
     auto positive_ix = torch::nonzero(target_class_ids > 0).narrow(1, 0, 1);
@@ -106,7 +107,7 @@ at::Tensor ComputeMrcnnMaskLoss(at::Tensor target_masks,
                                 at::Tensor target_class_ids,
                                 at::Tensor pred_masks) {
   at::Tensor loss;
-  if (!target_class_ids.sizes().empty()) {
+  if (!is_empty(target_class_ids)) {
     // Only positive ROIs contribute to the loss. And only
     // the class specific mask of each ROI.
     auto positive_ix = torch::nonzero(target_class_ids > 0).narrow(1, 0, 1);

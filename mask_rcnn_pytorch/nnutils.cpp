@@ -127,3 +127,10 @@ void ClipGradNorm(std::vector<at::Tensor> parameters, float max_norm) {
     }
   }
 }
+
+bool is_empty(at::Tensor x) {
+  if (x.dim() > 0 && x.size(0) != 0 && x.numel() > 0)
+    return false;
+  else
+    return true;
+}

@@ -422,11 +422,14 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
     mrcnn_mask = mrcnn_mask.cuda();
   }
 
-  if (!rois.sizes().empty()) {
+  if (!is_empty(rois)) {
     // Network Heads
     // Proposal classifier and BBox regressor heads
     std::tie(mrcnn_class_logits, mrcnn_class, mrcnn_bbox) =
         classifier_->forward(mrcnn_feature_maps, rois);
+
+    // Add back batch dimension
+    rois = rois.unsqueeze(0);
 
     // Create masks for detections
     mrcnn_mask = mask_->forward(mrcnn_feature_maps, rois);

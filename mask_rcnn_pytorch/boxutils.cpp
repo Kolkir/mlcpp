@@ -91,7 +91,9 @@ torch::Tensor BoxRefinement(torch::Tensor box, torch::Tensor gt_box) {
   auto dh = torch::log(gt_height / height);
   auto dw = torch::log(gt_width / width);
 
-  auto result = torch::stack({dy, dx, dh, dw}, /*dim*/ 1).squeeze();
+  auto result = torch::stack({dy, dx, dh, dw}, /*dim*/ 1);
+  if (result.dim() > 2)
+    result = result.squeeze(result.dim() - 1);
   return result;
 }
 

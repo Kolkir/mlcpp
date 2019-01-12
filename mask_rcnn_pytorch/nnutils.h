@@ -4,6 +4,8 @@
 #include <torch/torch.h>
 #include <vector>
 
+bool is_empty(at::Tensor x);
+
 /* Clips gradient norm of an iterable of parameters.
  * The norm is computed over all gradients together, as if they were
  * concatenated into a single vector. Gradients are modified in-place.

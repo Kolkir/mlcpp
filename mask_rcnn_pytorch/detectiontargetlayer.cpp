@@ -1,5 +1,6 @@
 #include "detectiontargetlayer.h"
 #include "boxutils.h"
+#include "nnutils.h"
 #include "roialign/crop_and_resize.h"
 #include "roialign/crop_and_resize_gpu.h"
 
@@ -11,9 +12,12 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     at::Tensor gt_masks) {
   // Currently only supports batchsize 1
   proposals = proposals.squeeze(0);
-  gt_class_ids = gt_class_ids.squeeze(0);
-  gt_boxes = gt_boxes.squeeze(0);
-  gt_masks = gt_masks.squeeze(0);
+  if (gt_class_ids.dim() > 1)
+    gt_class_ids = gt_class_ids.squeeze(0);
+  if (gt_boxes.dim() > 2)
+    gt_boxes = gt_boxes.squeeze(0);
+  if (gt_boxes.dim() > 3)
+    gt_masks = gt_masks.squeeze(0);
 
   //  Handle COCO crowds
   //  A crowd box in COCO is a bounding box around several instances. Exclude
@@ -38,7 +42,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
   int64_t positive_count = 0;
   torch::Tensor positive_rois;
   auto positive_indices = torch::nonzero(positive_roi_bool);
-  if (!positive_indices.sizes().empty()) {
+  if (!is_empty(positive_indices)) {
     positive_indices = positive_indices.narrow(1, 0, 1);
 
     positive_count =
@@ -126,8 +130,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
   // Negative ROIs. Add enough to maintain positive:negative ratio.
   int64_t negative_count = 0;
   torch::Tensor negative_rois;
-  if (!torch::nonzero(negative_roi_bool).sizes().empty() &&
-      positive_count > 0) {
+  if (!is_empty(torch::nonzero(negative_roi_bool)) && positive_count > 0) {
     auto negative_indices = torch::nonzero(negative_roi_bool).narrow(1, 0, 1);
     auto r = 1.0f / config.roi_positive_ratio;
     negative_count = static_cast<int64_t>(r * positive_count - positive_count);
