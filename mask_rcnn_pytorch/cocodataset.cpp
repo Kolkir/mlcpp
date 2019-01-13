@@ -103,6 +103,8 @@ CocoDataset::CocoDataset(std::shared_ptr<CocoLoader> loader,
 }
 
 Sample CocoDataset::get(size_t index) {
+  // index = 90243;
+  std::cerr << "Load index " << index;
   auto img_desc = loader_->GetImage(index);
   auto img_width = img_desc.image.cols;
   auto img_height = img_desc.image.rows;
@@ -154,26 +156,26 @@ Sample CocoDataset::get(size_t index) {
   auto [rpn_match, rpn_bbox] =
       BuildRpnTargets(anchors_, result.target.gt_boxes, *config_);
 
-  // clang-format off
-
-   // If more instances than fits in the array, sub-sample from them.
-   if (result.target.gt_boxes.size(0) > config_->max_gt_instances){
+  // If more instances than fits in the array, sub-sample from them.
+  if (result.target.gt_boxes.size(0) > config_->max_gt_instances) {
     auto ids = torch::randperm(result.target.gt_boxes.size(0));
     ids = ids.narrow(0, 0, config_->max_gt_instances);
-       result.target.gt_class_ids = result.target.gt_class_ids.index_select(0,ids);
-       result.target.gt_boxes = result.target.gt_boxes.index_select(0,ids);
-       result.target.gt_masks = result.target.gt_masks.index_select(0,ids);
-    }
-   result.target.rpn_match = rpn_match.unsqueeze(0);
+    result.target.gt_class_ids =
+        result.target.gt_class_ids.index_select(0, ids);
+    result.target.gt_boxes = result.target.gt_boxes.index_select(0, ids);
+    result.target.gt_masks = result.target.gt_masks.index_select(0, ids);
+  }
+  result.target.rpn_match = rpn_match.unsqueeze(0);
+  result.target.rpn_bbox = rpn_bbox;
 
-   // Convert
+  // Convert
   assert(result.data.image.size(0) == 3);
   assert(result.target.gt_masks.sizes().size() == 3);
   assert(result.target.gt_masks.size(0) == result.target.gt_boxes.size(0));
-   // images = torch.from_numpy(images.transpose(2, 0, 1)).float()
-   // gt_masks = torch.from_numpy(gt_masks.astype(int).transpose(2, 0, 1)).float()
+  // images = torch.from_numpy(images.transpose(2, 0, 1)).float()
+  // gt_masks = torch.from_numpy(gt_masks.astype(int).transpose(2, 0,
+  // 1)).float()
 
-  // clang-format on
   return result;
 }
 

@@ -31,7 +31,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
   auto roi_iou_max = std::get<0>(torch::max(overlaps, /*dim*/ 1));
 
   // 1. Positive ROIs are those with >= 0.5 IoU with a GT box
-  auto positive_roi_bool = roi_iou_max >= 0.5;
+  auto positive_roi_bool = roi_iou_max >= 0.5f;
 
   at::Tensor roi_gt_class_ids;
   at::Tensor deltas;

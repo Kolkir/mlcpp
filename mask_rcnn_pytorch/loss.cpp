@@ -4,7 +4,7 @@
 at::Tensor ComputeRpnClassLoss(at::Tensor rpn_match,
                                at::Tensor rpn_class_logits) {
   // Squeeze last dim to simplify
-  if (rpn_match.dim() == 2)
+  if (rpn_match.dim() == 3)
     rpn_match = rpn_match.squeeze(2);
 
   // Get anchor classes. Convert the -1/+1 match to 0/1 values.
@@ -15,18 +15,19 @@ at::Tensor ComputeRpnClassLoss(at::Tensor rpn_match,
   auto indices = torch::nonzero(rpn_match != 0);
 
   // Pick rows that contribute to the loss and filter out the rest.
-  auto y_ind = indices.narrow(1, 0, 1);
-  auto x_ind = indices.narrow(1, 1, 1);
+  auto y_ind = indices.narrow(1, 0, 1).squeeze();
+  auto x_ind = indices.narrow(1, 1, 1).squeeze();
 
-  rpn_class_logits = index_select_2d(
-      y_ind, x_ind,
-      rpn_class_logits);  // rpn_class_logits[indices.data[:,0],indices.data[:,1],:];
-  anchor_class = index_select_2d(
-      y_ind, x_ind,
-      indices);  // anchor_class[indices.data[:,0],indices.data[:,1]];
+  // rpn_class_logits.index
+
+  // rpn_class_logits[indices.data[:,0],indices.data[:,1],:];
+  rpn_class_logits = rpn_class_logits.index({y_ind, x_ind});
+
+  // anchor_class[indices.data[:,0],indices.data[:,1]];
+  anchor_class = anchor_class.index({y_ind, x_ind});
 
   // Crossentropy loss
-  auto loss = torch::nll_loss2d(rpn_class_logits, anchor_class);
+  auto loss = torch::nll_loss(rpn_class_logits, anchor_class);  // nll_loss2d
 
   return loss;
 }
@@ -35,17 +36,19 @@ at::Tensor ComputeRpnBBoxLoss(at::Tensor target_bbox,
                               at::Tensor rpn_match,
                               at::Tensor rpn_bbox) {
   // Squeeze last dim to simplify
-  rpn_match = rpn_match.squeeze(2);
+  if (rpn_match.dim() == 3)
+    rpn_match = rpn_match.squeeze(2);
 
   // Positive anchors contribute to the loss, but negative and
   // neutral anchors (match value of 0 or -1) don't.
   auto indices = torch::nonzero(rpn_match == 1);
 
   // Pick bbox deltas that contribute to the loss
-  auto y_ind = indices.narrow(1, 0, 1);
-  auto x_ind = indices.narrow(1, 1, 1);
-  rpn_bbox = index_select_2d(y_ind, x_ind,
-                             rpn_bbox);  //[indices.data[:,0],indices.data[:,1]]
+  auto y_ind = indices.narrow(1, 0, 1).squeeze();
+  auto x_ind = indices.narrow(1, 1, 1).squeeze();
+
+  // [indices.data[:,0],indices.data[:,1]]
+  rpn_bbox = rpn_bbox.index({y_ind, x_ind});
 
   // Trim target bounding box deltas to the same length as rpn_bbox.
   target_bbox = target_bbox[0].narrow(0, 0, rpn_bbox.size(0));
