@@ -6,7 +6,7 @@
 #include "nnutils.h"
 
 at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
-                         uint32_t proposal_count,
+                         int64_t proposal_count,
                          float nms_threshold,
                          at::Tensor anchors,
                          const Config& config) {
@@ -56,8 +56,9 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
 
   // Non-max suppression
   auto keep = Nms(torch::cat({boxes, scores.unsqueeze(1)}, 1), nms_threshold);
-  keep = keep.narrow(0, 0, proposal_count);  //[:proposal_count];
-  boxes = boxes.index_select(0, keep);       //[keep, :];
+  keep = keep.narrow(
+      0, 0, std::min(keep.size(0), proposal_count));  //[:proposal_count];
+  boxes = boxes.index_select(0, keep);                //[keep, :];
 
   // Normalize dimensions to range of 0 to 1.
   auto norm =

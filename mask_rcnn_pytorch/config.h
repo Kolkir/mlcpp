@@ -69,8 +69,8 @@ class Config {
   int32_t rpn_train_anchors_per_image = 256;
 
   // ROIs kept after non-maximum supression (training and inference)
-  uint32_t post_nms_rois_training = 2000;
-  uint32_t post_nms_rois_inference = 1000;
+  int64_t post_nms_rois_training = 2000;
+  int64_t post_nms_rois_inference = 1000;
 
   // If enabled, resizes instance masks to a smaller size to reduce
   // memory load. Recommended when using high-resolution images.

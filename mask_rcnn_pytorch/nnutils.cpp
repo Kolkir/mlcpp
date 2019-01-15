@@ -117,7 +117,7 @@ void ClipGradNorm(std::vector<at::Tensor> parameters, float max_norm) {
     if (p.requires_grad()) {
       auto param_norm = p.grad();
       if (!is_empty(param_norm)) {
-        param_norm = param_norm.cpu().norm();
+        param_norm = param_norm.norm();
         total_norm += std::pow(param_norm.item<float>(), 2.f);
         total_norm = std::pow(total_norm, (1. / 2.));
       }
@@ -126,7 +126,10 @@ void ClipGradNorm(std::vector<at::Tensor> parameters, float max_norm) {
   auto clip_coef = max_norm / (total_norm + 1e-6);
   if (clip_coef < 1) {
     for (auto& p : parameters) {
-      p.grad().mul_(clip_coef);
+      auto param_norm = p.grad();
+      if (!is_empty(param_norm)) {
+        p.grad().mul_(clip_coef);
+      }
     }
   }
 }

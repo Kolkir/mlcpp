@@ -27,9 +27,7 @@ void CropAndResizePerBox(const float* image_data,
 
   int b{0};
 
-  //  omp_set_dynamic(0);
-  //  omp_set_num_threads(1);
-  //#pragma omp parallel for
+#pragma omp parallel for
   for (b = start_box; b < limit_box; ++b) {
     const float* box = boxes_data + b * 4;
     const float y1 = box[0];

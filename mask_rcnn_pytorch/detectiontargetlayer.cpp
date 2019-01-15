@@ -66,8 +66,12 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     roi_gt_class_ids = gt_class_ids.take(roi_gt_box_assignment);
 
     //   Compute bbox refinement for positive ROIs
-    deltas = BoxRefinement(positive_rois, roi_gt_boxes);
-    deltas.set_requires_grad(false);
+    auto deltas_data = BoxRefinement(positive_rois, roi_gt_boxes);
+    deltas = torch::from_blob(deltas_data.data<float>(), deltas_data.sizes(),
+                              at::dtype(at::kFloat).requires_grad(false));
+    if (config.gpu_count > 0)
+      deltas = deltas.cuda();
+
     auto std_dev = torch::tensor(config.rpn_bbox_std_dev,
                                  at::dtype(at::kFloat).requires_grad(false));
     if (config.gpu_count > 0)
@@ -106,6 +110,9 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     if (config.gpu_count > 0)
       box_ids = box_ids.cuda();
     masks = torch::zeros({}, at::dtype(at::kFloat).requires_grad(false));
+    if (config.gpu_count > 0)
+      masks = masks.cuda();
+
     if (config.gpu_count > 0) {
       crop_and_resize_gpu_forward(roi_masks.unsqueeze(1), boxes, box_ids, 0,
                                   config.mask_shape[0], config.mask_shape[1],
@@ -125,7 +132,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
   }
 
   //  2. Negative ROIs are those with < 0.5 with every GT box. Skip crowds.
-  auto negative_roi_bool = roi_iou_max < 0.5;
+  auto negative_roi_bool = roi_iou_max < 0.5f;
   // negative_roi_bool = negative_roi_bool & no_crowd_bool
   // Negative ROIs. Add enough to maintain positive:negative ratio.
   int64_t negative_count = 0;

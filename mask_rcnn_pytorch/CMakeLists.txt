@@ -25,7 +25,7 @@ list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wextra;")
 list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wno-unused-parameter;")
 list(APPEND CUDA_NVCC_FLAGS "--compiler-options;-Wno-unknown-pragmas;")
 set(CUDA_NVCC_FLAGS_RELEASE "-O3;-DNDEBUG;")
-set(CUDA_NVCC_FLAGS_DEBUG "-g;-O0;")
+set(CUDA_NVCC_FLAGS_DEBUG "-g;-G;-O0;")
 set(CUDA_PROPAGATE_HOST_FLAGS ON)
 
 
@@ -88,7 +88,9 @@ set(SOURCE_FILES
                     boxutils.h
                     boxutils.cpp
                     loss.h
-                    loss.cpp)
+                    loss.cpp
+                    statreporter.h
+                    statreporter.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})

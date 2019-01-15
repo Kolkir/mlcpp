@@ -42,14 +42,14 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
   auto anchor_iou_argmax = torch::argmax(overlaps, /*dim*/ 1);
 
   auto anchor_iou_max =
-      index_select_2d(torch::arange(overlaps.size(0), at::dtype(at::kLong)),
-                      anchor_iou_argmax, overlaps);
+      overlaps.index({torch::arange(overlaps.size(0), at::dtype(at::kLong)),
+                      anchor_iou_argmax});
   rpn_match =
       torch::where((anchor_iou_max < 0.3), torch::tensor(-1), rpn_match);
   // 2. Set an anchor for each GT box (regardless of IoU value).
   // TODO: (Legacy)If multiple anchors have the same IoU match all of them
   auto gt_iou_argmax = torch::argmax(overlaps, /*dim*/ 0);
-  rpn_match.index_select(0, gt_iou_argmax) = 1;
+  rpn_match.index_fill_(0, gt_iou_argmax, 1);
   // 3. Set anchors with high overlap as positive.
   rpn_match = torch::where(anchor_iou_max >= 0.7, torch::tensor(1), rpn_match);
 
@@ -62,7 +62,7 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
     auto idx = torch::randperm(ids.size(0), at::dtype(at::kLong));
     idx = idx.narrow(0, 0, extra);
     ids = ids.take(idx);  // random::choice(ids, extra, replace=False)
-    rpn_match.index_select(0, ids) = 0;
+    rpn_match.index_fill_(0, ids, 0);
   }
   // Same for negative proposals
   auto positives_num = torch::sum(rpn_match == 1).cpu().data<int64_t>()[0];
@@ -74,15 +74,17 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
     auto idx = torch::randperm(ids.size(0), at::dtype(at::kLong));
     idx = idx.narrow(0, 0, extra);
     ids = ids.take(idx);  // random::choice(ids, extra, replace=False)
-    rpn_match.index_select(0, ids) = 0;
+    rpn_match.index_fill_(0, ids, 0);
   }
+
   // For positive anchors, compute shift and scale needed to transform them
   // to match the corresponding GT boxes.
   ids = (rpn_match == 1).nonzero().narrow(1, 0, 1).squeeze();
-
   auto gt = gt_boxes.index_select(0, anchor_iou_argmax.take(ids));
   auto a = anchors.index_select(0, ids);
-  rpn_bbox = BoxRefinement(a, gt);
+
+  rpn_bbox.index_put_({torch::arange(0, ids.numel(), at::kLong)},
+                      BoxRefinement(a, gt));
   // Normalize
   auto std_dev = torch::tensor(config.rpn_bbox_std_dev,
                                at::dtype(at::kFloat).requires_grad(false));
@@ -103,8 +105,14 @@ CocoDataset::CocoDataset(std::shared_ptr<CocoLoader> loader,
 }
 
 Sample CocoDataset::get(size_t index) {
-  // index = 90243;
-  std::cerr << "Load index " << index;
+  // index = 90243; 1 target
+  // index = 81841; 5 target
+  // index = 46947;
+  // index = 105522;
+  // index = 2683;
+  // index = 31066;
+  // std::cerr << "Load index " << index << "\n";
+
   auto img_desc = loader_->GetImage(index);
   auto img_width = img_desc.image.cols;
   auto img_height = img_desc.image.rows;
@@ -118,10 +126,12 @@ Sample CocoDataset::get(size_t index) {
   std::vector<float> boxes;
   boxes.reserve(img_desc.boxes.size() * 4);
   for (auto bbox : img_desc.boxes) {
-    boxes.push_back(std::ceil(bbox.y * scale));
-    boxes.push_back(std::ceil(bbox.x * scale));
-    boxes.push_back(std::ceil((bbox.y + bbox.height) * scale));
-    boxes.push_back(std::ceil((bbox.x + bbox.width) * scale));
+    boxes.push_back(padding.top_pad + std::ceil(bbox.y * scale));
+    boxes.push_back(padding.left_pad + std::ceil(bbox.x * scale));
+    boxes.push_back(padding.top_pad +
+                    std::ceil((bbox.y + bbox.height) * scale));
+    boxes.push_back(padding.left_pad +
+                    std::ceil((bbox.x + bbox.width) * scale));
   }
 
   // Resize masks to smaller size to reduce memory usage

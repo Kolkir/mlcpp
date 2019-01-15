@@ -8,6 +8,7 @@
 #include "imageutils.h"
 #include "mask.h"
 #include "rpn.h"
+#include "statreporter.h"
 
 #include <torch/torch.h>
 #include <memory>
@@ -58,6 +59,7 @@ class MaskRCNNImpl : public torch::nn::Module {
   void SetTrainableLayers(const std::string& layers_regex);
   std::string GetCheckpointPath(uint32_t epoch) const;
   std::tuple<float, float, float, float, float, float> TrainEpoch(
+      StatReporter& reporter,
       torch::data::DataLoader<CocoDataset,
                               torch::data::samplers::RandomSampler>&
           datagenerator,
@@ -65,13 +67,14 @@ class MaskRCNNImpl : public torch::nn::Module {
       torch::optim::SGD& optimizer_bn,
       uint32_t steps);
   std::tuple<float, float, float, float, float, float> ValidEpoch(
+      StatReporter& reporter,
       torch::data::DataLoader<CocoDataset,
                               torch::data::samplers::RandomSampler>&
           datagenerator,
       uint32_t steps);
 
   std::tuple<std::vector<at::Tensor>, at::Tensor, at::Tensor, at::Tensor>
-  PredictRPN(at::Tensor images, uint32_t proposal_count);
+  PredictRPN(at::Tensor images, int64_t proposal_count);
 
   std::tuple<at::Tensor, at::Tensor> PredictInference(
       at::Tensor images,

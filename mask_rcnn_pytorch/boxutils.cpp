@@ -78,22 +78,21 @@ torch::Tensor BBoxOverlapsLoops(torch::Tensor boxes1, torch::Tensor boxes2) {
 torch::Tensor BoxRefinement(torch::Tensor box, torch::Tensor gt_box) {
   auto height = box.narrow(1, 2, 1) - box.narrow(1, 0, 1);
   auto width = box.narrow(1, 3, 1) - box.narrow(1, 1, 1);
-  auto center_y = box.narrow(1, 0, 1) + 0.5 * height;
-  auto center_x = box.narrow(1, 1, 1) + 0.5 * width;
+  auto center_y = box.narrow(1, 0, 1) + 0.5f * height;
+  auto center_x = box.narrow(1, 1, 1) + 0.5f * width;
 
   auto gt_height = gt_box.narrow(1, 2, 1) - gt_box.narrow(1, 0, 1);
   auto gt_width = gt_box.narrow(1, 3, 1) - gt_box.narrow(1, 1, 1);
-  auto gt_center_y = gt_box.narrow(1, 0, 1) + 0.5 * gt_height;
-  auto gt_center_x = gt_box.narrow(1, 1, 1) + 0.5 * gt_width;
+  auto gt_center_y = gt_box.narrow(1, 0, 1) + 0.5f * gt_height;
+  auto gt_center_x = gt_box.narrow(1, 1, 1) + 0.5f * gt_width;
 
   auto dy = (gt_center_y - center_y) / height;
   auto dx = (gt_center_x - center_x) / width;
   auto dh = torch::log(gt_height / height);
   auto dw = torch::log(gt_width / width);
 
-  auto result = torch::stack({dy, dx, dh, dw}, /*dim*/ 1);
-  if (result.dim() > 2)
-    result = result.squeeze(result.dim() - 1);
+  auto result = torch::stack(
+      {dy.squeeze(1), dx.squeeze(1), dh.squeeze(1), dw.squeeze(1)}, /*dim*/ 1);
   return result;
 }
 

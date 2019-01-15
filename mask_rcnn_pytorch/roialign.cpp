@@ -71,7 +71,10 @@ at::Tensor PyramidRoiAlign(std::vector<at::Tensor> input,
     // CropAndResizeFunction needs batch dimension
     feature_maps[i] = feature_maps[i].unsqueeze(0);
 
-    torch::Tensor pooled_features = torch::zeros({1}, at::dtype(at::kFloat));
+    torch::Tensor pooled_features = torch::empty({}, at::dtype(at::kFloat));
+    if (level_boxes.is_cuda())
+      pooled_features = pooled_features.cuda();
+
     if (boxes.is_cuda()) {
       crop_and_resize_gpu_forward(feature_maps[i], level_boxes, ind, 0,
                                   pool_size, pool_size, pooled_features);

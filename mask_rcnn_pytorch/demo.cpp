@@ -82,14 +82,16 @@ int main(int argc, char** argv) {
 
     // Create model object.
     MaskRCNN model(model_dir, config);
-    if (config->gpu_count > 0)
-      model->to(torch::DeviceType::CUDA);
 
+    // load state before moving to GPU
     if (params_path.find(".json") != std::string::npos) {
       LoadStateDictJson(*model, params_path);
     } else {
       LoadStateDict(*model, params_path);
     }
+
+    if (config->gpu_count > 0)
+      model->to(torch::DeviceType::CUDA);
 
     auto [detections, mrcnn_mask] = model->Detect(molded_images, image_metas);
 

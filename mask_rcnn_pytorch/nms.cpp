@@ -29,6 +29,6 @@ at::Tensor Nms(at::Tensor dets, float thresh) {
     dets = dets.index(order).contiguous();
     gpu_nms(keep, num_out, dets_temp, thresh);
     auto ind = keep.narrow(0, 0, *num_out.data<int64_t>()).cuda();
-    return order[ind].contiguous();
+    return order.take(ind).contiguous();
   }
 }

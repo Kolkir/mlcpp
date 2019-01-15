@@ -17,7 +17,7 @@
  *      Proposals in normalized coordinates [batch, rois, (y1, x1, y2, x2)]
  */
 at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
-                         uint32_t proposal_count,
+                         int64_t proposal_count,
                          float nms_threshold,
                          at::Tensor anchors,
                          const Config& config);

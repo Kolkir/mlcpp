@@ -78,17 +78,6 @@ void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
     layers_regex = layer_regex_i->second;
   SetTrainableLayers(layers_regex);
 
-  int32_t workers_num = 1;
-  auto train_loader = torch::data::make_data_loader(
-      *train_dataset,
-      torch::data::DataLoaderOptions().batch_size(1).workers(
-          workers_num));  // random sampler is default
-
-  auto val_loader = torch::data::make_data_loader(
-      *val_dataset,
-      torch::data::DataLoaderOptions().batch_size(1).workers(
-          workers_num));  // random sampler is default
-
   // Optimizer object
   // Add L2 Regularization
   // Skip gamma and beta weights of batch normalization layers.
@@ -114,33 +103,48 @@ void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
                              torch::optim::SGDOptions(learning_rate)
                                  .momentum(config_->learning_momentum));
 
+  StatReporter reporter(epochs, config_->steps_per_epoch,
+                        config_->validation_steps);
+  const uint32_t workers_num = 1;
   for (uint32_t epoch = 0; epoch < epochs; ++epoch) {
+    reporter.StartEpoch(epoch, optim_no_bn.options.learning_rate_);
+    // Reset data loaders
+    auto train_loader = torch::data::make_data_loader(
+        *train_dataset,
+        torch::data::DataLoaderOptions().batch_size(1).workers(
+            workers_num));  // random sampler is default
+
+    auto val_loader = torch::data::make_data_loader(
+        *val_dataset,
+        torch::data::DataLoaderOptions().batch_size(1).workers(
+            workers_num));  // random sampler is default
+
     // Training
     auto [loss, loss_rpn_class, loss_rpn_bbox, loss_mrcnn_class,
           loss_mrcnn_bbox, loss_mrcnn_mask] =
-        TrainEpoch(*train_loader, optim_no_bn, optim_bn,
+        TrainEpoch(reporter, *train_loader, optim_no_bn, optim_bn,
                    config_->steps_per_epoch);
 
-    // Validation
+    //  Validation
     auto [val_loss, val_loss_rpn_class, val_loss_rpn_bbox, val_loss_mrcnn_class,
           val_loss_mrcnn_bbox, val_loss_mrcnn_mask] =
-        ValidEpoch(*val_loader, config_->validation_steps);
+        ValidEpoch(reporter, *val_loader, config_->validation_steps);
 
     // Show statistics
-    std::cout << "Epoch " << epoch << " of " << epochs << " :\n";
-    std::cout << "Training losses :\n";
-    PrintLoss(loss, loss_rpn_class, loss_rpn_bbox, loss_mrcnn_class,
-              loss_mrcnn_bbox, loss_mrcnn_mask);
-    std::cout << "Validation losses :\n";
-    PrintLoss(val_loss, val_loss_rpn_class, val_loss_rpn_bbox,
-              val_loss_mrcnn_class, val_loss_mrcnn_bbox, val_loss_mrcnn_mask);
-    std::cout.flush();
+    reporter.ReportEpoch(
+        {loss, loss_rpn_class, loss_rpn_bbox, loss_mrcnn_class, loss_mrcnn_bbox,
+         loss_mrcnn_mask},
+        {val_loss, val_loss_rpn_class, val_loss_rpn_bbox, val_loss_mrcnn_class,
+         val_loss_mrcnn_bbox, val_loss_mrcnn_mask});
 
-    SaveStateDict(*this, GetCheckpointPath(epoch));
+    auto check_file_name = GetCheckpointPath(epoch);
+    SaveStateDict(*this, check_file_name);
+    std::cerr << "Checkpoint saved to : " << check_file_name << "\n";
   }
 }
 
 std::tuple<float, float, float, float, float, float> MaskRCNNImpl::ValidEpoch(
+    StatReporter& reporter,
     torch::data::DataLoader<CocoDataset, torch::data::samplers::RandomSampler>&
         datagenerator,
     uint32_t steps) {
@@ -188,17 +192,23 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::ValidEpoch(
                 mrcnn_bbox_loss + mrcnn_mask_loss;
 
     // Progress
-    float loss_value = loss.cpu().data<float>()[0];
-    std::cout << "Validation step " << step << " of " << steps
-              << " steps, loss sum = " << loss_value << "\n";
+    auto loss_ = loss.cpu().data<float>()[0];
+    auto loss_rpn_class = rpn_class_loss.cpu().data<float>()[0];
+    auto loss_rpn_bbox = rpn_bbox_loss.cpu().data<float>()[0];
+    auto loss_mrcnn_class = mrcnn_class_loss.cpu().data<float>()[0];
+    auto loss_mrcnn_bbox = mrcnn_bbox_loss.cpu().data<float>()[0];
+    auto loss_mrcnn_mask = mrcnn_mask_loss.cpu().data<float>()[0];
+    reporter.ReportValidationStep(
+        step, {loss_, loss_rpn_class, loss_rpn_bbox, loss_mrcnn_class,
+               loss_mrcnn_bbox, loss_mrcnn_mask});
 
     // Statistics
-    loss_sum += loss_value / steps;
-    loss_rpn_class_sum += rpn_class_loss.cpu().data<float>()[0] / steps;
-    loss_rpn_bbox_sum += rpn_bbox_loss.cpu().data<float>()[0] / steps;
-    loss_mrcnn_class_sum += mrcnn_class_loss.cpu().data<float>()[0] / steps;
-    loss_mrcnn_bbox_sum += mrcnn_bbox_loss.cpu().data<float>()[0] / steps;
-    loss_mrcnn_mask_sum += mrcnn_mask_loss.cpu().data<float>()[0] / steps;
+    loss_sum += loss_ / steps;
+    loss_rpn_class_sum += loss_rpn_class / steps;
+    loss_rpn_bbox_sum += loss_rpn_bbox / steps;
+    loss_mrcnn_class_sum += loss_mrcnn_class / steps;
+    loss_mrcnn_bbox_sum += loss_mrcnn_bbox / steps;
+    loss_mrcnn_mask_sum += loss_mrcnn_mask / steps;
 
     // Break after 'steps' steps
     if (step == steps - 1)
@@ -215,6 +225,7 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::ValidEpoch(
 }
 
 std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
+    StatReporter& reporter,
     torch::data::DataLoader<CocoDataset, torch::data::samplers::RandomSampler>&
         datagenerator,
     torch::optim::SGD& optimizer,
@@ -234,7 +245,6 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
 
   for (auto input : datagenerator) {
     ++batch_count;
-
     assert(input.size() == 1);
 
     // Wrap input in variables
@@ -283,17 +293,23 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
     }
 
     // Progress
-    float loss_value = loss.cpu().data<float>()[0];
-    std::cout << "Training step " << step << " of " << steps
-              << " steps, loss sum = " << loss_value << "\n";
+    auto loss_ = loss.cpu().data<float>()[0];
+    auto loss_rpn_class = rpn_class_loss.cpu().data<float>()[0];
+    auto loss_rpn_bbox = rpn_bbox_loss.cpu().data<float>()[0];
+    auto loss_mrcnn_class = mrcnn_class_loss.cpu().data<float>()[0];
+    auto loss_mrcnn_bbox = mrcnn_bbox_loss.cpu().data<float>()[0];
+    auto loss_mrcnn_mask = mrcnn_mask_loss.cpu().data<float>()[0];
+    reporter.ReportTrainStep(
+        step, {loss_, loss_rpn_class, loss_rpn_bbox, loss_mrcnn_class,
+               loss_mrcnn_bbox, loss_mrcnn_mask});
 
     // Statistics
-    loss_sum += loss_value / steps;
-    loss_rpn_class_sum += rpn_class_loss.cpu().data<float>()[0] / steps;
-    loss_rpn_bbox_sum += rpn_bbox_loss.cpu().data<float>()[0] / steps;
-    loss_mrcnn_class_sum += mrcnn_class_loss.cpu().data<float>()[0] / steps;
-    loss_mrcnn_bbox_sum += mrcnn_bbox_loss.cpu().data<float>()[0] / steps;
-    loss_mrcnn_mask_sum += mrcnn_mask_loss.cpu().data<float>()[0] / steps;
+    loss_sum += loss_ / steps;
+    loss_rpn_class_sum += loss_rpn_class / steps;
+    loss_rpn_bbox_sum += loss_rpn_bbox / steps;
+    loss_mrcnn_class_sum += loss_mrcnn_class / steps;
+    loss_mrcnn_bbox_sum += loss_mrcnn_bbox / steps;
+    loss_mrcnn_mask_sum += loss_mrcnn_mask / steps;
 
     // Break after 'steps' steps
     if (step == steps - 1)
@@ -338,7 +354,7 @@ MaskRCNNImpl::ComputeLosses(torch::Tensor rpn_match,
 }
 
 std::tuple<std::vector<at::Tensor>, at::Tensor, at::Tensor, at::Tensor>
-MaskRCNNImpl::PredictRPN(at::Tensor images, uint32_t proposal_count) {
+MaskRCNNImpl::PredictRPN(at::Tensor images, int64_t proposal_count) {
   // Feature extraction
   auto [p2_out, p3_out, p4_out, p5_out, p6_out] = fpn_->forward(images);
 

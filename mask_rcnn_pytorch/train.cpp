@@ -20,8 +20,9 @@ class TrainConfig : public Config {
   TrainConfig() {
     if (!torch::cuda::is_available())
       throw std::runtime_error("Cuda is not available");
-    gpu_count = 0;
+    gpu_count = 1;
     images_per_gpu = 1;
+    // steps_per_epoch = 300;
     num_classes = 81;  // for coco dataset
     UpdateSettings();
   }
@@ -67,18 +68,22 @@ int main(int argc, char** argv) {
     auto root_dir = fs::current_path();
     // Directory to save logs and trained model
     auto model_dir = root_dir / "logs";
+    if (!fs::exists(model_dir)) {
+      fs::create_directories(model_dir);
+    }
 
     // Create model object.
     MaskRCNN model(model_dir, config);
-    if (config->gpu_count > 0)
-      model->to(torch::DeviceType::CUDA);
 
-    // load weights
+    // load weights before moving to GPU
     if (params_path.find(".json") != std::string::npos) {
       LoadStateDictJson(*model, params_path);
     } else {
       LoadStateDict(*model, params_path);
     }
+
+    if (config->gpu_count > 0)
+      model->to(torch::DeviceType::CUDA);
 
     // Make data sets
     auto train_loader = std::make_unique<CocoLoader>(
@@ -95,20 +100,20 @@ int main(int argc, char** argv) {
     // Training - Stage 1
     std::cout << "Training network heads" << std::endl;
     model->Train(std::move(train_set), std::move(val_set),
-                 config->learning_rate, /*epochs*/ 40, "heads");
+                 config->learning_rate, /*epochs*/ 4, "heads");  // 40
 
     // Training - Stage 2
     // Finetune layers from ResNet stage 4 and up
     std::cout << "Fine tune Resnet stage 4 and up" << std::endl;
     model->Train(std::move(train_set), std::move(val_set),
-                 config->learning_rate, /*epochs*/ 120, "4+");
+                 config->learning_rate, /*epochs*/ 12, "4+");  // 120
 
     // Training - Stage 3
     // Fine tune all layers
     std::cout << "Fine tune all layers" << std::endl;
     model->Train(std::move(train_set), std::move(val_set),
                  config->learning_rate / 10,
-                 /*epochs*/ 160, "all");
+                 /*epochs*/ 16, "all");  // 160
 
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;
