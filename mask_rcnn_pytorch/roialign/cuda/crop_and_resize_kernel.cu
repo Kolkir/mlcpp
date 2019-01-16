@@ -207,7 +207,7 @@ void CropAndResizeBackpropImageLaucher(const float* grads_ptr,
                                        int depth,
                                        float* grads_image_ptr) {
   const int total_count = num_boxes * crop_height * crop_width * depth;
-  const int thread_per_block = 1024;
+  const int thread_per_block = 512;
   const int block_count =
       (total_count + thread_per_block - 1) / thread_per_block;
   cudaError_t err;

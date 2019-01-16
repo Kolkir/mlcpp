@@ -47,8 +47,8 @@ class MaskRCNNImpl : public torch::nn::Module {
    *            4+: Train Resnet stage 4 and up
    *            5+: Train Resnet stage 5 and up
    */
-  void Train(std::unique_ptr<CocoDataset> train_dataset,
-             std::unique_ptr<CocoDataset> val_dataset,
+  void Train(CocoDataset train_dataset,
+             CocoDataset val_dataset,
              double learning_rate,
              uint32_t epochs,
              std::string layers_regex);

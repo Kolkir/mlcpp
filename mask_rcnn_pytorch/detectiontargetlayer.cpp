@@ -12,12 +12,9 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     at::Tensor gt_masks) {
   // Currently only supports batchsize 1
   proposals = proposals.squeeze(0);
-  if (gt_class_ids.dim() > 1)
-    gt_class_ids = gt_class_ids.squeeze(0);
-  if (gt_boxes.dim() > 2)
-    gt_boxes = gt_boxes.squeeze(0);
-  if (gt_boxes.dim() > 3)
-    gt_masks = gt_masks.squeeze(0);
+  gt_class_ids = gt_class_ids.squeeze(0);
+  gt_boxes = gt_boxes.squeeze(0);
+  gt_masks = gt_masks.squeeze(0);
 
   //  Handle COCO crowds
   //  A crowd box in COCO is a bounding box around several instances. Exclude
@@ -66,9 +63,13 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     roi_gt_class_ids = gt_class_ids.take(roi_gt_box_assignment);
 
     //   Compute bbox refinement for positive ROIs
-    auto deltas_data = BoxRefinement(positive_rois, roi_gt_boxes);
-    deltas = torch::from_blob(deltas_data.data<float>(), deltas_data.sizes(),
-                              at::dtype(at::kFloat).requires_grad(false));
+    {
+      auto deltas_data = BoxRefinement(positive_rois, roi_gt_boxes);
+      deltas =
+          torch::from_blob(deltas_data.cpu().data<float>(), deltas_data.sizes(),
+                           at::dtype(at::kFloat).requires_grad(false))
+              .clone();
+    }
     if (config.gpu_count > 0)
       deltas = deltas.cuda();
 

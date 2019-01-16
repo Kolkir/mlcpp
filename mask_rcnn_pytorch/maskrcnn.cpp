@@ -55,8 +55,8 @@ void MaskRCNNImpl::PrintLoss(float loss,
   std::cout << "\tloss_mrcnn_mask : " << loss_mrcnn_mask << "\n";
 }
 
-void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
-                         std::unique_ptr<CocoDataset> val_dataset,
+void MaskRCNNImpl::Train(CocoDataset train_dataset,
+                         CocoDataset val_dataset,
                          double learning_rate,
                          uint32_t epochs,
                          std::string layers_regex) {
@@ -110,12 +110,12 @@ void MaskRCNNImpl::Train(std::unique_ptr<CocoDataset> train_dataset,
     reporter.StartEpoch(epoch, optim_no_bn.options.learning_rate_);
     // Reset data loaders
     auto train_loader = torch::data::make_data_loader(
-        *train_dataset,
+        train_dataset,
         torch::data::DataLoaderOptions().batch_size(1).workers(
             workers_num));  // random sampler is default
 
     auto val_loader = torch::data::make_data_loader(
-        *val_dataset,
+        val_dataset,
         torch::data::DataLoaderOptions().batch_size(1).workers(
             workers_num));  // random sampler is default
 
@@ -160,7 +160,7 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::ValidEpoch(
     assert(input.size() == 1);
 
     // Wrap input in variables
-    auto images = input[0].data.image.unsqueeze(0);  // add batch size dimention
+    auto images = input[0].data.image;
     auto rpn_match = input[0].target.rpn_match;
     auto rpn_bbox = input[0].target.rpn_bbox;
     auto gt_class_ids = input[0].target.gt_class_ids;
@@ -248,7 +248,7 @@ std::tuple<float, float, float, float, float, float> MaskRCNNImpl::TrainEpoch(
     assert(input.size() == 1);
 
     // Wrap input in variables
-    auto images = input[0].data.image.unsqueeze(0);  // add batch size dimention
+    auto images = input[0].data.image;
     auto rpn_match = input[0].target.rpn_match;
     auto rpn_bbox = input[0].target.rpn_bbox;
     auto gt_class_ids = input[0].target.gt_class_ids;

@@ -22,8 +22,12 @@ class TrainConfig : public Config {
       throw std::runtime_error("Cuda is not available");
     gpu_count = 1;
     images_per_gpu = 1;
-    // steps_per_epoch = 300;
+    steps_per_epoch = 500;
     num_classes = 81;  // for coco dataset
+                       // image_min_dim = 400;
+                       // image_max_dim = 512;
+    // rpn_anchor_scales = {8, 16, 32};
+
     UpdateSettings();
   }
 };
@@ -35,6 +39,9 @@ const cv::String keys =
 
 int main(int argc, char** argv) {
 #ifndef NDEBUG
+  at::globalContext().setDeterministicCuDNN(true);
+  torch::manual_seed(999);
+
   // initialize debug print function
   auto x__ = torch::tensor({1, 2, 3, 4});
   auto p = PrintTensor(x__);
@@ -98,22 +105,23 @@ int main(int argc, char** argv) {
     auto val_set = std::make_unique<CocoDataset>(std::move(val_loader), config);
 
     // Training - Stage 1
-    std::cout << "Training network heads" << std::endl;
-    model->Train(std::move(train_set), std::move(val_set),
-                 config->learning_rate, /*epochs*/ 4, "heads");  // 40
+    //    std::cout << "Training network heads" << std::endl;
+    model->Train(*train_set, *val_set, config->learning_rate, /*epochs*/
+                 4,
+                 "heads");  // 40
 
     // Training - Stage 2
     // Finetune layers from ResNet stage 4 and up
     std::cout << "Fine tune Resnet stage 4 and up" << std::endl;
-    model->Train(std::move(train_set), std::move(val_set),
-                 config->learning_rate, /*epochs*/ 12, "4+");  // 120
+    model->Train(*train_set, *val_set, config->learning_rate, /*epochs*/
+                 12,
+                 "4+");  // 120
 
     // Training - Stage 3
     // Fine tune all layers
-    std::cout << "Fine tune all layers" << std::endl;
-    model->Train(std::move(train_set), std::move(val_set),
-                 config->learning_rate / 10,
-                 /*epochs*/ 16, "all");  // 160
+    //    std::cout << "Fine tune all layers" << std::endl;
+    //    model->Train(*train_set, *val_set, config->learning_rate / 10,
+    //                 /*epochs*/ 16, "all");  // 160
 
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;

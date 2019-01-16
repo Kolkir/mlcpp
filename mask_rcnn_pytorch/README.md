@@ -51,3 +51,5 @@ also [] operator can be used
 **Create tensors
 https://pytorch.org/cppdocs/notes/tensor_creation.html
 see torch::tensor function for creation tensor from initializer list
+
+**Torch cpu have unstable reductions(max, argmax) that differs from numpy. Try gpu

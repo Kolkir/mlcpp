@@ -70,7 +70,8 @@ torch::Tensor BBoxOverlapsLoops(torch::Tensor boxes1, torch::Tensor boxes2) {
   auto overlaps = torch::zeros({boxes1.size(0), boxes2.size(0)});
   for (int64_t i = 0; i < overlaps.size(1); ++i) {
     auto box2 = boxes2[i];
-    overlaps.narrow(1, i, 1) = ComputeIou(box2, boxes1, area2[i], area1);
+    auto iou = ComputeIou(box2, boxes1, area2[i], area1);
+    overlaps.narrow(1, i, 1) = iou;
   }
   return overlaps;
 }
