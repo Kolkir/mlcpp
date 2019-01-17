@@ -26,7 +26,11 @@ at::Tensor ComputeRpnClassLoss(at::Tensor rpn_match,
   // Crossentropy loss
   auto loss = torch::nll_loss(rpn_class_logits.log_softmax(1),
                               anchor_class);  // nll_loss2d
-
+  if (std::isnan(loss.item<float>()) || loss.item<float>() > 1000) {
+    std::cerr << rpn_class_logits.log_softmax(1);
+    std::cerr << anchor_class;
+    assert(false);
+  }
   return loss;
 }
 
@@ -46,13 +50,20 @@ at::Tensor ComputeRpnBBoxLoss(at::Tensor target_bbox,
 
   // [indices.data[:,0],indices.data[:,1]]
   rpn_bbox = rpn_bbox.index({y_ind, x_ind});
-  rpn_bbox = rpn_bbox.reshape({-1, 4});
+  //  rpn_bbox = rpn_bbox.reshape({-1, 4});
 
   // Trim target bounding box deltas to the same length as rpn_bbox.
   target_bbox = target_bbox[0].narrow(0, 0, rpn_bbox.size(0));
 
   // Smooth L1 loss
-  auto loss = torch::smooth_l1_loss(rpn_bbox, target_bbox);
+  auto box_target = torch::broadcast_tensors({rpn_bbox, target_bbox});
+  auto loss = torch::smooth_l1_loss(box_target[0], box_target[1]);
+
+  if (std::isnan(loss.item<float>()) || loss.item<float>() > 1000) {
+    std::cerr << rpn_bbox;
+    std::cerr << target_bbox;
+    assert(false);
+  }
 
   return loss;
 }
@@ -64,7 +75,7 @@ at::Tensor ComputeMrcnnClassLoss(at::Tensor target_class_ids,
     loss = torch::nll_loss(pred_class_logits.log_softmax(1),
                            target_class_ids.to(at::dtype(at::kLong)));
     if (std::isnan(loss.item<float>()) || loss.item<float>() > 1000) {
-      std::cerr << pred_class_logits;
+      std::cerr << pred_class_logits.log_softmax(1);
       std::cerr << target_class_ids;
       assert(false);
     }
@@ -98,10 +109,11 @@ at::Tensor ComputeMrcnnBBoxLoss(at::Tensor target_bbox,
     target_bbox = target_bbox.index_select(0, y_ind);
     //[indices[:,0].data,indices[:,1].data,:];
     pred_bbox = pred_bbox.index({y_ind, x_ind});
-    pred_bbox = pred_bbox.reshape({-1, 4});
+    //    pred_bbox = pred_bbox.reshape({-1, 4});
 
     // Smooth L1 loss
-    loss = torch::smooth_l1_loss(pred_bbox, target_bbox);
+    auto box_target = torch::broadcast_tensors({pred_bbox, target_bbox});
+    loss = torch::smooth_l1_loss(box_target[0], box_target[1]);
     if (std::isnan(loss.item<float>()) || loss.item<float>() > 1000) {
       std::cerr << pred_bbox << "\n";
       std::cerr << target_bbox << "\n";
@@ -132,7 +144,7 @@ at::Tensor ComputeMrcnnMaskLoss(at::Tensor target_masks,
     auto x_ind = indices.narrow(1, 1, 1).squeeze();
 
     //[indices[:, 0].data, :, :];
-    auto y_true = target_masks.index_select(0, y_ind);
+    auto y_true = target_masks.index(y_ind);
 
     //[indices[:, 0].data, indices[:, 1].data, :, :];
     auto y_pred = pred_masks.index({y_ind, x_ind});

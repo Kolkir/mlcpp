@@ -20,9 +20,14 @@ class InferenceConfig : public Config {
   InferenceConfig() {
     if (!torch::cuda::is_available())
       throw std::runtime_error("Cuda is not available");
-    gpu_count = 0;
+    gpu_count = 1;
     images_per_gpu = 1;
     num_classes = 81;  // for coco dataset
+
+    //    image_min_dim = 480;
+    //    image_max_dim = 640;
+    //    rpn_anchor_scales = {8, 16, 32, 64, 128};
+
     UpdateSettings();
   }
 };
@@ -94,21 +99,24 @@ int main(int argc, char** argv) {
       model->to(torch::DeviceType::CUDA);
 
     auto [detections, mrcnn_mask] = model->Detect(molded_images, image_metas);
+    if (!is_empty(detections)) {
+      // Process detections
+      //[final_rois, final_class_ids, final_scores, final_masks]
+      using Result =
+          std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>;
+      std::vector<Result> results;
+      for (size_t i = 0; i < images.size(); ++i) {
+        auto result = UnmoldDetections(detections[static_cast<int64_t>(i)],
+                                       mrcnn_mask[static_cast<int64_t>(i)],
+                                       image.size(), windows[i]);
+        results.push_back(result);
+      }
 
-    // Process detections
-    //[final_rois, final_class_ids, final_scores, final_masks]
-    using Result =
-        std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>;
-    std::vector<Result> results;
-    for (size_t i = 0; i < images.size(); ++i) {
-      auto result = UnmoldDetections(detections[static_cast<int64_t>(i)],
-                                     mrcnn_mask[static_cast<int64_t>(i)],
-                                     image.size(), windows[i]);
-      results.push_back(result);
+      visualize(image, std::get<0>(results[0]), std::get<1>(results[0]),
+                std::get<2>(results[0]), std::get<3>(results[0]));
+    } else {
+      std::cerr << "Failed to detect anything!\n";
     }
-
-    visualize(image, std::get<0>(results[0]), std::get<1>(results[0]),
-              std::get<2>(results[0]), std::get<3>(results[0]));
 
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;

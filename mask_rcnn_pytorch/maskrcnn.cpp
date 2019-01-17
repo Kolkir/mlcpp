@@ -34,9 +34,9 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Detect(
     const std::vector<ImageMeta>& image_metas) {
   // Run object detection
   auto [detections, mrcnn_mask] = PredictInference(images, image_metas);
-
   detections = detections.cpu();
-  mrcnn_mask = mrcnn_mask.permute({0, 1, 3, 4, 2}).cpu();
+  if (!is_empty(mrcnn_mask))
+    mrcnn_mask = mrcnn_mask.permute({0, 1, 3, 4, 2}).cpu();
 
   return {detections, mrcnn_mask};
 }
@@ -409,6 +409,12 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
 
   auto [mrcnn_feature_maps, rpn_rois, rpn_class_logits, rpn_bbox] =
       PredictRPN(images, config_->post_nms_rois_training);
+  //  if (!is_empty(rpn_rois)) {
+  //    std::cerr << "RPN rois : \n" << rpn_rois[0].narrow(0, 0, 1);
+  //    std::cerr << "RPN deltas : \n" << rpn_bbox[0].narrow(0, 0, 1);
+  //    auto cp = rpn_class_logits.softmax(1)[0].narrow(0, 0, 1);
+  //    std::cerr << "RPN class : \n" << cp;  // bg or fg
+  //  }
 
   // Normalize coordinates
   auto h = static_cast<float>(config_->image_shape[0]);
@@ -426,6 +432,11 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
   auto [rois, target_class_ids, target_deltas, target_mask] =
       DetectionTargetLayer(*config_, rpn_rois, gt_class_ids, gt_boxes,
                            gt_masks);
+  //  if (!is_empty(rois)) {
+  //    std::cerr << "DTL rois : \n" << rois.narrow(0, 0, 1);
+  //    std::cerr << "DTL deltas : \n" << target_deltas.narrow(0, 0, 1);
+  //    std::cerr << "DTL class : \n" << target_class_ids.narrow(0, 0, 1);
+  //  }
 
   auto mrcnn_class_logits = torch::empty({}, at::dtype(at::kFloat));
   auto mrcnn_class = torch::empty({}, at::dtype(at::kInt));
@@ -443,6 +454,10 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
     // Proposal classifier and BBox regressor heads
     std::tie(mrcnn_class_logits, mrcnn_class, mrcnn_bbox) =
         classifier_->forward(mrcnn_feature_maps, rois);
+    //    if (!is_empty(mrcnn_class_logits)) {
+    //      std::cerr << "MRCNN logits : \n"
+    //                << mrcnn_class_logits.log_softmax(1).narrow(0, 0, 1);
+    //    }
 
     // Add back batch dimension
     rois = rois.unsqueeze(0);
@@ -474,27 +489,29 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::PredictInference(
   at::Tensor detections = DetectionLayer(*config_.get(), rpn_rois, mrcnn_class,
                                          mrcnn_bbox, image_metas);
 
-  // Convert boxes to normalized coordinates
-  auto h = static_cast<float>(config_->image_shape[0]);
-  auto w = static_cast<float>(config_->image_shape[1]);
+  auto mrcnn_mask = torch::empty({0}, at::dtype(at::kFloat));
+  if (!is_empty(detections)) {
+    // Convert boxes to normalized coordinates
+    auto h = static_cast<float>(config_->image_shape[0]);
+    auto w = static_cast<float>(config_->image_shape[1]);
 
-  auto scale =
-      torch::tensor({h, w, h, w}, at::dtype(at::kFloat).requires_grad(false));
+    auto scale =
+        torch::tensor({h, w, h, w}, at::dtype(at::kFloat).requires_grad(false));
 
-  if (config_->gpu_count > 0)
-    scale = scale.cuda();
-  auto detection_boxes = detections.narrow(1, 0, 4) / scale;
+    if (config_->gpu_count > 0)
+      scale = scale.cuda();
+    auto detection_boxes = detections.narrow(1, 0, 4) / scale;
 
-  // Add back batch dimension
-  detection_boxes = detection_boxes.unsqueeze(0);
+    // Add back batch dimension
+    detection_boxes = detection_boxes.unsqueeze(0);
 
-  // Create masks for detections
-  auto mrcnn_mask = mask_->forward(mrcnn_feature_maps, detection_boxes);
+    // Create masks for detections
+    mrcnn_mask = mask_->forward(mrcnn_feature_maps, detection_boxes);
 
-  // Add back batch dimension
-  detections = detections.unsqueeze(0);
-  mrcnn_mask = mrcnn_mask.unsqueeze(0);
-
+    // Add back batch dimension
+    detections = detections.unsqueeze(0);
+    mrcnn_mask = mrcnn_mask.unsqueeze(0);
+  }
   return {detections, mrcnn_mask};
 }
 

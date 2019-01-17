@@ -34,9 +34,9 @@ at::Tensor RefineDetections(at::Tensor rois,
   if (config.gpu_count > 0)
     idx = idx.cuda();
 
-  auto class_scores = index_select_2d(idx, class_ids, probs);
+  auto class_scores = probs.index({idx, class_ids});
   // probs.take(class_ids + idx * probs.size(1));  //[idx, class_ids.data];
-  auto deltas_specific = index_select_2d(idx, class_ids, deltas);
+  auto deltas_specific = deltas.index({idx, class_ids});
   // deltas.take(class_ids + idx * deltas.size(1));  //[idx, class_ids.data];
 
   // Apply bounding box deltas
@@ -84,7 +84,10 @@ at::Tensor RefineDetections(at::Tensor rois,
   auto pre_nms_rois = refined_rois.index_select(0, keep);
 
   auto nms_class_ids = unique1d(pre_nms_class_ids);
-  at::Tensor nms_keep;
+  at::Tensor nms_keep =
+      torch::empty({0}, at::dtype(at::kLong).requires_grad(false));
+  if (config.gpu_count > 0)
+    nms_keep = nms_keep.cuda();
   for (int64_t i = 0; i < nms_class_ids.size(0); ++i) {
     auto class_id = nms_class_ids[i];
     //    // Pick detections of this class

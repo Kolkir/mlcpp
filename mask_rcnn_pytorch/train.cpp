@@ -24,9 +24,12 @@ class TrainConfig : public Config {
     images_per_gpu = 1;
     steps_per_epoch = 500;
     num_classes = 81;  // for coco dataset
-                       // image_min_dim = 400;
-                       // image_max_dim = 512;
-    // rpn_anchor_scales = {8, 16, 32};
+
+    image_min_dim = 480;
+    image_max_dim = 640;
+    rpn_anchor_scales = {8, 16, 32, 64, 128};
+    // backbone_strides = {4, 8, 16};
+    // rpn_anchor_stride = 4;
 
     UpdateSettings();
   }
@@ -105,23 +108,23 @@ int main(int argc, char** argv) {
     auto val_set = std::make_unique<CocoDataset>(std::move(val_loader), config);
 
     // Training - Stage 1
-    //    std::cout << "Training network heads" << std::endl;
+    std::cout << "Training network heads" << std::endl;
     model->Train(*train_set, *val_set, config->learning_rate, /*epochs*/
-                 4,
+                 40,
                  "heads");  // 40
 
     // Training - Stage 2
     // Finetune layers from ResNet stage 4 and up
     std::cout << "Fine tune Resnet stage 4 and up" << std::endl;
     model->Train(*train_set, *val_set, config->learning_rate, /*epochs*/
-                 12,
+                 120,
                  "4+");  // 120
 
     // Training - Stage 3
     // Fine tune all layers
-    //    std::cout << "Fine tune all layers" << std::endl;
-    //    model->Train(*train_set, *val_set, config->learning_rate / 10,
-    //                 /*epochs*/ 16, "all");  // 160
+    std::cout << "Fine tune all layers" << std::endl;
+    model->Train(*train_set, *val_set, config->learning_rate / 10,
+                 /*epochs*/ 160, "all");  // 160
 
   } catch (const std::exception& err) {
     std::cout << err.what() << std::endl;

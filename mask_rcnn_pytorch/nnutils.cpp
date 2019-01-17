@@ -92,10 +92,14 @@ at::Tensor unique1d(at::Tensor tensor) {
 
 at::Tensor intersect1d(at::Tensor tensor1, at::Tensor tensor2) {
   auto aux = torch::cat({tensor1, tensor2}, /*dim*/ 0);
-  std::tie(aux, std::ignore) = aux.sort();
-  auto unique_bool =
-      aux.narrow(0, 1, aux.size(0) - 1) == aux.narrow(0, 0, aux.size(0) - 1);
-  return aux.narrow(0, 0, aux.size(0) - 1).masked_select(unique_bool);
+  if (!is_empty(aux)) {
+    std::tie(aux, std::ignore) = aux.sort();
+    auto unique_bool =
+        aux.narrow(0, 1, aux.size(0) - 1) == aux.narrow(0, 0, aux.size(0) - 1);
+    return aux.narrow(0, 0, aux.size(0) - 1).masked_select(unique_bool);
+  } else {
+    return aux;
+  }
 }
 
 at::Tensor index_select_2d(at::Tensor y,
@@ -119,10 +123,10 @@ void ClipGradNorm(std::vector<at::Tensor> parameters, float max_norm) {
       if (!is_empty(param_norm)) {
         param_norm = param_norm.norm();
         total_norm += std::pow(param_norm.item<float>(), 2.f);
-        total_norm = std::pow(total_norm, (1. / 2.));
       }
     }
   }
+  total_norm = std::pow(total_norm, (1. / 2.));
   auto clip_coef = max_norm / (total_norm + 1e-6);
   if (clip_coef < 1) {
     for (auto& p : parameters) {

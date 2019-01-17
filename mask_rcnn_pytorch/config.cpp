@@ -27,6 +27,7 @@ void Config::UpdateSettings() {
   image_shape = {image_max_dim, image_max_dim, 3};
 
   // compute backbone size from input image size
+  backbone_shapes.clear();
   for (auto stride : backbone_strides) {
     backbone_shapes.push_back(
         {image_shape[0] / stride, image_shape[1] / stride});
