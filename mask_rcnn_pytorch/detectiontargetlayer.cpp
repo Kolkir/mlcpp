@@ -80,8 +80,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     deltas /= std_dev;
 
     //   Assign positive ROIs to GT masks
-    auto roi_masks = gt_masks.index_select(
-        0, roi_gt_box_assignment);  //[roi_gt_box_assignment,:,:]
+    auto roi_masks = gt_masks.index_select(0, roi_gt_box_assignment);
 
     //   Compute mask targets
     auto boxes = positive_rois;

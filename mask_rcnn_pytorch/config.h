@@ -123,7 +123,7 @@ class Config {
   float detection_nms_threshold = 0.3f;
 
   // Learning rate and momentum
-  // The Mask RCNN paper uses lr=0.02, but on TensorFlow it causes
+  // The Mask RCNN paper uses lr=0.02, but it can cause
   // weights to explode. Likely due to differences in optimzer
   // implementation.
   double learning_rate = 0.001;

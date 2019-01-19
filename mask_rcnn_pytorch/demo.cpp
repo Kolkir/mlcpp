@@ -105,10 +105,13 @@ int main(int argc, char** argv) {
       using Result =
           std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>;
       std::vector<Result> results;
+
+      double mask_threshold = 0.5;
       for (size_t i = 0; i < images.size(); ++i) {
-        auto result = UnmoldDetections(detections[static_cast<int64_t>(i)],
-                                       mrcnn_mask[static_cast<int64_t>(i)],
-                                       image.size(), windows[i]);
+        auto result =
+            UnmoldDetections(detections[static_cast<int64_t>(i)],
+                             mrcnn_mask[static_cast<int64_t>(i)], image.size(),
+                             windows[i], mask_threshold);
         results.push_back(result);
       }
 

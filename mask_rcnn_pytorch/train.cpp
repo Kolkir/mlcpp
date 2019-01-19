@@ -25,11 +25,10 @@ class TrainConfig : public Config {
     steps_per_epoch = 500;
     num_classes = 81;  // for coco dataset
 
+    // Use smaller image size to fit to GPU memory
     image_min_dim = 480;
     image_max_dim = 640;
     rpn_anchor_scales = {8, 16, 32, 64, 128};
-    // backbone_strides = {4, 8, 16};
-    // rpn_anchor_stride = 4;
 
     UpdateSettings();
   }

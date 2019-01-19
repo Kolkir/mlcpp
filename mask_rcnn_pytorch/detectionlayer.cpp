@@ -76,7 +76,7 @@ at::Tensor RefineDetections(at::Tensor rois,
   auto keep = torch::nonzero(keep_bool)
                   .narrow(1, 0, 1)
                   .to(at::dtype(at::kLong))
-                  .squeeze();  // [:, 0];
+                  .squeeze();
 
   // Apply per-class NMS
   auto pre_nms_class_ids = class_ids.take(keep);
@@ -102,7 +102,7 @@ at::Tensor RefineDetections(at::Tensor rois,
     std::tie(ix_scores, order) =
         ix_scores.unsqueeze(1).sort(0, /*descending*/ true);
     order = order.squeeze();
-    ix_rois = ix_rois.index_select(0, order);  //[order.data, :];
+    ix_rois = ix_rois.index_select(0, order);
 
     auto class_keep = Nms(torch::cat({ix_rois, ix_scores}, /*dim*/ 1),
                           config.detection_nms_threshold);

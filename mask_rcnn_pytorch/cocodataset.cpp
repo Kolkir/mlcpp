@@ -100,6 +100,9 @@ CocoDataset::CocoDataset(std::shared_ptr<CocoLoader> loader,
                          std::shared_ptr<const Config> config)
     : loader_(loader), config_(config) {
   loader_->LoadData();
+  // train only on vehicles
+  // loader_->LoadData({2, 3, 4, 6, 7});
+
   anchors_ = GeneratePyramidAnchors(
       config_->rpn_anchor_scales, config_->rpn_anchor_ratios,
       config_->backbone_shapes, config_->backbone_strides,
@@ -107,17 +110,6 @@ CocoDataset::CocoDataset(std::shared_ptr<CocoLoader> loader,
 }
 
 Sample CocoDataset::get(size_t index) {
-  // index = 90243; 1 target
-  // index = 81841; 5 target
-  // index = 46947; //*
-  // index = 105522;
-  // index = 2683;
-  // index = 31066;
-
-  // index = 110546;
-
-  // std::cerr << "Load index " << index << "\n";
-
   auto img_desc = loader_->GetImage(index);
   auto img_width = img_desc.image.cols;
   auto img_height = img_desc.image.rows;

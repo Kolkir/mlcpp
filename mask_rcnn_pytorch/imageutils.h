@@ -116,5 +116,6 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>
 UnmoldDetections(at::Tensor detections,
                  at::Tensor mrcnn_mask,
                  const cv::Size& image_shape,
-                 const Window& window);
+                 const Window& window,
+                 double mask_threshold);
 #endif  // IMAGEUTILS_H

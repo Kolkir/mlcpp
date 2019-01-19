@@ -106,6 +106,7 @@ void MaskRCNNImpl::Train(CocoDataset train_dataset,
   StatReporter reporter(epochs, config_->steps_per_epoch,
                         config_->validation_steps);
   const uint32_t workers_num = 1;
+  std::string check_file_name;
   for (uint32_t epoch = 0; epoch < epochs; ++epoch) {
     reporter.StartEpoch(epoch, optim_no_bn.options.learning_rate_);
     // Reset data loaders
@@ -137,7 +138,9 @@ void MaskRCNNImpl::Train(CocoDataset train_dataset,
         {val_loss, val_loss_rpn_class, val_loss_rpn_bbox, val_loss_mrcnn_class,
          val_loss_mrcnn_bbox, val_loss_mrcnn_mask});
 
-    auto check_file_name = GetCheckpointPath(epoch);
+    if (fs::exists(check_file_name))
+      fs::remove(check_file_name);
+    check_file_name = GetCheckpointPath(epoch);
     SaveStateDict(*this, check_file_name);
     std::cerr << "Checkpoint saved to : " << check_file_name << "\n";
   }
@@ -409,12 +412,6 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
 
   auto [mrcnn_feature_maps, rpn_rois, rpn_class_logits, rpn_bbox] =
       PredictRPN(images, config_->post_nms_rois_training);
-  //  if (!is_empty(rpn_rois)) {
-  //    std::cerr << "RPN rois : \n" << rpn_rois[0].narrow(0, 0, 1);
-  //    std::cerr << "RPN deltas : \n" << rpn_bbox[0].narrow(0, 0, 1);
-  //    auto cp = rpn_class_logits.softmax(1)[0].narrow(0, 0, 1);
-  //    std::cerr << "RPN class : \n" << cp;  // bg or fg
-  //  }
 
   // Normalize coordinates
   auto h = static_cast<float>(config_->image_shape[0]);
@@ -432,11 +429,6 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
   auto [rois, target_class_ids, target_deltas, target_mask] =
       DetectionTargetLayer(*config_, rpn_rois, gt_class_ids, gt_boxes,
                            gt_masks);
-  //  if (!is_empty(rois)) {
-  //    std::cerr << "DTL rois : \n" << rois.narrow(0, 0, 1);
-  //    std::cerr << "DTL deltas : \n" << target_deltas.narrow(0, 0, 1);
-  //    std::cerr << "DTL class : \n" << target_class_ids.narrow(0, 0, 1);
-  //  }
 
   auto mrcnn_class_logits = torch::empty({}, at::dtype(at::kFloat));
   auto mrcnn_class = torch::empty({}, at::dtype(at::kInt));
@@ -454,10 +446,6 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
     // Proposal classifier and BBox regressor heads
     std::tie(mrcnn_class_logits, mrcnn_class, mrcnn_bbox) =
         classifier_->forward(mrcnn_feature_maps, rois);
-    //    if (!is_empty(mrcnn_class_logits)) {
-    //      std::cerr << "MRCNN logits : \n"
-    //                << mrcnn_class_logits.log_softmax(1).narrow(0, 0, 1);
-    //    }
 
     // Add back batch dimension
     rois = rois.unsqueeze(0);

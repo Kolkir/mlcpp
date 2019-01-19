@@ -106,8 +106,6 @@ void visualize(const cv::Mat& image,
     auto score = *scores[i].data<float>();
 
     cv::Mat bin_mask = masks[i].clone();
-    bin_mask = bin_mask != 0;
-    bin_mask *= 255;
     cv::Mat mask_ch[3];
     mask_ch[2] = bin_mask;
     mask_ch[0] = cv::Mat::zeros(img.size(), CV_8UC1);

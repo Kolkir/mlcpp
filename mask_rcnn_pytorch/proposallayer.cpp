@@ -15,7 +15,7 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
   inputs[1] = inputs[1].squeeze(0);
 
   // Box Scores. Use the foreground class confidence. [Batch, num_rois, 1]
-  auto scores = inputs[0].narrow(1, 1, 1);  //[:, 1];
+  auto scores = inputs[0].narrow(1, 1, 1);
 
   // Box deltas [batch, num_rois, 4]
   auto deltas = inputs[1];
@@ -33,12 +33,12 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
   at::Tensor order;
   std::tie(scores, order) = scores.sort(/*dim*/ 0, /*descending*/ true);
 
-  order = order.narrow(0, 0, pre_nms_limit).flatten();    //[:pre_nms_limit];
-  scores = scores.narrow(0, 0, pre_nms_limit).flatten();  //[:pre_nms_limit];
+  order = order.narrow(0, 0, pre_nms_limit).flatten();
+  scores = scores.narrow(0, 0, pre_nms_limit).flatten();
 
   // TODO : (Legacy)Support batch size > 1 ff.
-  deltas = deltas.index_select(0, order);    //[order.data, :];
-  anchors = anchors.index_select(0, order);  //[order.data, :];
+  deltas = deltas.index_select(0, order);
+  anchors = anchors.index_select(0, order);
 
   // Apply deltas to anchors to get refined anchors.
   // [batch, N, (y1, x1, y2, x2)]
@@ -56,9 +56,8 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
 
   // Non-max suppression
   auto keep = Nms(torch::cat({boxes, scores.unsqueeze(1)}, 1), nms_threshold);
-  keep = keep.narrow(
-      0, 0, std::min(keep.size(0), proposal_count));  //[:proposal_count];
-  boxes = boxes.index_select(0, keep);                //[keep, :];
+  keep = keep.narrow(0, 0, std::min(keep.size(0), proposal_count));
+  boxes = boxes.index_select(0, keep);
 
   // Normalize dimensions to range of 0 to 1.
   auto norm =

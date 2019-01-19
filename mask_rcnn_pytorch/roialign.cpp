@@ -46,8 +46,8 @@ at::Tensor PyramidRoiAlign(std::vector<at::Tensor> input,
     if (!ix.any().is_nonzero())
       continue;
 
-    ix = ix.nonzero().narrow(1, 0, 1);                       // [:, 0]
-    auto level_boxes = boxes.index_select(0, ix.flatten());  // [ix.data, :]
+    ix = ix.nonzero().narrow(1, 0, 1);
+    auto level_boxes = boxes.index_select(0, ix.flatten());
 
     // Keep track of which box is mapped to which level
     box_to_level.push_back(ix.flatten());
@@ -94,8 +94,7 @@ at::Tensor PyramidRoiAlign(std::vector<at::Tensor> input,
 
   // Rearrange pooled features to match the order of the original boxes
   std::tie(std::ignore, box_to_level_res) = torch::sort(box_to_level_res);
-  pooled_res = pooled_res.index_select(
-      0, box_to_level_res.flatten());  // [box_to_level, :, :];
+  pooled_res = pooled_res.index_select(0, box_to_level_res.flatten());
 
   return pooled_res;
 }

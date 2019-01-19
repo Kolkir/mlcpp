@@ -135,12 +135,16 @@ std::tuple<at::Tensor, std::vector<ImageMeta>, std::vector<Window>> MoldInputs(
  */
 cv::Mat UnmoldMask(at::Tensor mask,
                    at::Tensor bbox,
-                   const cv::Size& image_shape) {
-  const double threshold = 0.5;
+                   const cv::Size& image_shape,
+                   double threshold) {
   auto y1 = *bbox[0].data<int32_t>();
   auto x1 = *bbox[1].data<int32_t>();
   auto y2 = *bbox[2].data<int32_t>();
   auto x2 = *bbox[3].data<int32_t>();
+
+  if ((mask > 0).nonzero().numel() == 0) {
+    std::cerr << "Empty mask detected!";
+  }
 
   cv::Mat cv_mask(static_cast<int>(mask.size(0)),
                   static_cast<int>(mask.size(1)), CV_32FC1, mask.data<float>());
@@ -159,7 +163,8 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, std::vector<cv::Mat>>
 UnmoldDetections(at::Tensor detections,
                  at::Tensor mrcnn_mask,
                  const cv::Size& image_shape,
-                 const Window& window) {
+                 const Window& window,
+                 double mask_threshold) {
   // How many detections do we have?
   // Detections array is padded with zeros. Find the first class_id == 0.
   auto zero_ix = (detections.narrow(1, 4, 1) == 0).nonzero();
@@ -169,15 +174,14 @@ UnmoldDetections(at::Tensor detections,
       zero_ix.size(0) > 0 ? *zero_ix[0].data<uint8_t>() : detections.size(0);
 
   //  Extract boxes, class_ids, scores, and class-specific masks
-  auto boxes = detections.narrow(0, 0, N).narrow(1, 0, 4);  //[:N, :4];
+  auto boxes = detections.narrow(0, 0, N).narrow(1, 0, 4);
   auto class_ids = detections.narrow(0, 0, N)
                        .narrow(1, 4, 1)
                        .to(at::dtype(at::kLong))
                        .squeeze();
   auto scores = detections.narrow(0, 0, N).narrow(1, 5, 1);
   auto masks = index_select_2d(torch::arange(N, at::dtype(at::kLong)),
-                               class_ids, mrcnn_mask,
-                               3);  // [np.arange(N), :, :, class_ids];
+                               class_ids, mrcnn_mask, 3);
 
   // Compute scale and shift to translate coordinates to image domain.
   auto h_scale =
@@ -216,7 +220,8 @@ UnmoldDetections(at::Tensor detections,
   std::vector<cv::Mat> full_masks_vec;
   for (int64_t i = 0; i < N; ++i) {
     // Convert neural network mask to full size mask
-    auto full_mask = UnmoldMask(masks[i], boxes[i], image_shape);
+    auto full_mask =
+        UnmoldMask(masks[i], boxes[i], image_shape, mask_threshold);
     full_masks_vec.push_back(full_mask);
   }
 
@@ -256,7 +261,9 @@ std::vector<cv::Mat> MinimizeMasks(const std::vector<float>& boxes,
     auto x1 = static_cast<int32_t>(boxes[b_ind + 1]);
     auto y2 = static_cast<int32_t>(boxes[b_ind + 2]);
     auto x2 = static_cast<int32_t>(boxes[b_ind + 3]);
-    auto m_crop = m(cv::Rect(x1, y1, x2 - x1, y2 - y1));
+    auto m_rect = cv::Rect(cv::Point(0, 0), m.size());
+    auto crop_rect = cv::Rect(x1, y1, x2 - x1, y2 - y1);
+    auto m_crop = m(m_rect & crop_rect);
     if (m_crop.empty())
       throw std::logic_error("Invalid bounding box with area of zero");
     m_crop.convertTo(m_crop, CV_32FC1);
