@@ -1,4 +1,6 @@
-# mlcpp
+|![logo](mlcpp_logo.png)|**mlcpp**|
+|-----------------------|---------|
+
 Set of examples of ML approaches implemented in C++ with different frameworks.
 
 After cloning the source code please execute next commands to get all required third parties:
