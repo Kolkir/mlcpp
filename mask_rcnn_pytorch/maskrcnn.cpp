@@ -138,11 +138,12 @@ void MaskRCNNImpl::Train(CocoDataset train_dataset,
         {val_loss, val_loss_rpn_class, val_loss_rpn_bbox, val_loss_mrcnn_class,
          val_loss_mrcnn_bbox, val_loss_mrcnn_mask});
 
-    if (fs::exists(check_file_name))
-      fs::remove(check_file_name);
+    auto prev_check_file_name = check_file_name;
     check_file_name = GetCheckpointPath(epoch);
     SaveStateDict(*this, check_file_name);
     std::cerr << "Checkpoint saved to : " << check_file_name << "\n";
+    if (fs::exists(prev_check_file_name))
+      fs::remove(prev_check_file_name);
   }
 }
 
