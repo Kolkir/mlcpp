@@ -98,14 +98,14 @@ int main(int argc, char** argv) {
 
     // Make data sets
     auto train_loader = std::make_unique<CocoLoader>(
-        fs::path(data_path) / "shape_train2018",
-        fs::path(data_path) / "annotations/instances_shape_train2018.json");
+        fs::path(data_path) / "train2017",
+        fs::path(data_path) / "annotations/instances_train2017.json");
     auto train_set =
         std::make_unique<CocoDataset>(std::move(train_loader), config);
 
     auto val_loader = std::make_unique<CocoLoader>(
-        fs::path(data_path) / "shape_train2018",
-        fs::path(data_path) / "annotations/instances_shape_train2018.json");
+        fs::path(data_path) / "val2017",
+        fs::path(data_path) / "annotations/instances_val2017.json");
     auto val_set = std::make_unique<CocoDataset>(std::move(val_loader), config);
 
     //    // Training - Stage 1
