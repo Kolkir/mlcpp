@@ -1,40 +1,5 @@
 #include "boxutils.h"
 
-torch::Tensor BBoxOverlaps(torch::Tensor boxes1, torch::Tensor boxes2) {
-  // 1. Tile boxes2 and repeate boxes1. This allows us to compare
-  // every boxes1 against every boxes2 without loops.
-
-  auto boxes1_repeat = boxes2.size(0);
-  auto boxes2_repeat = boxes1.size(0);
-  boxes1 = boxes1.repeat({1, boxes1_repeat}).view({-1, 4});
-  boxes2 = boxes2.repeat({boxes2_repeat, 1});
-
-  // 2. Compute intersections
-  auto b1 = boxes1.chunk(4, /*dim*/ 1);
-  auto b2 = boxes2.chunk(4, /*dim*/ 1);
-  auto y1 = torch::max(b1[0], b2[0]).narrow(1, 0, 1);
-  auto x1 = torch::max(b1[1], b2[1]).narrow(1, 0, 1);
-  auto y2 = torch::min(b1[2], b2[2]).narrow(1, 0, 1);
-  auto x2 = torch::min(b1[3], b2[3]).narrow(1, 0, 1);
-  auto zeros = torch::zeros({y1.size(0), 1}, at::requires_grad(false));
-  if (y1.is_cuda())
-    zeros = zeros.cuda();
-  auto intersection =
-      torch::mul(torch::max(x2 - x1, zeros), torch::max(y2 - y1, zeros));
-
-  // 3. Compute unions
-  auto b1_area = (b1[2] - b1[1]) * (b1[3] - b1[0]);
-  auto b2_area = (b2[2] - b2[1]) * (b2[3] - b2[0]);
-  auto box_union =
-      b1_area.narrow(1, 0, 1) + b2_area.narrow(1, 0, 1) - intersection;
-
-  // 4. Compute IoU and reshape to [boxes1, boxes2]
-  auto iou = intersection / box_union;
-  auto overlaps = iou.view({boxes2_repeat, boxes1_repeat});
-
-  return overlaps;
-}
-
 /* Calculates IoU of the given box with the array of the given boxes.
  * box: 1D vector [y1, x1, y2, x2]
  * boxes: [boxes_count, (y1, x1, y2, x2)]
@@ -51,8 +16,11 @@ static at::Tensor ComputeIou(at::Tensor box,
   auto y2 = torch::min(box[2], boxes.narrow(1, 2, 1));
   auto x1 = torch::max(box[1], boxes.narrow(1, 1, 1));
   auto x2 = torch::min(box[3], boxes.narrow(1, 3, 1));
-  auto intersection = torch::max(x2 - x1, torch::tensor(0.f)) *
-                      torch::max(y2 - y1, torch::tensor(0.f));
+  auto zero_val = torch::tensor(0.f);
+  if (box.is_cuda())
+    zero_val = zero_val.cuda();
+  auto intersection =
+      torch::max(x2 - x1, zero_val) * torch::max(y2 - y1, zero_val);
   auto union_ = box_area + boxes_area - intersection;
   auto iou = intersection / union_;
   return iou;
@@ -68,6 +36,8 @@ torch::Tensor BBoxOverlapsLoops(torch::Tensor boxes1, torch::Tensor boxes2) {
   // Compute overlaps to generate matrix [boxes1 count, boxes2 count]
   // Each cell contains the IoU value.
   auto overlaps = torch::zeros({boxes1.size(0), boxes2.size(0)});
+  if (boxes2.is_cuda())
+    overlaps = overlaps.cuda();
   for (int64_t i = 0; i < overlaps.size(1); ++i) {
     auto box2 = boxes2[i];
     auto iou = ComputeIou(box2, boxes1, area2[i], area1);

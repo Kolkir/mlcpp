@@ -90,7 +90,9 @@ set(SOURCE_FILES
                     loss.h
                     loss.cpp
                     statreporter.h
-                    statreporter.cpp)
+                    statreporter.cpp
+                    datasetclasses.h
+                    datasetclasses.cpp)
 
 set(REQUIRED_LIBS "stdc++fs")
 list(APPEND REQUIRED_LIBS ${TORCH_LIBRARIES})

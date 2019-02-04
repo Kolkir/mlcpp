@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <experimental/filesystem>
+#include <random>
 #include <regex>
 
 namespace fs = std::experimental::filesystem;
@@ -39,20 +40,6 @@ std::tuple<at::Tensor, at::Tensor> MaskRCNNImpl::Detect(
     mrcnn_mask = mrcnn_mask.permute({0, 1, 3, 4, 2}).cpu();
 
   return {detections, mrcnn_mask};
-}
-
-void MaskRCNNImpl::PrintLoss(float loss,
-                             float loss_rpn_class,
-                             float loss_rpn_bbox,
-                             float loss_mrcnn_class,
-                             float loss_mrcnn_bbox,
-                             float loss_mrcnn_mask) {
-  std::cout << "\tLoss sum : " << loss << "\n";
-  std::cout << "\tloss_rpn_class : " << loss_rpn_class << "\n";
-  std::cout << "\tloss_rpn_bbox : " << loss_rpn_bbox << "\n";
-  std::cout << "\tloss_mrcnn_class, : " << loss_mrcnn_class << "\n";
-  std::cout << "\tloss_mrcnn_bbox : " << loss_mrcnn_bbox << "\n";
-  std::cout << "\tloss_mrcnn_mask : " << loss_mrcnn_mask << "\n";
 }
 
 void MaskRCNNImpl::Train(CocoDataset train_dataset,
@@ -107,9 +94,13 @@ void MaskRCNNImpl::Train(CocoDataset train_dataset,
                         config_->validation_steps);
   const uint32_t workers_num = 1;
   std::string check_file_name;
+  std::random_device rnd_dev;
   for (uint32_t epoch = 0; epoch < epochs; ++epoch) {
     reporter.StartEpoch(epoch, optim_no_bn.options.learning_rate_);
     // Reset data loaders
+#ifdef NDEBUG
+    torch::manual_seed(rnd_dev());
+#endif
     auto train_loader = torch::data::make_data_loader(
         train_dataset,
         torch::data::DataLoaderOptions().batch_size(1).workers(
@@ -144,6 +135,11 @@ void MaskRCNNImpl::Train(CocoDataset train_dataset,
     std::cerr << "Checkpoint saved to : " << check_file_name << "\n";
     if (fs::exists(prev_check_file_name))
       fs::remove(prev_check_file_name);
+
+    // Debug block
+    //    if (loss_rpn_bbox < 0.01f) {
+    //      exit(0);
+    //    }
   }
 }
 
@@ -414,6 +410,13 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
   auto [mrcnn_feature_maps, rpn_rois, rpn_class_logits, rpn_bbox] =
       PredictRPN(images, config_->post_nms_rois_training);
 
+  // Debug block
+  //  auto d = torch::tensor({512, 512, 512, 512}, at::dtype(at::kFloat));
+  //  VisualizeBoxes("rpn_targets", 512, 512,
+  //                 rpn_rois.squeeze().cpu().narrow(0, 0, 10) * d,
+  //                 gt_boxes.squeeze().cpu());
+  // exit(0);
+
   // Normalize coordinates
   auto h = static_cast<float>(config_->image_shape[0]);
   auto w = static_cast<float>(config_->image_shape[1]);
@@ -430,6 +433,11 @@ MaskRCNNImpl::PredictTraining(at::Tensor images,
   auto [rois, target_class_ids, target_deltas, target_mask] =
       DetectionTargetLayer(*config_, rpn_rois, gt_class_ids, gt_boxes,
                            gt_masks);
+
+  // Debug block
+  //  VisualizeBoxes("proposals", 512, 512, rois.squeeze().cpu() * d,
+  //                 gt_boxes.squeeze().cpu() * d);
+  //  exit(0);
 
   auto mrcnn_class_logits = torch::empty({}, at::dtype(at::kFloat));
   auto mrcnn_class = torch::empty({}, at::dtype(at::kInt));

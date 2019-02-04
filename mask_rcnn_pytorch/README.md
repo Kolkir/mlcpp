@@ -71,3 +71,4 @@ Also you can download file with pre-trained parameters from this [link](https://
     * Branch with fixed  C++ extensions  https://github.com/mjstevens777/pytorch-mask-rcnn/tree/feat/build
 2. https://github.com/matterport/Mask_RCNN
 3. https://github.com/wannabeOG/Mask-RCNN
+4. https://patrickwasp.com/create-your-own-coco-style-dataset/

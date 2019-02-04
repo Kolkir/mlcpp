@@ -108,12 +108,6 @@ class MaskRCNNImpl : public torch::nn::Module {
                 torch::Tensor mrcnn_bbox,
                 torch::Tensor target_mask,
                 torch::Tensor mrcnn_mask);
-  void PrintLoss(float loss,
-                 float loss_rpn_class,
-                 float loss_rpn_bbox,
-                 float loss_mrcnn_class,
-                 float loss_mrcnn_bbox,
-                 float loss_mrcnn_mask);
 
  private:
   std::string model_dir_;

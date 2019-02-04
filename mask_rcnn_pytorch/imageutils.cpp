@@ -180,8 +180,8 @@ UnmoldDetections(at::Tensor detections,
                        .to(at::dtype(at::kLong))
                        .squeeze();
   auto scores = detections.narrow(0, 0, N).narrow(1, 5, 1);
-  auto masks = index_select_2d(torch::arange(N, at::dtype(at::kLong)),
-                               class_ids, mrcnn_mask, 3);
+  auto masks = mrcnn_mask.permute({0, 3, 1, 2})
+                   .index({torch::arange(N, at::kLong), class_ids});
 
   // Compute scale and shift to translate coordinates to image domain.
   auto h_scale =
@@ -203,12 +203,12 @@ UnmoldDetections(at::Tensor detections,
                       (boxes.narrow(1, 3, 1) - boxes.narrow(1, 1, 1))) > 0)
                         .nonzero();
   include_ix = include_ix.narrow(1, 0, 1).squeeze();
-  if (include_ix.size(0) > 0) {
-    boxes = boxes.index_select(0, include_ix);
-    class_ids = class_ids.index_select(0, include_ix);
-    scores = scores.index_select(0, include_ix);
+  if (include_ix.numel() > 0) {
+    N = include_ix.numel();
+    boxes = boxes.index_select(0, include_ix).reshape({N, -1});
+    class_ids = class_ids.index_select(0, include_ix).reshape({N, -1});
+    scores = scores.index_select(0, include_ix).reshape({N, -1});
     masks = masks.index_select(0, include_ix);
-    N = class_ids.size(0);
   } else {
     boxes = torch::empty({}, boxes.options());
     class_ids = torch::empty({}, class_ids.options());
@@ -272,4 +272,77 @@ std::vector<cv::Mat> MinimizeMasks(const std::vector<float>& boxes,
     mini_masks.push_back(m_crop);
   }
   return mini_masks;
+}
+
+void VisualizeBoxes(const std::string& name,
+                    int width,
+                    int height,
+                    at::Tensor anchors,
+                    at::Tensor gt_boxes) {
+  std::vector<int> clr_table = {
+      0xFFB300,  // Vivid Yellow
+      0x803E75,  // Strong Purple
+      0xFF6800,  // Vivid Orange
+      0xA6BDD7,  // Very Light Blue
+      0xC10020,  // Vivid Red
+      0xCEA262,  // Grayish Yellow
+      0x817066,  // Medium Gray
+      0x007D34,  // Vivid Green
+      0xF6768E,  // Strong Purplish Pink
+      0x00538A,  // Strong Blue
+      0xFF7A5C,  // Strong Yellowish Pink
+      0x53377A,  // Strong Violet
+      0xFF8E00,  // Vivid Orange Yellow
+      0xB32851,  // Strong Purplish Red
+      0xF4C800,  // Vivid Greenish Yellow
+      0x7F180D,  // Strong Reddish Brown
+      0x93AA00,  // Vivid Yellowish Green
+      0x593315,  // Deep Yellowish Brown
+      0xF13A13,  // Vivid Reddish Orange
+      0x232C16,  // Dark Olive Green
+  };
+
+  std::vector<cv::Scalar> colors;
+  for (size_t i = 0, j = 0; i < static_cast<size_t>(anchors.size(0)); ++i) {
+    int red = (clr_table[j] & 0xFF000000) >> 24;
+    int green = (clr_table[j] & 0x00FF0000) >> 16;
+    int blue = (clr_table[j] & 0x0000FF00) >> 8;
+    colors.push_back(cv::Scalar(blue, green, red));
+    ++j;
+    if (j >= clr_table.size())
+      j = 0;
+  }
+  cv::Mat img(height, width, CV_32FC3, cv::Scalar(255, 255, 255));
+
+  if (gt_boxes.dim() == 1)
+    gt_boxes = gt_boxes.unsqueeze(0);
+
+  auto gt_data = gt_boxes.accessor<float, 2>();
+  for (int64_t i = 0; i < gt_boxes.size(0); ++i) {
+    auto y1 = gt_data[i][0];
+    auto x1 = gt_data[i][1];
+    auto y2 = gt_data[i][2];
+    auto x2 = gt_data[i][3];
+
+    cv::Point tl(static_cast<int32_t>(x1), static_cast<int32_t>(y1));
+    cv::Point br(static_cast<int32_t>(x2), static_cast<int32_t>(y2));
+    cv::rectangle(img, tl, br, cv::Scalar(0, 0, 0), 3);
+  }
+
+  if (anchors.dim() == 1)
+    anchors = anchors.unsqueeze(0);
+
+  auto anchor_data = anchors.accessor<float, 2>();
+  for (int64_t i = 0; i < anchors.size(0); ++i) {
+    auto y1 = anchor_data[i][0];
+    auto x1 = anchor_data[i][1];
+    auto y2 = anchor_data[i][2];
+    auto x2 = anchor_data[i][3];
+
+    cv::Point tl(static_cast<int32_t>(x1), static_cast<int32_t>(y1));
+    cv::Point br(static_cast<int32_t>(x2), static_cast<int32_t>(y2));
+    cv::rectangle(img, tl, br, colors[static_cast<size_t>(i)]);
+  }
+
+  cv::imwrite(name + ".png", img);
 }

@@ -1,5 +1,6 @@
 #include "cocoloader.h"
 #include "config.h"
+#include "datasetclasses.h"
 #include "debug.h"
 #include "imageutils.h"
 #include "maskrcnn.h"
@@ -22,11 +23,10 @@ class InferenceConfig : public Config {
       throw std::runtime_error("Cuda is not available");
     gpu_count = 1;
     images_per_gpu = 1;
-    num_classes = 81;  // for coco dataset
+    num_classes = 81;  // 4 - for shapes, 81 - for coco dataset
 
-    //    image_min_dim = 480;
-    //    image_max_dim = 640;
-    //    rpn_anchor_scales = {8, 16, 32, 64, 128};
+    image_min_dim = 512;
+    image_max_dim = 512;
 
     UpdateSettings();
   }
@@ -92,12 +92,13 @@ int main(int argc, char** argv) {
     if (params_path.find(".json") != std::string::npos) {
       LoadStateDictJson(*model, params_path);
     } else {
-      LoadStateDict(*model, params_path);
+      LoadStateDict(*model, params_path, "");
     }
 
     if (config->gpu_count > 0)
       model->to(torch::DeviceType::CUDA);
 
+    auto start = std::chrono::steady_clock::now();
     auto [detections, mrcnn_mask] = model->Detect(molded_images, image_metas);
     if (!is_empty(detections)) {
       // Process detections
@@ -114,9 +115,16 @@ int main(int argc, char** argv) {
                              windows[i], mask_threshold);
         results.push_back(result);
       }
+      auto stop = std::chrono::steady_clock::now();
+      auto inference_time =
+          std::chrono::duration_cast<std::chrono::milliseconds>(stop - start)
+              .count();
+      std::cout << "Inference time " << inference_time << "\n";
 
+      float score_threshold = 0.7f;
       visualize(image, std::get<0>(results[0]), std::get<1>(results[0]),
-                std::get<2>(results[0]), std::get<3>(results[0]));
+                std::get<2>(results[0]), std::get<3>(results[0]),
+                score_threshold, GetDatasetClasses());
     } else {
       std::cerr << "Failed to detect anything!\n";
     }

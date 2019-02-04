@@ -13,88 +13,6 @@
 
 namespace fs = std::experimental::filesystem;
 
-static std::vector<std::string> coco_classes{"__background__",
-                                             "person",
-                                             "bicycle",
-                                             "car",
-                                             "motorcycle",
-                                             "airplane",
-                                             "bus",
-                                             "train",
-                                             "truck",
-                                             "boat",
-                                             "traffic light",
-                                             "fire hydrant",
-                                             "stop sign",
-                                             "parking meter",
-                                             "bench",
-                                             "bird",
-                                             "cat",
-                                             "dog",
-                                             "horse",
-                                             "sheep",
-                                             "cow",
-                                             "elephant",
-                                             "bear",
-                                             "zebra",
-                                             "giraffe",
-                                             "backpack",
-                                             "umbrella",
-                                             "handbag",
-                                             "tie",
-                                             "suitcase",
-                                             "frisbee",
-                                             "skis",
-                                             "snowboard",
-                                             "sports ball",
-                                             "kite",
-                                             "baseball bat",
-                                             "baseball glove",
-                                             "skateboard",
-                                             "surfboard",
-                                             "tennis racket",
-                                             "bottle",
-                                             "wine glass",
-                                             "cup",
-                                             "fork",
-                                             "knife",
-                                             "spoon",
-                                             "bowl",
-                                             "banana",
-                                             "apple",
-                                             "sandwich",
-                                             "orange",
-                                             "broccoli",
-                                             "carrot",
-                                             "hot dog",
-                                             "pizza",
-                                             "donut",
-                                             "cake",
-                                             "chair",
-                                             "couch",
-                                             "potted plant",
-                                             "bed",
-                                             "dining table",
-                                             "toilet",
-                                             "tv",
-                                             "laptop",
-                                             "mouse",
-                                             "remote",
-                                             "keyboard",
-                                             "cell phone",
-                                             "microwave",
-                                             "oven",
-                                             "toaster",
-                                             "sink",
-                                             "refrigerator",
-                                             "book",
-                                             "clock",
-                                             "vase",
-                                             "scissors",
-                                             "teddy bear",
-                                             "hair drier",
-                                             "toothbrush"};
-
 CocoLoader::CocoLoader(const std::string& images_folder,
                        const std::string& ann_file) {
   images_folder_ = fs::path(images_folder);
@@ -256,7 +174,8 @@ struct CocoHandler
   CocoLoader* coco_ = nullptr;
 };
 
-void CocoLoader::LoadData(const std::vector<uint32_t>& keep_classes,
+void CocoLoader::LoadData(const std::vector<std::string>& coco_classes,
+                          const std::vector<uint32_t>& keep_classes,
                           float keep_aspect) {
   if (!images_.empty()) {
     std::cerr << "Dataset " << images_folder_ << " already loaded\n";
@@ -461,8 +380,4 @@ cv::Mat CocoLoader::DrawAnnotedImage(uint32_t id) const {
   } else {
     throw std::runtime_error(file_path.string() + " file can't be opened");
   }
-}
-
-const std::vector<std::string>& CocoLoader::GetClasses() {
-  return coco_classes;
 }

@@ -33,8 +33,9 @@ at::Tensor ProposalLayer(std::vector<at::Tensor> inputs,
   at::Tensor order;
   std::tie(scores, order) = scores.sort(/*dim*/ 0, /*descending*/ true);
 
-  order = order.narrow(0, 0, pre_nms_limit).flatten();
-  scores = scores.narrow(0, 0, pre_nms_limit).flatten();
+  order = order.narrow(0, 0, std::min(order.numel(), pre_nms_limit)).flatten();
+  scores =
+      scores.narrow(0, 0, std::min(scores.numel(), pre_nms_limit)).flatten();
 
   // TODO : (Legacy)Support batch size > 1 ff.
   deltas = deltas.index_select(0, order);

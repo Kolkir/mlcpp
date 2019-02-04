@@ -1,6 +1,8 @@
 #include "cocodataset.h"
 #include "anchors.h"
 #include "boxutils.h"
+#include "datasetclasses.h"
+#include "imageutils.h"
 #include "nnutils.h"
 
 namespace {
@@ -32,6 +34,17 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
   // use loops because anchors are too big
   auto overlaps = BBoxOverlapsLoops(anchors, gt_boxes);
 
+  //  // Debug block
+  //  {
+  //    std::cerr << std::get<0>(overlaps.sort(0, true)).narrow(0, 0,
+  //    10).squeeze(); auto max_overlaps =
+  //        std::get<1>(overlaps.sort(0, true)).narrow(0, 0, 10).squeeze();
+  //    auto max_anchors = anchors.index_select(0, max_overlaps);
+  //    VisualizeRPNTrargets(config.image_shape[0], config.image_shape[1],
+  //                         max_anchors, gt_boxes);
+  //    exit(0);
+  //  }
+
   // Match anchors to GT Boxes
   // If an anchor overlaps a GT box with IoU >= 0.7 then it's positive.
   // If an anchor overlaps a GT box with IoU < 0.3 then it's negative.
@@ -46,14 +59,15 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
   auto anchor_iou_max =
       overlaps.index({torch::arange(overlaps.size(0), at::dtype(at::kLong)),
                       anchor_iou_argmax});
-  rpn_match = torch::where(anchor_iou_max < 0.3, minus_one, rpn_match);
+  rpn_match = torch::where(anchor_iou_max < 0.5, minus_one, rpn_match);  // 0.3
 
   // 2. Set an anchor for each GT box (regardless of IoU value).
   // TODO: (Legacy)If multiple anchors have the same IoU match all of them
   auto gt_iou_argmax = torch::argmax(overlaps, /*dim*/ 0);
   rpn_match.index_fill_(0, gt_iou_argmax, 1);
   // 3. Set anchors with high overlap as positive.
-  rpn_match = torch::where(anchor_iou_max >= 0.7, one, rpn_match);
+  rpn_match = torch::where(anchor_iou_max >= config.anchor_iou_max_threshold,
+                           one, rpn_match);
 
   // Subsample to balance positive and negative anchors
   // Don't let positives be more than half the anchors
@@ -84,9 +98,9 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
   ids = (rpn_match == 1).nonzero().narrow(1, 0, 1).squeeze();
   auto gt = gt_boxes.index_select(0, anchor_iou_argmax.take(ids));
   auto a = anchors.index_select(0, ids);
-
   rpn_bbox.index_put_({torch::arange(0, ids.numel(), at::kLong)},
                       BoxRefinement(a, gt));
+
   // Normalize
   auto std_dev = torch::tensor(config.rpn_bbox_std_dev,
                                at::dtype(at::kFloat).requires_grad(false));
@@ -99,7 +113,7 @@ std::tuple<at::Tensor, at::Tensor> BuildRpnTargets(at::Tensor anchors,
 CocoDataset::CocoDataset(std::shared_ptr<CocoLoader> loader,
                          std::shared_ptr<const Config> config)
     : loader_(loader), config_(config) {
-  loader_->LoadData();
+  loader_->LoadData(GetDatasetClasses());
   // train only on vehicles
   // loader_->LoadData({2, 3, 4, 6, 7});
 
@@ -130,10 +144,28 @@ Sample CocoDataset::get(size_t index) {
     boxes.push_back(padding.left_pad +
                     std::ceil((bbox.x + bbox.width) * scale));
   }
-  // TESTING
-  //  boxes = {552, 642, 732, 979, 389, 421, 424, 448, 565, 203, 580, 243,
-  //           559, 248, 581, 371, 565, 229, 578, 243, 572, 237, 580, 243};
-  //  img_desc.classes = {58, 75, 48, 72, 50, 48};
+
+  // Debug block
+  //  if (!image.empty()) {
+  //    cv::Mat img = image.clone();
+  //    for (size_t i = 0; i < masks.size(); ++i) {
+  //      cv::Point tl(static_cast<int32_t>(boxes[i * 4 + 1]),
+  //                   static_cast<int32_t>(boxes[i * 4]));
+  //      cv::Point br(static_cast<int32_t>(boxes[i * 4 + 3]),
+  //                   static_cast<int32_t>(boxes[i * 4 + 2]));
+  //      cv::rectangle(img, tl, br, cv::Scalar(255, 0, 0));
+
+  //      cv::Mat mask_ch[3];
+  //      mask_ch[2] = masks[i] * 255;
+  //      mask_ch[0] = cv::Mat::zeros(img.size(), CV_8UC1);
+  //      mask_ch[1] = cv::Mat::zeros(img.size(), CV_8UC1);
+  //      cv::Mat mask;
+  //      cv::merge(mask_ch, 3, mask);
+  //      cv::addWeighted(img, 1, mask, 0.5, 0, img);
+  //    }
+  //    cv::imwrite("test_resize.png", img);
+  //    exit(0);
+  //  }
 
   // Resize masks to smaller size to reduce memory usage
   if (config_->use_mini_mask) {
@@ -152,7 +184,8 @@ Sample CocoDataset::get(size_t index) {
 
   std::vector<at::Tensor> tmasks;
   for (auto& m : masks) {
-    tmasks.push_back(CvImageToTensor(m));
+    auto mask = CvImageToTensor(m) != 0;
+    tmasks.push_back(mask.to(at::kFloat));
   }
   result.target.gt_masks = torch::stack(tmasks);
 

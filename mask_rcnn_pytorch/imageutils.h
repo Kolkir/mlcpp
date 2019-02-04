@@ -118,4 +118,10 @@ UnmoldDetections(at::Tensor detections,
                  const cv::Size& image_shape,
                  const Window& window,
                  double mask_threshold);
+
+void VisualizeBoxes(const std::string& name,
+                    int width,
+                    int height,
+                    at::Tensor anchors,
+                    at::Tensor gt_boxes);
 #endif  // IMAGEUTILS_H
