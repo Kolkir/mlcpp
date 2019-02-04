@@ -1,4 +1,5 @@
 # mlcpp
+
 Set of examples of ML approaches implemented in C++ with different frameworks.
 
 After cloning the source code please execute next commands to get all required third parties:
@@ -33,4 +34,4 @@ Each folder contains single example with own ``CMakeLists.txt`` file.
 |-------|-------|---|---|-----------------|
 |[Faster R-CNN](https://github.com/Kolkir/mlcpp/tree/master/rcnn-mxnet)|[MXNet](https://mxnet.apache.org/) [(sources)](https://github.com/apache/incubator-mxnet/tree/master/cpp-package)|+|+|Apache License 2.0|
 |planned|[Caffe2](https://caffe2.ai/) [(sources)](https://github.com/caffe2/caffe2)|+|+|Apache License 2.0|
-|planned|[PyTorch C++ Frontend](https://github.com/pytorch/pytorch)|+|+BSD 3-Clause|
+|[Mask R-CNN](https://github.com/Kolkir/mlcpp/tree/master/mask_rcnn_pytorch)|[PyTorch C++ Frontend](https://github.com/pytorch/pytorch)|+|+|BSD 3-Clause|
