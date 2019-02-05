@@ -24,9 +24,6 @@ class TrainConfig : public Config {
     images_per_gpu = 1;
     num_classes = 81;  // 4 - for shapes, 81 - for coco dataset
 
-    image_min_dim = 512;
-    image_max_dim = 512;
-
     UpdateSettings();
   }
 };

@@ -115,7 +115,7 @@ CocoDataset::CocoDataset(std::shared_ptr<CocoLoader> loader,
     : loader_(loader), config_(config) {
   loader_->LoadData(GetDatasetClasses());
   // train only on vehicles
-  // loader_->LoadData({2, 3, 4, 6, 7});
+  // loader_->LoadData(GetDatasetClasses(), {2, 3, 4, 6, 7});
 
   anchors_ = GeneratePyramidAnchors(
       config_->rpn_anchor_scales, config_->rpn_anchor_ratios,

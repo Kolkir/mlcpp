@@ -264,8 +264,11 @@ std::vector<cv::Mat> MinimizeMasks(const std::vector<float>& boxes,
     auto m_rect = cv::Rect(cv::Point(0, 0), m.size());
     auto crop_rect = cv::Rect(x1, y1, x2 - x1, y2 - y1);
     auto m_crop = m(m_rect & crop_rect);
-    if (m_crop.empty())
-      throw std::logic_error("Invalid bounding box with area of zero");
+    if (m_crop.empty()) {
+      std::cerr << "Dataset: Invalid bounding box with area of zero "
+                << crop_rect << " \n";
+      m_crop = m;
+    }
     m_crop.convertTo(m_crop, CV_32FC1);
     cv::resize(m_crop, m_crop, mini_shape, cv::INTER_LINEAR);
     cv::threshold(m_crop, m_crop, 127, 1, cv::THRESH_BINARY);
