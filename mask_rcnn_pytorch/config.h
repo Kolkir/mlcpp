@@ -63,7 +63,10 @@ class Config {
 
   // Non-max suppression threshold to filter RPN proposals.
   // You can reduce this during training to generate more propsals.
-  float rpn_nms_threshold = 0.7f;
+  float rpn_nms_threshold = 0.5f;  // 0.7
+
+  // You can reduce this during training to generate more positive anchors.
+  float anchor_iou_max_threshold = 0.5f;  // 0.7 original
 
   // How many anchors per image to use for RPN training
   int32_t rpn_train_anchors_per_image = 256;

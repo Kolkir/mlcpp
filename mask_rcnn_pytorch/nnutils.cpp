@@ -102,19 +102,6 @@ at::Tensor intersect1d(at::Tensor tensor1, at::Tensor tensor2) {
   }
 }
 
-at::Tensor index_select_2d(at::Tensor y,
-                           at::Tensor x,
-                           at::Tensor target,
-                           int64_t dim) {
-  auto tmp = target.index_select(0, y).unbind();
-  int64_t i = 0;
-  for (auto& v : tmp) {
-    v = v.narrow(dim - 1, *x[i].data<int64_t>(), 1).squeeze();
-    ++i;
-  }
-  return torch::stack(tmp);
-}
-
 void ClipGradNorm(std::vector<at::Tensor> parameters, float max_norm) {
   double total_norm = 0.0;
   for (auto& p : parameters) {

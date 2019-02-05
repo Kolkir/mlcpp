@@ -25,6 +25,8 @@ void LoadStateDictJson(torch::nn::Module& module, const std::string& file_name);
 
 void SaveStateDict(const torch::nn::Module& module,
                    const std::string& file_name);
-void LoadStateDict(torch::nn::Module& module, const std::string& file_name);
+void LoadStateDict(torch::nn::Module& module,
+                   const std::string& file_name,
+                   const std::string& ignore_name_regex = "");
 
 #endif  // STATELOADER_H

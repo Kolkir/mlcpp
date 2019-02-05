@@ -1,4 +1,5 @@
 #include "loss.h"
+#include "imageutils.h"
 #include "nnutils.h"
 
 at::Tensor ComputeRpnClassLoss(at::Tensor rpn_match,

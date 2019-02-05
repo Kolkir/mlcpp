@@ -75,14 +75,13 @@ class CocoLoader {
  public:
   explicit CocoLoader(const std::string& images_folder,
                       const std::string& ann_file);
-  void LoadData(const std::vector<uint32_t>& keep_classes = {},
+  void LoadData(const std::vector<std::string>& coco_classes,
+                const std::vector<uint32_t>& keep_classes = {},
                 float keep_aspect = -1);
   void AddImage(CocoImage image);
   void AddAnnotation(CocoAnnotation annotation);
   void AddCategory(CocoCategory category);
   cv::Mat DrawAnnotedImage(uint32_t id) const;
-
-  static const std::vector<std::string>& GetClasses();
 
   // ImageDb interface
   uint32_t GetImagesCount() const;

@@ -1,11 +1,13 @@
 #include "stateloader.h"
 #include "debug.h"
+#include "nnutils.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/reader.h>
 
 #include <iostream>
+#include <regex>
 #include <stack>
 
 namespace {
@@ -225,24 +227,36 @@ void SaveStateDict(const torch::nn::Module& module,
   auto params = module.named_parameters(true /*recurse*/);
   auto buffers = module.named_buffers(true /*recurse*/);
   for (const auto& val : params) {
-    archive.write(val.key(), val.value());
+    if (!is_empty(val.value())) {
+      archive.write(val.key(), val.value());
+    }
   }
   for (const auto& val : buffers) {
-    archive.write(val.key(), val.value(), /*is_buffer*/ true);
+    if (!is_empty(val.value())) {
+      archive.write(val.key(), val.value(), /*is_buffer*/ true);
+    }
   }
   archive.save_to(file_name);
 }
 
-void LoadStateDict(torch::nn::Module& module, const std::string& file_name) {
+void LoadStateDict(torch::nn::Module& module,
+                   const std::string& file_name,
+                   const std::string& ignore_name_regex) {
   torch::serialize::InputArchive archive;
   archive.load_from(file_name);
   torch::NoGradGuard no_grad;
+  std::regex re(ignore_name_regex);
+  std::smatch m;
   auto params = module.named_parameters(true /*recurse*/);
   auto buffers = module.named_buffers(true /*recurse*/);
   for (auto& val : params) {
-    archive.read(val.key(), val.value());
+    if (!std::regex_match(val.key(), m, re)) {
+      archive.read(val.key(), val.value());
+    }
   }
   for (auto& val : buffers) {
-    archive.read(val.key(), val.value(), /*is_buffer*/ true);
+    if (!std::regex_match(val.key(), m, re)) {
+      archive.read(val.key(), val.value(), /*is_buffer*/ true);
+    }
   }
 }

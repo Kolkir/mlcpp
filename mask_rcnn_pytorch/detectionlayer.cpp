@@ -35,9 +35,7 @@ at::Tensor RefineDetections(at::Tensor rois,
     idx = idx.cuda();
 
   auto class_scores = probs.index({idx, class_ids});
-  // probs.take(class_ids + idx * probs.size(1));  //[idx, class_ids.data];
   auto deltas_specific = deltas.index({idx, class_ids});
-  // deltas.take(class_ids + idx * deltas.size(1));  //[idx, class_ids.data];
 
   // Apply bounding box deltas
   // Shape: [boxes, (y1, x1, y2, x2)] in normalized coordinates
@@ -127,11 +125,11 @@ at::Tensor RefineDetections(at::Tensor rois,
 
   // Arrange output as [N, (y1, x1, y2, x2, class_id, score)]
   // Coordinates are in image domain.
-  auto result =
-      torch::cat({refined_rois.index_select(0, keep),
-                  class_ids.take(keep).unsqueeze(1).to(at::dtype(at::kFloat)),
-                  class_scores.take(keep).unsqueeze(1)},
-                 /*dim*/ 1);
+  auto result = torch::cat(
+      {refined_rois.index_select(0, keep),
+       class_ids.index_select(0, keep).unsqueeze(1).to(at::dtype(at::kFloat)),
+       class_scores.index_select(0, keep).unsqueeze(1)},
+      /*dim*/ 1);
   return result;
 }
 }  // namespace

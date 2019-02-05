@@ -22,7 +22,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
   //  Now they are excluded in coco loader
 
   // Compute overlaps matrix [proposals, gt_boxes]
-  auto overlaps = BBoxOverlaps(proposals, gt_boxes);
+  auto overlaps = BBoxOverlapsLoops(proposals, gt_boxes);
 
   // Determine postive and negative ROIs
   auto roi_iou_max = std::get<0>(torch::max(overlaps, /*dim*/ 1));
@@ -44,6 +44,7 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
 
     positive_count =
         int(config.train_rois_per_image * config.roi_positive_ratio);
+
     auto rand_idx =
         torch::randperm(positive_indices.size(0), at::dtype(at::kLong));
     rand_idx = rand_idx.narrow(
@@ -54,6 +55,14 @@ std::tuple<at::Tensor, at::Tensor, at::Tensor, at::Tensor> DetectionTargetLayer(
     positive_indices = positive_indices.take(rand_idx);
     positive_count = positive_indices.size(0);
     positive_rois = proposals.index_select(0, positive_indices);
+
+    // Debug block
+    //    std::cerr << "positive rois \n" << positive_rois << "\n";
+    //    auto d = torch::tensor({512, 512, 512, 512}, at::dtype(at::kFloat));
+    //    VisualizeBoxes("proposals", 512, 512, positive_rois.squeeze().cpu() *
+    //    d,
+    //                   gt_boxes.squeeze().cpu() * d);
+    //    exit(0);
 
     //   Assign positive ROIs to GT boxes.
     auto positive_overlaps = overlaps.index_select(0, positive_indices);

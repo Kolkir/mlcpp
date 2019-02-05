@@ -22,13 +22,7 @@ class TrainConfig : public Config {
       throw std::runtime_error("Cuda is not available");
     gpu_count = 1;
     images_per_gpu = 1;
-    steps_per_epoch = 500;
-    num_classes = 81;  // for coco dataset
-
-    // Use smaller image size to fit to GPU memory
-    image_min_dim = 480;
-    image_max_dim = 640;
-    rpn_anchor_scales = {8, 16, 32, 64, 128};
+    num_classes = 81;  // 4 - for shapes, 81 - for coco dataset
 
     UpdateSettings();
   }
@@ -42,7 +36,7 @@ const cv::String keys =
 int main(int argc, char** argv) {
 #ifndef NDEBUG
   at::globalContext().setDeterministicCuDNN(true);
-  torch::manual_seed(999);
+  torch::manual_seed(9993);
 
   // initialize debug print function
   auto x__ = torch::tensor({1, 2, 3, 4});
@@ -88,7 +82,12 @@ int main(int argc, char** argv) {
     if (params_path.find(".json") != std::string::npos) {
       LoadStateDictJson(*model, params_path);
     } else {
-      LoadStateDict(*model, params_path);
+      // Uncoment to load only resnet
+      //      std::string ignore_layers =
+      //          "(fpn.P5\\_.*)|(fpn.P4\\_.*)|(fpn.P3\\_.*)|(fpn.P2\\_.*)|(rpn.*)|("
+      //          "classifier.*)|(mask.*)";
+      std::string ignore_layers{""};
+      LoadStateDict(*model, params_path, ignore_layers);
     }
 
     if (config->gpu_count > 0)
@@ -106,14 +105,13 @@ int main(int argc, char** argv) {
         fs::path(data_path) / "annotations/instances_val2017.json");
     auto val_set = std::make_unique<CocoDataset>(std::move(val_loader), config);
 
-    // Training - Stage 1
+    //    // Training - Stage 1
     std::cout << "Training network heads" << std::endl;
     model->Train(*train_set, *val_set, config->learning_rate, /*epochs*/
                  40,
                  "heads");  // 40
 
-    // Training - Stage 2
-    // Finetune layers from ResNet stage 4 and up
+    //    // Training - Stage 2
     std::cout << "Fine tune Resnet stage 4 and up" << std::endl;
     model->Train(*train_set, *val_set, config->learning_rate, /*epochs*/
                  120,
