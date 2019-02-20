@@ -2,7 +2,7 @@ This is C++ implementation of [Mask R-CNN](https://arxiv.org/abs/1703.06870) wit
 The code is based on PyTorch implementations from [multimodallearning](https://github.com/multimodallearning/pytorch-mask-rcnn) and Keras implementation from [Matterport](https://github.com/matterport/Mask_RCNN). Also this implementation use heads from _resnet50_ and can be trained only with
 [coco dataset](https://cocodataset.org/).
 
-I made development on custom PyTorch build based on this [revision](https://github.com/pytorch/pytorch/tree/4f0434d5ab6406da4a44a23252cc05526bfbc34e), because at that moment there was no Cuda 10 support in published binaries. Now I assume you can use binaries for PyTorch v1.x.
+This implementation is compatible with PyTorch v1.0.1 .
 
 **Development environment configuration**
 
@@ -60,11 +60,9 @@ Please notice that parameters saved from python version of PyTorch with ``save_s
 **Using**
 
 There are two projects ``mask-rcnn_demo`` and ``mask-rcnn_train`` which should be used with next parameters:
-* *Demo* - ``mask-rcnn_demo`` executable takes two parameters ``path to file with trained parameters`` and ``path to image file for classification``. You can use pre-trained [parameters](https://drive.google.com/file/d/1Y9Qq4u-DxiM_eYJ7w4-VXWp4XmUeoU3t/view?usp=sharing) from the original project (I just converted them to the format acceptable for C++ application). After processing you will get file, named ``result.png`` in your's working directory, with rendered bounding boxes, masks and printed labels. Command line can looks like this "mask-rcnn_demo checkpoint.pt test.png"
+* *Demo* - ``mask-rcnn_demo`` executable takes two parameters ``path to file with trained parameters`` and ``path to image file for classification``. You can use pre-trained [parameters](https://drive.google.com/file/d/1H8_0uxCt7J7QIqQWs2QL-fW558-jRm9a/view?usp=sharing) from the original project (I just converted them to the format acceptable for C++ application). After processing you will get file, named ``result.png`` in your's working directory, with rendered bounding boxes, masks and printed labels. Command line can looks like this "mask-rcnn_demo checkpoint.pt test.png"
 
-* *Train* - ``mask-rcnn_train`` executable takes twp parameters ``path to the coco dataset`` and ``path to the pretrained model``. If you want to start training from scratch, please put path to the pretrained resnet50 weights. Command line can looks like this "mask-rcnn_train /development/data/coco /development/model/resnet-50.pt". Default name for check-point file is ``./logs/checkpoint-epoch-NUM.pt``. You can download pre-trained resnet parameters from [here](https://drive.google.com/file/d/1mPPXQ6VitQmIdHi8_WC0X3McAw2HOtPp/view?usp=sharing).
-
-Also you can download file with pre-trained parameters from this [link](https://drive.google.com/file/d/1SXQroqPfKBPyVHU93-Kw9LfahYxhgyY1/view?usp=sharing), it was made for proof of the concept and for vehicles label types only also it was trained on small number of iteration, because I don't have suitable hardware for full training cycle.
+* *Train* - ``mask-rcnn_train`` executable takes twp parameters ``path to the coco dataset`` and ``path to the pretrained model``. If you want to start training from scratch, please put path to the pretrained resnet50 weights. Command line can looks like this "mask-rcnn_train /development/data/coco /development/model/resnet-50.pt". Default name for check-point file is ``./logs/checkpoint-epoch-NUM.pt``.
 
 **Resources**
 1. https://github.com/multimodallearning/pytorch-mask-rcnn
