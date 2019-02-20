@@ -311,7 +311,7 @@ static cv::Mat ConvertPolygonsToMask(
     ++c_idx;
   }
 
-  cv::drawContours(mask, contours, -1, cv::Scalar(255), CV_FILLED);
+  cv::drawContours(mask, contours, -1, cv::Scalar(255), cv::FILLED);
 
   return mask;
 }
