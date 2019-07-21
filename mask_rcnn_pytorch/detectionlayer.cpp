@@ -76,6 +76,11 @@ at::Tensor RefineDetections(at::Tensor rois,
                   .to(at::dtype(at::kLong))
                   .squeeze();
 
+  // Unsqueeze in case keep is a 0-dimensional tensor
+  // otherwise calls like nms_class_ids.size(0) will fail
+  if (keep.ndimension() == 0)
+      keep = keep.unsqueeze(0);
+
   // Apply per-class NMS
   auto pre_nms_class_ids = class_ids.take(keep);
   auto pre_nms_scores = class_scores.take(keep);
