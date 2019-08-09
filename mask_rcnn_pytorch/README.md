@@ -6,7 +6,7 @@ This implementation is compatible with PyTorch v1.0.1 .
 
 **Development environment configuration**
 
-I'm using Arch Linux, with additional packages ``openblas``, ``OpenCV``, ``gcc-7``, ``cuda``. At the moment when I was building PyTorch Cuda had support only for gcc-7 as host compiler, so you need to configure a build to use it. Don't use ``CC`` environmental variable for compiler configuration, because scripts depend on ``gcc``. To make build successful I used next strategy:
+I'm using Arch Linux, with additional packages ``openblas``, ``OpenCV``, ``gcc-7``, ``cuda``, ``gomp``. At the moment when I was building PyTorch Cuda had support only for gcc-7 as host compiler, so you need to configure a build to use it. Don't use ``CC`` environmental variable for compiler configuration, because scripts depend on ``gcc``. To make build successful I used next strategy:
 created a directory ``$HOME/old_gcc``, then symlink ``gcc`` in that directory to ``/usr/bin/gcc-7``. Add that directory to the front of PATH ``export PATH=$HOME/old_gcc:$PATH`` before building PyTorch.
 
 Install PyYaml for your python environment ``pip install pyyaml``.
