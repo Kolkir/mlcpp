@@ -2,6 +2,8 @@
 
 Set of examples of ML approaches implemented in C++ with different frameworks.
 
+You can also consider taking a look at my book ["Hands-On Machine Learning with C++"](https://www.packtpub.com/data/hands-on-machine-learning-with-c) which covers also the theoretical part of algorithms and contains additional examples.
+
 After cloning the source code please execute next commands to get all required third parties:
 
 ```
