@@ -27,10 +27,10 @@ TEST_CASE("Generate anchors", "[anchors]") {
   }
 
   uint64_t total_size = 0;
-  for (size_t i = 0; i < scales.size(); ++i) {
+  for (size_t i = 0; i < feature_shapes.size(); ++i) {
     auto features_num = std::round(feature_shapes[i].first / anchor_stride) *
                         std::round(feature_shapes[i].second / anchor_stride);
-    total_size += ratios.size() * features_num;
+    total_size += ratios.size() * scales.size() * features_num;
   }
 
   torch::Tensor boxes;

@@ -551,8 +551,9 @@ void MaskRCNNImpl::Build() {
     anchors_ = anchors_.toBackend(torch::Backend::CUDA);
 
   // RPN
-  rpn_ =
-      RPN(config_->rpn_anchor_ratios.size(), config_->rpn_anchor_stride, 256);
+  uint32_t anchors_per_location = config_->rpn_anchor_ratios.size() * 
+       config_->rpn_anchor_scales.size();
+  rpn_ = RPN(anchors_per_location , config_->rpn_anchor_stride, 256);
   register_module("rpn", rpn_);
 
   // FPN Classifier

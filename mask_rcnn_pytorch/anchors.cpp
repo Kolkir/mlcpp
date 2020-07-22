@@ -68,10 +68,10 @@ torch::Tensor GeneratePyramidAnchors(
     float anchor_stride) {
   std::vector<at::Tensor> anchors;
   auto ratios = torch::tensor(ratios_vec);
+  auto scales = torch::tensor(scales_vec);
 
-  for (size_t i = 0; i < scales_vec.size(); ++i) {
-    auto scale = torch::tensor(scales_vec[i]);
-    anchors.push_back(GenerateAnchors(scale, ratios, feature_shapes[i],
+  for (size_t i = 0; i < feature_strides.size(); ++i) {
+    anchors.push_back(GenerateAnchors(scales, ratios, feature_shapes[i],
                                       feature_strides[i], anchor_stride));
   }
   return at::cat(anchors, /*dim*/ 0);
